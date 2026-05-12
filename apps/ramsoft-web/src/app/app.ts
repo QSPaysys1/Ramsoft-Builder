@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NxWelcome } from './nx-welcome';
+import { AuthToastStackComponent } from '@ramsoft-builder/auth/ui/login';
 
 @Component({
-  imports: [NxWelcome, RouterModule],
+  imports: [RouterModule, AuthToastStackComponent],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.scss',

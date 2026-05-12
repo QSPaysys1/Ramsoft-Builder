@@ -1,0 +1,14 @@
+{
+  "name": "auth-data-access-auth",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/auth/data-access/auth/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["domain:auth", "type:data-access"],
+  "implicitDependencies": ["shared-data-access-supabase"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

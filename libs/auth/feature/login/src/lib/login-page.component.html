@@ -1,0 +1,35 @@
+<lib-auth-page-layout [heroImageSrc]="heroImageSrc" heroImageAlt="Ramsoft">
+  <h1
+    class="mb-6 text-center text-2xl font-medium tracking-wide text-black md:mb-4 md:text-3xl"
+  >
+    Sign In
+  </h1>
+  <p
+    class="-mt-4 mb-2 text-center text-sm text-gray-500 md:-mt-8"
+  >
+    Use the same <strong class="font-medium text-gray-700">email</strong> as in
+    Supabase Authentication (e.g. ajay.gunda&#64;sbpcorp.in), or your short
+    <strong class="font-medium text-gray-700">user name</strong> when it is mapped
+    in <code class="rounded bg-gray-100 px-1 text-xs">legacy_user_flat</code>
+    (otherwise legacy <span class="whitespace-nowrap">name&#64;phone.com</span>).
+    An account with a <strong class="font-medium text-gray-700">blank</strong>
+    email in the dashboard cannot sign in until an administrator sets it.
+  </p>
+  <form
+    class="-mt-2 flex flex-col gap-6 md:-mt-10"
+    [formGroup]="loginForm"
+    (ngSubmit)="onSubmit()"
+  >
+    <lib-auth-server-error [message]="authStore.errorMessage()" />
+    <lib-auth-user-name-field
+      [control]="loginForm.controls.userName"
+      label="Email or user name"
+      placeholder="e.g. ajay.gunda@sbpcorp.in or ajay"
+    />
+    <lib-auth-password-field [control]="loginForm.controls.password" />
+    <lib-auth-financial-year-field
+      [control]="loginForm.controls.financialYear"
+    />
+    <lib-auth-submit-button [loading]="loading()" />
+  </form>
+</lib-auth-page-layout>

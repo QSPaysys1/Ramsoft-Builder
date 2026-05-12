@@ -1,0 +1,13 @@
+{
+  "name": "einvoice-ui-sections",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/einvoice/ui/sections/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:ui", "domain:einvoice"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

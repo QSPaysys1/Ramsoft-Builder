@@ -1,0 +1,20 @@
+.div-menu-tab {
+  transition: transform 0.3s ease-in-out;
+
+  &:hover {
+    background-color: #e93b81;
+    transform: scale(1.075);
+
+    .img-invert {
+      filter: invert(1);
+    }
+
+    h6 {
+      color: #fff;
+    }
+  }
+}
+
+.h-invoice {
+  height: calc(100vh - 100px);
+}

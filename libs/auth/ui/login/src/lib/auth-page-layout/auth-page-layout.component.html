@@ -1,0 +1,31 @@
+<div
+  class="flex min-h-screen flex-col overflow-hidden md:flex-row md:items-stretch"
+>
+  <div
+    class="relative flex w-full flex-col justify-center bg-[#ebe8fd] px-6 py-10 md:w-1/2 md:py-0"
+  >
+    <div
+      class="mx-auto flex w-full max-w-md flex-col gap-4 md:h-full md:max-w-none md:justify-evenly md:px-8 lg:w-1/2"
+    >
+      <div class="flex items-center gap-3">
+        <img
+          class="h-auto w-48 max-w-full md:w-60"
+          [src]="heroImageSrc()"
+          [alt]="heroImageAlt()"
+        />
+      </div>
+      <h1
+        class="-mt-4 text-2xl font-normal leading-snug text-black md:-mt-9 md:text-3xl"
+      >
+        {{ heroHeading() }}
+      </h1>
+    </div>
+  </div>
+  <div class="flex w-full flex-1 bg-[#f5f5f7] md:w-1/2">
+    <div
+      class="mx-auto flex w-full max-w-lg flex-col justify-center px-6 py-10 md:h-full md:max-w-none md:justify-evenly md:px-8 md:py-8 lg:w-7/12"
+    >
+      <ng-content />
+    </div>
+  </div>
+</div>

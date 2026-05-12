@@ -1,0 +1,41 @@
+.einvoices-list-root {
+  min-height: 100vh;
+  background-color: rgb(239 246 255); /* blue-50 */
+}
+
+.error {
+  background-color: rgb(220 38 38);
+  color: white;
+}
+
+.process {
+  background-color: hsl(39, 100%, 55%);
+  color: white;
+}
+
+.completed {
+  background-color: #21897e;
+  color: white;
+}
+
+.filter-section-scroll.filter-section-expanded {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.filter-drawer {
+  top: 4.5rem;
+  max-height: calc(100vh - 6rem);
+}
+
+.filter-drawer--closing {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .filter-drawer {
+    top: 6.25rem;
+  }
+}

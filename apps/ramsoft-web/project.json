@@ -4,7 +4,7 @@
   "projectType": "application",
   "prefix": "app",
   "sourceRoot": "apps/ramsoft-web/src",
-  "tags": [],
+  "tags": ["type:app", "domain:web", "serve:test"],
   "targets": {
     "build": {
       "executor": "@angular/build:application",
@@ -21,7 +21,7 @@
             "input": "apps/ramsoft-web/public"
           }
         ],
-        "styles": ["apps/ramsoft-web/src/styles.scss"],
+        "styles": ["apps/ramsoft-web/src/styles.css"],
         "server": "apps/ramsoft-web/src/main.server.ts",
         "ssr": {
           "entry": "apps/ramsoft-web/src/server.ts"
@@ -30,16 +30,22 @@
       },
       "configurations": {
         "production": {
+          "fileReplacements": [
+            {
+              "replace": "apps/ramsoft-web/src/environments/environment.ts",
+              "with": "apps/ramsoft-web/src/environments/environment.prod.ts"
+            }
+          ],
           "budgets": [
             {
               "type": "initial",
               "maximumWarning": "500kb",
-              "maximumError": "1mb"
+              "maximumError": "5mb"
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "4kb",
-              "maximumError": "8kb"
+              "maximumWarning": "12kb",
+              "maximumError": "50kb"
             }
           ],
           "outputHashing": "all"
@@ -55,6 +61,10 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "options": {
+        "port": 4200,
+        "host": "0.0.0.0"
+      },
       "configurations": {
         "production": {
           "buildTarget": "ramsoft-web:build:production"

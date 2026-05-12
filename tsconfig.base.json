@@ -4,7 +4,7 @@
     "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
@@ -14,7 +14,49 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "strict": true,
+    "paths": {
+      "@ramsoft-builder/auth/data-access/auth": [
+        "libs/auth/data-access/auth/src/index.ts"
+      ],
+      "@ramsoft-builder/auth/feature/login": [
+        "libs/auth/feature/login/src/index.ts"
+      ],
+      "@ramsoft-builder/auth/ui/login": ["libs/auth/ui/login/src/index.ts"],
+      "@ramsoft-builder/e-invoices/data-access/einvoice": [
+        "libs/e-invoices/data-access/einvoice/src/index.ts"
+      ],
+      "@ramsoft-builder/e-invoices/feature/create": [
+        "libs/e-invoices/feature/create/src/index.ts"
+      ],
+      "@ramsoft-builder/e-invoices/ui/form": [
+        "libs/e-invoices/ui/form/src/index.ts"
+      ],
+      "@ramsoft-builder/einvoice/data-access/api": [
+        "libs/einvoice/data-access/api/src/index.ts"
+      ],
+      "@ramsoft-builder/einvoice/data-access/persistence": [
+        "libs/einvoice/data-access/persistence/src/index.ts"
+      ],
+      "@ramsoft-builder/einvoice/data-access/state": [
+        "libs/einvoice/data-access/state/src/index.ts"
+      ],
+      "@ramsoft-builder/einvoice/feature/flow": [
+        "libs/einvoice/feature/flow/src/index.ts"
+      ],
+      "@ramsoft-builder/einvoice/models/nic": [
+        "libs/einvoice/models/nic/src/index.ts"
+      ],
+      "@ramsoft-builder/einvoice/ui/sections": [
+        "libs/einvoice/ui/sections/src/index.ts"
+      ],
+      "@ramsoft-builder/einvoice/utils/core": [
+        "libs/einvoice/utils/core/src/index.ts"
+      ],
+      "@ramsoft-builder/shared/data-access/supabase": [
+        "libs/shared/data-access/supabase/src/index.ts"
+      ]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

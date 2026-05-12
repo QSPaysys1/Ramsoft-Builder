@@ -1,0 +1,22 @@
+<fieldset class="einv-fieldset" [formGroup]="group()">
+  <legend class="einv-legend">Seller</legend>
+  <div class="einv-grid einv-grid--2">
+    <label class="einv-label">GSTIN <input class="einv-input" formControlName="Gstin" autocomplete="off" /></label>
+    <label class="einv-label">Legal name <input class="einv-input" formControlName="LglNm" /></label>
+    <label class="einv-label">Trade name <input class="einv-input" formControlName="TrdNm" /></label>
+    <label class="einv-label">State
+      <select class="einv-select" formControlName="Stcd">
+        <option value="">Select state</option>
+        @for (s of states; track s.GSTStateCode) {
+          <option [value]="s.GSTStateCode">{{ s.State }} ({{ s.GSTStateCode }})</option>
+        }
+      </select>
+    </label>
+    <label class="einv-label einv-span-2">Address 1 <input class="einv-input" formControlName="Addr1" /></label>
+    <label class="einv-label einv-span-2">Address 2 <input class="einv-input" formControlName="Addr2" /></label>
+    <label class="einv-label">Location <input class="einv-input" formControlName="Loc" /></label>
+    <label class="einv-label">PIN <input class="einv-input" formControlName="Pin" inputmode="numeric" maxlength="6" /></label>
+    <label class="einv-label">Phone <input class="einv-input" formControlName="Ph" type="tel" /></label>
+    <label class="einv-label">Email <input class="einv-input" formControlName="Em" type="email" /></label>
+  </div>
+</fieldset>

@@ -1,0 +1,13 @@
+{
+  "name": "e-invoices-ui-form",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/e-invoices/ui/form/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:ui", "domain:e-invoices"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

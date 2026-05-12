@@ -1,0 +1,592 @@
+<div class="einvoices-list-root ">
+  <div
+    class=" flex flex-wrap items-center justify-between gap-2 overflow-hidden bg-[#2c4e86] p-2 px-4 md:-mx-8 md:mx-0 md:px-8"
+  >
+    <nav class="flex" aria-label="Breadcrumb">
+      <ol class="flex items-center space-x-2" role="list">
+        <li>
+          <a
+            routerLink="/home"
+            class="cursor-pointer text-[10px] font-medium tracking-wide text-gray-200 hover:text-white lg:text-xs"
+            >Home</a
+          >
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg
+              class="size-4 shrink-0 text-white lg:size-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span
+              class="ml-2 text-[10px] font-medium tracking-wide text-white lg:text-xs"
+              aria-current="page"
+              >E-Invoices</span
+            >
+          </div>
+        </li>
+      </ol>
+    </nav>
+    <div class="flex flex-1 flex-wrap items-center justify-center gap-2 md:justify-end lg:gap-4 lg:px-2">
+      <a
+        routerLink="/e-invoices/create"
+        class="shrink-0 cursor-pointer rounded-md bg-indigo-600 px-3 py-1.5 text-center text-[10px] font-medium text-white shadow-xs hover:bg-indigo-500 lg:text-xs"
+        style="background: #4f39f6 !important"
+        >Create E-Invoice</a
+      >
+      <div class="lg:w-80">
+        <div class="grid w-full grid-cols-1">
+          <input
+            type="search"
+            name="search"
+            placeholder="Search"
+            class="col-start-1 row-start-1 block w-full rounded bg-white py-1 pr-3 pl-6 text-[10px] text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 lg:rounded-md lg:py-1.5 lg:pl-10 lg:text-sm"
+            [ngModel]="searchText()"
+            (ngModelChange)="searchText.set($event)"
+          />
+          <svg
+            class="pointer-events-none col-start-1 row-start-1 ml-2 size-3 self-center text-gray-400 lg:ml-3 lg:size-4"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        @if (selectedRow(); as row) {
+          <a
+            [routerLink]="['/e-invoices/einvoice', row.id]"
+            class="block cursor-pointer rounded-md bg-blue-600 py-1 text-center text-[10px] font-medium text-white shadow-xs hover:bg-blue-500 lg:py-1.5 lg:text-xs"
+          >
+            Manage
+          </a>
+          <button
+            type="button"
+            disabled
+            title="Coming soon"
+            class="block rounded-md py-1 text-center text-[10px] font-medium text-red-300 lg:py-1.5 lg:text-xs"
+          >
+            Print
+          </button>
+          <button
+            type="button"
+            disabled
+            title="Coming soon"
+            class="block rounded-md py-1 text-center text-[10px] font-medium text-green-300 lg:py-1.5 lg:text-xs"
+          >
+            CR/DR Note
+          </button>
+        }
+      </div>
+      <button
+        type="button"
+        (click)="openFilter()"
+        class="flex cursor-pointer items-center gap-2 rounded border border-white/10 bg-white/10 px-2 py-0.5 transition-all hover:border-white/20 hover:bg-white/20 lg:rounded-md lg:px-3 lg:py-1.5"
+      >
+        <svg
+          class="size-3 text-white lg:size-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
+          />
+        </svg>
+        <span class="text-[10px] font-medium text-white lg:text-xs">Filters</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="overflow-hidden pb-4 text-center lg:pb-8 p-4">
+    <div class="flow-root">
+      <div class="overflow-x-auto">
+        <div class="inline-block min-w-full align-middle">
+          <div class="overflow-hidden rounded-lg border border-gray-300 sm:rounded-lg">
+            <table class="min-w-full table-fixed divide-y divide-gray-300 bg-white">
+              <colgroup>
+                <col style="width: 9%" />
+                <col style="width: 8%" />
+                <col style="width: 21%" />
+                <col style="width: 21%" />
+                <col style="width: 13%" />
+                <col style="width: 28%" />
+              </colgroup>
+              <thead class="bg-gray-50">
+                <tr class="divide-x divide-gray-300">
+                  <th
+                    scope="col"
+                    class="bg-blue-100 px-3 py-2 text-left text-sm font-semibold text-gray-600"
+                  >
+                    S No
+                  </th>
+                  <th
+                    scope="col"
+                    class="bg-blue-100 px-3 py-2 text-left text-sm font-semibold text-gray-600"
+                  >
+                    Date
+                  </th>
+                  <th
+                    scope="col"
+                    class="bg-blue-100 px-3 py-2 text-left text-sm font-semibold text-gray-600"
+                  >
+                    Message
+                  </th>
+                  <th
+                    scope="col"
+                    class="bg-blue-100 px-3 py-2 text-left text-sm font-semibold text-gray-600"
+                  >
+                    IRN&nbsp;Status
+                  </th>
+                  <th
+                    scope="col"
+                    class="bg-blue-100 px-3 py-2 text-left text-sm font-semibold text-gray-600"
+                  >
+                    EWB&nbsp;Status
+                  </th>
+                  <th
+                    scope="col"
+                    class="bg-blue-100 px-3 py-2 text-left text-sm font-semibold text-gray-600"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-300">
+                @for (item of filteredEinvoices(); track item.id) {
+                  <tr
+                    (click)="selectRow(item)"
+                    [class.completed]="item.irnStatus === 'GEN'"
+                    [class.process]="item.irnStatus === 'NON'"
+                    [class.error]="item.irnStatus === 'ERR'"
+                    class="cursor-pointer text-black"
+                  >
+                    <td
+                      class="whitespace-nowrap border-r border-gray-300 px-3 py-2 text-left text-[13px] font-semibold"
+                    >
+                      <span class="block">{{ item.docNo || '—' }}</span>
+                      <!-- <span class="block text-[10px] font-normal text-gray-500">{{ item.id }}</span> -->
+                    </td>
+                    <td
+                      class="whitespace-nowrap border-r border-gray-300 px-3 py-2 text-left text-[13px] font-semibold"
+                    >
+                      {{ item.docDate }}
+                    </td>
+                    <td
+                      class="align-top break-all border-r border-gray-300 px-3 py-2 text-left text-[13px] font-semibold"
+                      [attr.title]="item.message"
+                    >
+                      {{ item.message }}
+                    </td>
+                    @if (item.irnStatus) {
+                      <td
+                        class="align-top break-all border-r border-gray-300 px-3 py-2 text-left text-[13px] font-semibold"
+                        [attr.title]="item.irnStatus"
+                      >
+                        {{ item.irnStatus }}
+                      </td>
+                    }
+                    @if (!item.irnStatus) {
+                      <td
+                        class="align-top break-all border-r border-gray-300 px-3 py-2 text-left text-[13px] font-semibold"
+                        [attr.title]="item.statusFallbackMessage"
+                      >
+                        {{ item.statusFallbackMessage }}
+                      </td>
+                    }
+                    @if (item.ewbNo) {
+                      <td class="whitespace-nowrap border-r border-gray-300 px-3 py-2 text-[13px] font-semibold">
+                        <button
+                          type="button"
+                          disabled class="inline rounded px-4 py-2 text-center text-xs 
+                          font-semibold text-white p-3"
+                          title="Coming soon"
+                          style="background: #ad46ff !important"
+                        >
+                          {{ item.ewbNo || 'N/A' }}
+                        </button>
+                      </td>
+                    } @else {
+                      <td class="whitespace-nowrap border-r border-gray-300 px-3 py-2 text-left
+                       text-[13px] font-semibold">
+                        No WayBill
+                      </td>
+                    }
+                    <td class="flex items-center space-x-2 whitespace-nowrap px-3 py-2 text-left text-sm">
+                      @if (item.irnStatus === 'ERR') {
+                        <button
+                          type="button"
+                          [disabled]="deleteLoading()"
+                          (click)="$event.stopPropagation(); deleteIt(item.id)"
+                          class="inline cursor-pointer rounded bg-red-700 px-4 py-2 text-center text-xs 
+                          font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                          style="background: #ff0000 !important"
+                        >
+                          Delete
+                        </button>
+                      }
+                      @if (item.irnStatus === 'GEN') {
+                        <button
+                          type="button"
+                                                    title="Coming soon"
+                          [routerLink]="['/e-invoices/einvoice', item.id]"
+                          class="inline cursor-pointer rounded bg-blue-600/60 
+                          px-4 py-2 text-center text-xs font-semibold text-white p-3" 
+                          style="background: #2b7fff !important"
+                        >
+                          Manage
+                        </button>
+                      }
+                      @if (item.irnStatus === 'GEN') {
+                        <button
+                          type="button"
+                          disabled
+                          title="Coming soon"
+                          class="inline rounded bg-orange-600/60 px-4 py-2 text-center text-xs 
+                          font-semibold text-white p-3"
+                          style="background: #f54a00 !important"
+                        >
+                          Print
+                        </button>
+                      }
+                      @if (item.irnStatus === 'GEN') {
+                        <button
+                          type="button"
+                          disabled
+                          title="Coming soon"
+                          class="inline rounded px-4 py-2 text-center text-xs 
+                          font-semibold text-white p-3"
+                          [style.background]="item.crNo ? 'orangered' : 'green'"
+                        >
+                          @if (item.crNo) {
+                            {{
+                              item.crdr === 'credit note'
+                                ? item.crNo + ' (CRN)'
+                                : item.crNo + '(DBN)'
+                            }}
+                          } @else {
+                            CR/DR Note
+                          }
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (filterOpen() || isFilterClosing()) {
+    <div
+      class="filter-drawer fixed right-0 z-[999] w-[250px] overflow-y-auto border-l border-gray-200 bg-blue-50 p-4 shadow-md md:top-[100px] lg:w-[275px]"
+      [class.filter-drawer--closing]="isFilterClosing()"
+    >
+      <div>
+        <div class="mb-4 flex items-center justify-between border-b border-gray-300 pb-4">
+          <h2 class="text-xs font-medium lg:text-sm lg:font-semibold">Filter By</h2>
+          <button type="button" (click)="openFilter()" aria-label="Close filters">
+            <svg
+              class="size-4 cursor-pointer text-red-500 lg:size-5"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="mb-4 border-b border-gray-300 pb-4">
+          <div class="mb-1 flex items-center justify-between gap-2">
+            <p class="text-[10px] font-semibold lg:text-xs">IRN Status</p>
+            <button
+              type="button"
+              (click)="clearIRNStatusFilter()"
+              class="cursor-pointer text-[9px] font-semibold text-red-500 hover:text-red-600 lg:text-[10px]"
+            >
+              Clear
+            </button>
+          </div>
+          <div [class.filter-section-expanded]="irnStatusMore()" class="filter-section-scroll h-[160px] overflow-hidden lg:h-[180px]">
+            <div class="relative">
+              <svg
+                class="absolute top-[8px] left-2 size-3 text-gray-400 lg:top-[7px] lg:size-[14px]"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
+              </svg>
+              <input
+                type="search"
+                placeholder="Search IRN status"
+                class="mb-2 w-full rounded-md border border-gray-300 bg-white py-1 pl-6 pr-2 text-[10px] font-medium focus:outline-none lg:text-[11px]"
+                [ngModel]="irnStatusSearch()"
+                (ngModelChange)="irnStatusSearch.set($event)"
+              />
+            </div>
+            @for (status of filteredIRNStatusOptions(); track $index) {
+              <label
+                class="flex min-w-0 items-start gap-2 py-1 text-[10px] font-medium text-gray-500 lg:text-[11px]"
+              >
+                <input
+                  type="checkbox"
+                  class="mt-0.5 size-3 shrink-0 lg:size-4"
+                  [checked]="selectedIRNStatus().has(status.status)"
+                  (change)="toggleIRNStatusFilter(status.status)"
+                />
+                <span
+                  class="min-w-0 flex-1 break-all normal-case"
+                  [attr.title]="status.status || 'N/A'"
+                  >{{ status.status || 'N/A' }}</span
+                >
+                <span class="shrink-0 text-[10px] font-semibold text-black lg:text-[11px]"
+                  >({{ status.count || 0 }})</span
+                >
+              </label>
+            }
+          </div>
+          @if (filteredIRNStatusOptions().length > 10) {
+            <div class="mt-2 flex items-center justify-end">
+              <button
+                type="button"
+                (click)="irnStatusMore.set(!irnStatusMore())"
+                class="cursor-pointer text-[9px] font-semibold text-blue-500 hover:text-blue-600 lg:text-[10px]"
+              >
+                @if (irnStatusMore()) {
+                  Show less
+                } @else {
+                  Show more
+                }
+              </button>
+            </div>
+          }
+        </div>
+        <div class="mb-4 border-b border-gray-300 pb-4">
+          <div class="mb-1 flex items-center justify-between gap-2">
+            <p class="text-[10px] font-semibold lg:text-xs">Customer GSTIN</p>
+            <button
+              type="button"
+              (click)="clearCustomerGSTINFilter()"
+              class="cursor-pointer text-[9px] font-semibold text-red-500 hover:text-red-600 lg:text-[10px]"
+            >
+              Clear
+            </button>
+          </div>
+          <div [class.filter-section-expanded]="customerGSTINMore()" class="filter-section-scroll h-[260px] overflow-hidden lg:h-[280px]">
+            <div class="relative">
+              <svg
+                class="absolute top-[8px] left-2 size-3 text-gray-400 lg:top-[7px] lg:size-[14px]"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
+              </svg>
+              <input
+                type="search"
+                placeholder="Search Customer GSTIN"
+                class="mb-2 w-full rounded-md border border-gray-300 bg-white py-1 pl-6 pr-2 text-[10px] font-medium focus:outline-none lg:text-[11px]"
+                [ngModel]="customerGSTINSearch()"
+                (ngModelChange)="customerGSTINSearch.set($event)"
+              />
+            </div>
+            @for (customer of filteredCustomerGSTINOptions(); track $index) {
+              <label class="flex items-center gap-2 py-1 text-[10px] font-medium text-gray-500 capitalize lg:text-[11px]">
+                <input
+                  type="checkbox"
+                  class="size-3 lg:size-4"
+                  [checked]="selectedCustomerGSTIN().has(customer.customerGSTIN)"
+                  (change)="toggleCustomerGSTINFilter(customer.customerGSTIN)"
+                />
+                {{ customer.customerGSTIN || 'N/A' }}
+                <span class="text-[10px] font-semibold text-black lg:text-[11px]">({{ customer.count || 0 }})</span>
+              </label>
+            }
+          </div>
+          @if (filteredCustomerGSTINOptions().length > 10) {
+            <div class="mt-2 flex items-center justify-end">
+              <button
+                type="button"
+                (click)="customerGSTINMore.set(!customerGSTINMore())"
+                class="cursor-pointer text-[9px] font-semibold text-blue-500 hover:text-blue-600 lg:text-[10px]"
+              >
+                @if (customerGSTINMore()) {
+                  Show less
+                } @else {
+                  Show more
+                }
+              </button>
+            </div>
+          }
+        </div>
+        <div class="mb-4 border-b border-gray-300 pb-4">
+          <div class="mb-1 flex items-center justify-between gap-2">
+            <p class="text-[10px] font-semibold lg:text-xs">Customer Name</p>
+            <button
+              type="button"
+              (click)="clearCustomerFilter()"
+              class="cursor-pointer text-[9px] font-semibold text-red-500 hover:text-red-600 lg:text-[10px]"
+            >
+              Clear
+            </button>
+          </div>
+          <div [class.filter-section-expanded]="customerMore()" class="filter-section-scroll h-[260px] overflow-hidden lg:h-[280px]">
+            <div class="relative">
+              <svg
+                class="absolute top-[8px] left-2 size-3 text-gray-400 lg:top-[7px] lg:size-[14px]"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
+              </svg>
+              <input
+                type="search"
+                placeholder="Search Customer Name"
+                class="mb-2 w-full rounded-md border border-gray-300 bg-white py-1 pl-6 pr-2 text-[10px] font-medium focus:outline-none lg:text-[11px]"
+                [ngModel]="customerSearch()"
+                (ngModelChange)="customerSearch.set($event)"
+              />
+            </div>
+            @for (customer of filteredCustomerOptions(); track $index) {
+              <label class="flex items-center gap-2 py-1 text-[10px] font-medium text-gray-500 capitalize lg:text-[11px]">
+                <input
+                  type="checkbox"
+                  class="size-3 lg:size-4"
+                  [checked]="selectedCustomer().has(customer.customer)"
+                  (change)="toggleCustomerFilter(customer.customer)"
+                />
+                {{ customer.customer || 'N/A' }}
+                <span class="text-[10px] font-semibold text-black lg:text-[11px]">({{ customer.count || 0 }})</span>
+              </label>
+            }
+          </div>
+          @if (filteredCustomerOptions().length > 10) {
+            <div class="mt-2 flex items-center justify-end">
+              <button
+                type="button"
+                (click)="customerMore.set(!customerMore())"
+                class="cursor-pointer text-[9px] font-semibold text-blue-500 hover:text-blue-600 lg:text-[10px]"
+              >
+                @if (customerMore()) {
+                  Show less
+                } @else {
+                  Show more
+                }
+              </button>
+            </div>
+          }
+        </div>
+        <div class="mb-4 border-b border-gray-300 pb-4">
+          <div class="mb-1 flex items-center justify-between gap-2">
+            <p class="text-[10px] font-semibold lg:text-xs">Customer Location</p>
+            <button
+              type="button"
+              (click)="clearCustomerLocationFilter()"
+              class="cursor-pointer text-[9px] font-semibold text-red-500 hover:text-red-600 lg:text-[10px]"
+            >
+              Clear
+            </button>
+          </div>
+          <div [class.filter-section-expanded]="customerLocationMore()" class="filter-section-scroll h-[260px] overflow-hidden lg:h-[280px]">
+            <div class="relative">
+              <svg
+                class="absolute top-[8px] left-2 size-3 text-gray-400 lg:top-[7px] lg:size-[14px]"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
+              </svg>
+              <input
+                type="search"
+                placeholder="Search Customer Location"
+                class="mb-2 w-full rounded-md border border-gray-300 bg-white py-1 pl-6 pr-2 text-[10px] font-medium focus:outline-none lg:text-[11px]"
+                [ngModel]="customerLocationSearch()"
+                (ngModelChange)="customerLocationSearch.set($event)"
+              />
+            </div>
+            @for (customer of filteredCustomerLocationOptions(); track $index) {
+              <label class="flex items-center gap-2 py-1 text-[10px] font-medium text-gray-500 capitalize lg:text-[11px]">
+                <input
+                  type="checkbox"
+                  class="size-3 lg:size-4"
+                  [checked]="selectedCustomerLocation().has(customer.customerLocation)"
+                  (change)="toggleCustomerLocationFilter(customer.customerLocation)"
+                />
+                {{ customer.customerLocation || 'N/A' }}
+                <span class="text-[10px] font-semibold text-black lg:text-[11px]">({{ customer.count || 0 }})</span>
+              </label>
+            }
+          </div>
+          @if (filteredCustomerLocationOptions().length > 10) {
+            <div class="mt-2 flex items-center justify-end">
+              <button
+                type="button"
+                (click)="customerLocationMore.set(!customerLocationMore())"
+                class="cursor-pointer text-[9px] font-semibold text-blue-500 hover:text-blue-600 lg:text-[10px]"
+              >
+                @if (customerLocationMore()) {
+                  Show less
+                } @else {
+                  Show more
+                }
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

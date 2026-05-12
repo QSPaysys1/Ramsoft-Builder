@@ -1,0 +1,14 @@
+{
+  "name": "auth-feature-login",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/auth/feature/login/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["domain:auth", "type:feature"],
+  "implicitDependencies": ["auth-ui-login", "auth-data-access-auth"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

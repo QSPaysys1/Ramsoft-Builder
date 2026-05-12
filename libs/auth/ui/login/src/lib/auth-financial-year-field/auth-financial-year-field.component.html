@@ -1,0 +1,57 @@
+<div>
+  <label
+    class="mb-0.5 block text-sm font-medium tracking-wide text-gray-500"
+    [attr.for]="inputId()"
+    >{{ label() }}</label
+  >
+  <div class="relative">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-gray-400"
+      aria-hidden="true"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+      />
+    </svg>
+    <select
+      [id]="inputId()"
+      name="financialYear"
+      autocomplete="off"
+      class="w-full appearance-none rounded-xl border border-gray-300 bg-white p-4 pl-16 text-sm font-medium text-black focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+      [formControl]="control()"
+    >
+      @for (y of years; track y) {
+        <option [value]="y" class="text-black">{{ y }}</option>
+      }
+    </select>
+  </div>
+  @if (control().invalid && (control().touched || control().dirty)) {
+    @if (control().errors?.['required']) {
+      <div class="mt-2 flex items-center gap-2">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 shrink-0 text-red-600"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        <span class="text-sm font-medium text-red-600"
+          >Financial Year is required</span
+        >
+      </div>
+    }
+  }
+</div>

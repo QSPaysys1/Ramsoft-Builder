@@ -1,0 +1,19 @@
+<fieldset class="einv-fieldset" [formGroup]="group()">
+  <legend class="einv-legend">Transport &amp; e-way bill</legend>
+  <div class="einv-grid einv-grid--2">
+    <label class="einv-label">Transporter ID (GSTIN) <input class="einv-input" formControlName="TransId" /></label>
+    <label class="einv-label">Transporter name <input class="einv-input" formControlName="TransName" /></label>
+    <label class="einv-label">Mode <span class="einv-hint">1 Road · 2 Rail · 3 Air · 4 Ship</span>
+      <input class="einv-input" formControlName="TransMode" />
+    </label>
+    <label class="einv-label">Distance (km) <input class="einv-input" type="number" formControlName="Distance" /></label>
+    <label class="einv-label">Vehicle number <input class="einv-input" formControlName="VehNo" /></label>
+    <label class="einv-label">Vehicle type <span class="einv-hint">R regular · O ODC</span>
+      <input class="einv-input" formControlName="VehType" />
+    </label>
+    <label class="einv-label">Transport doc no. <input class="einv-input" formControlName="TransDocNo" /></label>
+    <label class="einv-label">Transport doc date <span class="einv-hint">YYYY-MM-DD</span>
+      <input class="einv-input" type="date" formControlName="TransDocDt" />
+    </label>
+  </div>
+</fieldset>

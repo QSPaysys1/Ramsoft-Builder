@@ -1,0 +1,23 @@
+<fieldset class="einv-fieldset" [formGroup]="group()">
+  <legend class="einv-legend">Ship to</legend>
+  <label class="einv-check">
+    <input type="checkbox" formControlName="sameShipping" />
+    Same as buyer address
+  </label>
+  @if (!group().get('sameShipping')?.value) {
+    <div class="einv-grid einv-grid--2">
+      <label class="einv-label">GSTIN <input class="einv-input" formControlName="Gstin" /></label>
+      <label class="einv-label">Legal name <input class="einv-input" formControlName="LglNm" /></label>
+      <label class="einv-label einv-span-2">Address 1 <input class="einv-input" formControlName="Addr1" /></label>
+      <label class="einv-label">PIN <input class="einv-input" formControlName="Pin" /></label>
+      <label class="einv-label">State
+        <select class="einv-select" formControlName="Stcd">
+          <option value="">Select state</option>
+          @for (s of states; track s.GSTStateCode) {
+            <option [value]="s.GSTStateCode">{{ s.State }} ({{ s.GSTStateCode }})</option>
+          }
+        </select>
+      </label>
+    </div>
+  }
+</fieldset>

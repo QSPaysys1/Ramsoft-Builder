@@ -1,0 +1,262 @@
+/* Enterprise e-invoice form sections — scoped per component, shared tokens */
+
+:host {
+  display: block;
+}
+
+.einv-fieldset {
+  margin: 0;
+  padding: 1.25rem 1.35rem 1.35rem;
+  border: 1px solid var(--einv-border);
+  border-radius: var(--einv-radius-lg);
+  background: var(--einv-surface);
+  box-shadow: var(--einv-shadow-sm);
+}
+
+.einv-legend {
+  padding: 0 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--einv-accent);
+}
+
+.einv-grid {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.85rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .einv-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .einv-grid--tax {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.einv-hint {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--einv-muted);
+}
+
+.einv-total-field {
+  grid-column: 1 / -1;
+}
+
+.einv-input--emphasis {
+  font-weight: 700;
+  font-size: 1rem;
+  background: var(--einv-accent-soft);
+  border-color: var(--einv-accent);
+}
+
+.einv-span-2 {
+  grid-column: 1 / -1;
+}
+
+.einv-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--einv-muted);
+}
+
+.einv-input,
+.einv-select {
+  margin-top: 0.35rem;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: var(--einv-text);
+  background: var(--einv-input-bg);
+  border: 1px solid var(--einv-input-border);
+  border-radius: var(--einv-radius);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.einv-input:hover,
+.einv-select:hover {
+  border-color: var(--einv-input-border-hover);
+}
+
+.einv-input:focus,
+.einv-select:focus {
+  outline: none;
+  border-color: var(--einv-accent);
+  box-shadow: 0 0 0 3px var(--einv-focus-ring);
+}
+
+.einv-input.ng-invalid.ng-touched,
+.einv-select.ng-invalid.ng-touched {
+  border-color: var(--einv-danger);
+}
+
+.einv-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--einv-muted) 50%),
+    linear-gradient(135deg, var(--einv-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1rem) calc(50% - 0.2rem),
+    calc(100% - 0.65rem) calc(50% - 0.2rem);
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 2rem;
+}
+
+.einv-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--einv-text);
+}
+
+.einv-check input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--einv-accent);
+  cursor: pointer;
+}
+
+/* Line items table */
+.einv-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--einv-border);
+  border-radius: var(--einv-radius-lg);
+  background: var(--einv-surface);
+  box-shadow: var(--einv-shadow-sm);
+}
+
+.einv-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  color: var(--einv-text);
+}
+
+.einv-table thead {
+  background: linear-gradient(180deg, var(--einv-table-head) 0%, var(--einv-table-head-end) 100%);
+}
+
+.einv-table th {
+  padding: 0.65rem 0.5rem;
+  text-align: left;
+  font-weight: 650;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--einv-muted);
+  border-bottom: 1px solid var(--einv-border);
+}
+
+.einv-table td {
+  padding: 0.35rem 0.4rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--einv-border-subtle);
+}
+
+.einv-table tbody tr:hover {
+  background: var(--einv-row-hover);
+}
+
+.einv-table-input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.35rem 0.45rem;
+  font-size: 0.75rem;
+  color: var(--einv-text);
+  background: var(--einv-input-bg);
+  border: 1px solid var(--einv-input-border);
+  border-radius: var(--einv-radius-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.einv-table-input:focus {
+  outline: none;
+  border-color: var(--einv-accent);
+  box-shadow: 0 0 0 2px var(--einv-focus-ring);
+}
+
+.einv-table-input.w-sl {
+  width: 2.5rem;
+}
+
+.einv-table-input.w-hsn {
+  width: 4.5rem;
+}
+
+.einv-table-input.w-num {
+  width: 3.25rem;
+}
+
+.einv-table-input.w-desc {
+  min-width: 8rem;
+}
+
+/* CSS variables (light default; dark via parent .einv-theme--dark or prefers-color-scheme) */
+:host {
+  --einv-radius: 0.5rem;
+  --einv-radius-sm: 0.375rem;
+  --einv-radius-lg: 0.75rem;
+  --einv-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06);
+  --einv-border: rgb(226 232 240);
+  --einv-border-subtle: rgb(241 245 249);
+  --einv-surface: rgb(255 255 255);
+  --einv-text: rgb(15 23 42);
+  --einv-muted: rgb(100 116 139);
+  --einv-accent: rgb(13 148 136);
+  --einv-accent-soft: rgb(204 251 241);
+  --einv-input-bg: rgb(248 250 252);
+  --einv-input-border: rgb(203 213 225);
+  --einv-input-border-hover: rgb(148 163 184);
+  --einv-focus-ring: rgb(45 212 191 / 0.25);
+  --einv-danger: rgb(225 29 72);
+  --einv-table-head: rgb(248 250 252);
+  --einv-table-head-end: rgb(241 245 249);
+  --einv-row-hover: rgb(240 253 250 / 0.65);
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --einv-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35);
+    --einv-border: rgb(51 65 85);
+    --einv-border-subtle: rgb(51 65 85 / 0.5);
+    --einv-surface: rgb(30 41 59);
+    --einv-text: rgb(248 250 252);
+    --einv-muted: rgb(148 163 184);
+    --einv-accent: rgb(45 212 191);
+    --einv-accent-soft: rgb(19 78 74 / 0.35);
+    --einv-input-bg: rgb(15 23 42);
+    --einv-input-border: rgb(71 85 105);
+    --einv-input-border-hover: rgb(100 116 139);
+    --einv-focus-ring: rgb(45 212 191 / 0.2);
+    --einv-danger: rgb(251 113 133);
+    --einv-table-head: rgb(51 65 85);
+    --einv-table-head-end: rgb(30 41 59);
+    --einv-row-hover: rgb(45 212 191 / 0.08);
+  }
+}

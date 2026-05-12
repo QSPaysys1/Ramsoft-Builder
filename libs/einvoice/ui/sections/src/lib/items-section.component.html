@@ -1,0 +1,36 @@
+<div class="einv-table-wrap">
+  <table class="einv-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Description</th>
+        <th>HSN</th>
+        <th>Qty</th>
+        <th>Unit</th>
+        <th>Taxable</th>
+        <th>GST %</th>
+        <th>IGST</th>
+        <th>CGST</th>
+        <th>SGST</th>
+        <th>Line total</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (c of array().controls; track $index) {
+        <tr [formGroup]="$any(c)">
+          <td><input class="einv-table-input w-sl" formControlName="SlNo" /></td>
+          <td><input class="einv-table-input w-desc" formControlName="PrdDesc" /></td>
+          <td><input class="einv-table-input w-hsn" formControlName="HsnCd" /></td>
+          <td><input class="einv-table-input w-num" type="number" formControlName="Qty" /></td>
+          <td><input class="einv-table-input w-num" formControlName="Unit" /></td>
+          <td><input class="einv-table-input w-num" type="number" formControlName="AssAmt" /></td>
+          <td><input class="einv-table-input w-num" type="number" formControlName="GstRt" /></td>
+          <td><input class="einv-table-input w-num" type="number" formControlName="IgstAmt" /></td>
+          <td><input class="einv-table-input w-num" type="number" formControlName="CgstAmt" /></td>
+          <td><input class="einv-table-input w-num" type="number" formControlName="SgstAmt" /></td>
+          <td><input class="einv-table-input w-num" type="number" formControlName="TotItemVal" /></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

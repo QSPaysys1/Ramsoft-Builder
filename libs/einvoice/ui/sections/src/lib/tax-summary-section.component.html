@@ -1,0 +1,17 @@
+<fieldset class="einv-fieldset" [formGroup]="group()">
+  <legend class="einv-legend">GST summary</legend>
+  <div class="einv-grid einv-grid--2 einv-grid--tax">
+    <label class="einv-label">Assessable value <input class="einv-input" type="number" formControlName="AssVal" /></label>
+    <label class="einv-label">CGST <input class="einv-input" type="number" formControlName="CgstVal" /></label>
+    <label class="einv-label">SGST <input class="einv-input" type="number" formControlName="SgstVal" /></label>
+    <label class="einv-label">IGST <input class="einv-input" type="number" formControlName="IgstVal" /></label>
+    <label class="einv-label">CESS <input class="einv-input" type="number" formControlName="CesVal" /></label>
+    <label class="einv-label">State CESS <input class="einv-input" type="number" formControlName="StCesVal" /></label>
+    <label class="einv-label">Discount <input class="einv-input" type="number" formControlName="Discount" /></label>
+    <label class="einv-label">Other charges <input class="einv-input" type="number" formControlName="OthChrg" /></label>
+    <label class="einv-label">Round off <input class="einv-input" type="number" formControlName="RndOffAmt" /></label>
+    <label class="einv-label einv-total-field">Total invoice value
+      <input class="einv-input einv-input--emphasis" type="number" formControlName="TotInvVal" />
+    </label>
+  </div>
+</fieldset>

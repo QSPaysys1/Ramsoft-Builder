@@ -1,0 +1,13 @@
+{
+  "name": "einvoice-feature-flow",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/einvoice/feature/flow/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:feature", "domain:einvoice"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

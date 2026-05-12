@@ -1,0 +1,444 @@
+<div class="min-h-svh bg-slate-50 pb-8">
+  <div
+    class="flex flex-wrap items-center justify-between gap-2 overflow-hidden bg-[#2c4e86] p-2 px-4 md:-mx-8 md:mx-0 md:px-8"
+  >
+    <nav class="flex" aria-label="Breadcrumb">
+      <ol class="flex items-center space-x-2" role="list">
+        <li>
+          <a
+            routerLink="/home"
+            class="cursor-pointer text-[10px] font-medium tracking-wide text-gray-200 hover:text-white lg:text-xs"
+            >Home</a
+          >
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg
+              class="size-4 shrink-0 text-white lg:size-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <a
+              routerLink="/e-invoices/einvoiceslist"
+              class="ml-2 cursor-pointer text-[10px] font-medium tracking-wide text-gray-200 hover:text-white lg:text-xs"
+              >E-Invoices</a
+            >
+          </div>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg
+              class="size-4 shrink-0 text-white lg:size-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span
+              class="ml-2 text-[10px] font-medium tracking-wide text-white lg:text-xs"
+              aria-current="page"
+              >View</span
+            >
+          </div>
+        </li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="mx-auto max-w-6xl p-4">
+    @if (loadState().kind === 'loading') {
+      <p class="py-12 text-center text-sm text-slate-600">Loading e-invoice…</p>
+    } @else if (loadState().kind === 'error') {
+      <div
+        class="rounded-lg border border-red-200 bg-red-50 p-4 text-center text-sm text-red-800"
+        role="alert"
+      >
+        {{ errorText() }}
+      </div>
+    } @else if (vm()) {
+      <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
+        <div class="mb-6 border-b border-slate-100 pb-4">
+          <h1 class="text-lg font-semibold text-slate-900">E-Invoice</h1>
+          <div class="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-700 lg:text-sm">
+            <p><span class="font-medium text-slate-500">IRN:</span> {{ irn() || '—' }}</p>
+            <p>
+              <span class="font-medium text-slate-500">ACK No &amp; Date:</span>
+              {{ ackDisplay() }}
+            </p>
+          </div>
+        </div>
+
+        <div class="grid gap-6 lg:grid-cols-3">
+          <section class="rounded-md border border-slate-100 p-4">
+            <h2 class="mb-3 text-sm font-semibold text-slate-800">Seller details</h2>
+            <dl class="space-y-2 text-xs text-slate-700 lg:text-sm">
+              <div>
+                <dt class="text-slate-500">GSTIN</dt>
+                <dd class="font-medium">{{ sellerGstin() || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">Company name</dt>
+                <dd class="font-medium">{{ sellerName() || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">Address</dt>
+                <dd>{{ sellerAddr() || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">City</dt>
+                <dd>{{ sellerCity() || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">State</dt>
+                <dd>{{ sellerState() || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">PIN</dt>
+                <dd>{{ sellerPin() || '—' }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="rounded-md border border-slate-100 p-4">
+            <h2 class="mb-3 text-sm font-semibold text-slate-800">Invoice details</h2>
+            <dl class="space-y-2 text-xs text-slate-700 lg:text-sm">
+              <div>
+                <dt class="text-slate-500">Invoice number</dt>
+                <dd class="font-medium">{{ t(docDtls()?.['No']) || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">Invoice date</dt>
+                <dd>{{ t(docDtls()?.['Dt']) || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">Supply type</dt>
+                <dd>{{ t(tranDtls()?.['SupTyp']) || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">Place of supply</dt>
+                <dd>{{ placeOfSupply() }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">Reverse charge</dt>
+                <dd>{{ t(tranDtls()?.['RegRev']) || '—' }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="flex flex-col items-center justify-start rounded-md border border-slate-100 p-4">
+            <h2 class="mb-3 w-full text-sm font-semibold text-slate-800">Signed QR</h2>
+            @if (qrHostReady() && signedQrData()) {
+              <qrcode
+                class="max-w-full [&_.qrcode]:mx-auto"
+                [qrdata]="signedQrData()"
+                [errorCorrectionLevel]="'M'"
+                [elementType]="'svg'"
+                [width]="180"
+              />
+            } @else if (signedQrImgRelative()) {
+              <img
+                class="max-h-48 w-auto"
+                [src]="gstZenImgBase + signedQrImgRelative()"
+                alt="E-invoice QR"
+              />
+            } @else {
+              <p class="text-center text-xs text-slate-500">QR code not available for this document.</p>
+            }
+          </section>
+        </div>
+
+        <div class="mt-6 grid gap-6 lg:grid-cols-3">
+          <section class="rounded-md border border-slate-100 p-4">
+            <h2 class="mb-3 text-sm font-semibold text-slate-800">Buyer details</h2>
+            <dl class="space-y-2 text-xs text-slate-700 lg:text-sm">
+              <div>
+                <dt class="text-slate-500">GSTIN</dt>
+                <dd class="font-medium">{{ t(buyerDtls()?.['Gstin']) || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">Company name</dt>
+                <dd>{{ t(buyerDtls()?.['LglNm']) || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">Address</dt>
+                <dd>{{ t(buyerDtls()?.['Addr1']) || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">City</dt>
+                <dd>{{ t(buyerDtls()?.['Loc']) || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">State</dt>
+                <dd>{{ buyerState() }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">PIN</dt>
+                <dd>{{ t(buyerDtls()?.['Pin']) || '—' }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="rounded-md border border-slate-100 p-4">
+            <h2 class="mb-3 text-sm font-semibold text-slate-800">Ship to address</h2>
+            @if (!hasShipDtls()) {
+              <p class="text-xs text-slate-500 italic">Same as bill-to address</p>
+            } @else {
+              <dl class="space-y-2 text-xs text-slate-700 lg:text-sm">
+                <div>
+                  <dt class="text-slate-500">GSTIN</dt>
+                  <dd>{{ t(shipDtls()?.['Gstin']) || '—' }}</dd>
+                </div>
+                <div>
+                  <dt class="text-slate-500">Company name</dt>
+                  <dd>{{ t(shipDtls()?.['LglNm']) || '—' }}</dd>
+                </div>
+                <div>
+                  <dt class="text-slate-500">Address</dt>
+                  <dd>{{ t(shipDtls()?.['Addr1']) || '—' }}</dd>
+                </div>
+                <div>
+                  <dt class="text-slate-500">City</dt>
+                  <dd>{{ t(shipDtls()?.['Loc']) || '—' }}</dd>
+                </div>
+                <div>
+                  <dt class="text-slate-500">State</dt>
+                  <dd>{{ shipState() }}</dd>
+                </div>
+                <div>
+                  <dt class="text-slate-500">PIN</dt>
+                  <dd>{{ t(shipDtls()?.['Pin']) || '—' }}</dd>
+                </div>
+              </dl>
+            }
+          </section>
+
+          <section class="rounded-md border border-slate-100 p-4">
+            <h2 class="mb-3 text-sm font-semibold text-slate-800">Dispatch from</h2>
+            <dl class="space-y-2 text-xs text-slate-700 lg:text-sm">
+              <div>
+                <dt class="text-slate-500">Address</dt>
+                <dd>{{ dispatchAddr() || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">City</dt>
+                <dd>{{ dispatchCity() || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">State</dt>
+                <dd>{{ dispatchState() || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-slate-500">PIN</dt>
+                <dd>{{ dispatchPin() || '—' }}</dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+
+        <section class="mt-8">
+          <h2 class="mb-3 text-sm font-semibold text-slate-800">Line items</h2>
+          <div class="overflow-x-auto rounded-md border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-xs lg:text-sm">
+              <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                  <th class="whitespace-nowrap px-3 py-2 font-medium">Variety</th>
+                  <th class="whitespace-nowrap px-3 py-2 font-medium">HSN</th>
+                  <th class="whitespace-nowrap px-3 py-2 font-medium">Qty</th>
+                  <th class="whitespace-nowrap px-3 py-2 font-medium">Unit</th>
+                  <th class="whitespace-nowrap px-3 py-2 font-medium">Rate</th>
+                  <th class="whitespace-nowrap px-3 py-2 font-medium">GST %</th>
+                  <th class="whitespace-nowrap px-3 py-2 font-medium">CGST</th>
+                  <th class="whitespace-nowrap px-3 py-2 font-medium">SGST</th>
+                  <th class="whitespace-nowrap px-3 py-2 font-medium">IGST</th>
+                  <th class="whitespace-nowrap px-3 py-2 font-medium">Taxable</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 bg-white text-slate-800">
+                @for (ein of itemRows(); track $index) {
+                  <tr>
+                    <td class="px-3 py-2">{{ t(ein['PrdDesc']) }}</td>
+                    <td class="px-3 py-2">{{ t(ein['HsnCd']) }}</td>
+                    <td class="px-3 py-2">{{ t(ein['Qty']) }}</td>
+                    <td class="px-3 py-2">{{ t(ein['Unit']) }}</td>
+                    <td class="px-3 py-2">{{ t(ein['UnitPrice']) }}</td>
+                    <td class="px-3 py-2">{{ t(ein['GstRt']) }}</td>
+                    <td class="px-3 py-2">{{ t(ein['CgstAmt']) }}</td>
+                    <td class="px-3 py-2">{{ t(ein['SgstAmt']) }}</td>
+                    <td class="px-3 py-2">{{ t(ein['IgstAmt']) }}</td>
+                    <td class="px-3 py-2">{{ t(ein['TotAmt']) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="mt-8 flex flex-col gap-6 lg:flex-row lg:justify-between">
+          <section class="lg:max-w-md">
+            <h2 class="mb-3 text-sm font-semibold text-slate-800">Bank details</h2>
+            @if (bank()) {
+              <div class="mb-4 rounded-md border border-slate-100 p-3 text-xs text-slate-700 lg:text-sm">
+                <p>
+                  <span class="text-slate-500">Bank:</span>
+                  {{ t(bank()?.['bankName']) }} {{ t(bank()?.['branch']) }}
+                  {{ t(bank()?.['accountNo']) }}
+                </p>
+                <p><span class="text-slate-500">Account no:</span> {{ t(bank()?.['accountNo']) }}</p>
+                <p><span class="text-slate-500">IFSC:</span> {{ t(bank()?.['ifscCode']) }}</p>
+              </div>
+            }
+            @if (bank2()) {
+              <div class="rounded-md border border-slate-100 p-3 text-xs text-slate-700 lg:text-sm">
+                <p>
+                  <span class="text-slate-500">Bank:</span>
+                  {{ t(bank2()?.['bankName']) }} {{ t(bank2()?.['branch']) }}
+                  {{ t(bank2()?.['accountNo']) }}
+                </p>
+                <p><span class="text-slate-500">Account no:</span> {{ t(bank2()?.['accountNo']) }}</p>
+                <p><span class="text-slate-500">IFSC:</span> {{ t(bank2()?.['ifscCode']) }}</p>
+              </div>
+            }
+            @if (!bank() && !bank2()) {
+              <p class="text-xs text-slate-500">No bank details on file.</p>
+            }
+          </section>
+
+          <section class="lg:text-right">
+            <dl class="space-y-2 text-xs text-slate-700 lg:text-sm">
+              <div class="flex justify-between gap-8 lg:justify-end">
+                <dt class="text-slate-500">Total taxable value</dt>
+                <dd class="min-w-[5rem] font-medium">{{ t(valDtls()?.['AssVal']) || '—' }}</dd>
+              </div>
+              <div class="flex justify-between gap-8 lg:justify-end">
+                <dt class="text-slate-500">Total CGST</dt>
+                <dd class="min-w-[5rem] font-medium">{{ t(valDtls()?.['CgstVal']) || '—' }}</dd>
+              </div>
+              <div class="flex justify-between gap-8 lg:justify-end">
+                <dt class="text-slate-500">Total SGST</dt>
+                <dd class="min-w-[5rem] font-medium">{{ t(valDtls()?.['SgstVal']) || '—' }}</dd>
+              </div>
+              <div class="flex justify-between gap-8 lg:justify-end">
+                <dt class="text-slate-500">Total IGST</dt>
+                <dd class="min-w-[5rem] font-medium">{{ t(valDtls()?.['IgstVal']) || '—' }}</dd>
+              </div>
+              <div class="flex justify-between gap-8 lg:justify-end">
+                <dt class="text-slate-500">TCS / other charges</dt>
+                <dd class="min-w-[5rem] font-medium">{{ t(valDtls()?.['OthChrg']) || '—' }}</dd>
+              </div>
+              <div class="flex justify-between gap-8 border-t border-slate-200 pt-2 lg:justify-end">
+                <dt class="font-semibold text-slate-800">Total invoice value</dt>
+                <dd class="min-w-[5rem] font-semibold text-slate-900">
+                  {{ t(valDtls()?.['TotInvVal']) || '—' }}
+                </dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+
+        <div class="mt-6 rounded-md bg-slate-50 p-4">
+          <p class="text-xs font-medium text-slate-600">Amount in words</p>
+          <p class="mt-1 text-sm text-slate-900">{{ amountWords() }}</p>
+        </div>
+
+        <div class="mt-6 flex flex-col gap-4 border-t border-slate-100 pt-4">
+          @if (sheetAction() === 'Cancel') {
+            <div
+              class="rounded-lg border border-slate-200 bg-slate-50 p-4 lg:p-6"
+              [formGroup]="cancelForm"
+            >
+              <h3 class="text-base font-semibold text-slate-900">
+                Reason for invoice cancelling
+              </h3>
+              <div class="mt-3">
+                <label class="mb-1 block text-xs font-medium text-slate-600" for="cnlRsn"
+                  >Cancel reason code (NIC)</label
+                >
+                <select
+                  id="cnlRsn"
+                  formControlName="cnlRsn"
+                  class="block w-full max-w-md rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                >
+                  <option value="1">1 — Duplicate</option>
+                  <option value="2">2 — Data entry mistake</option>
+                  <option value="3">3 — Order cancelled</option>
+                  <option value="4">4 — Others</option>
+                </select>
+              </div>
+              <div class="mt-3">
+                <label class="mb-1 block text-xs font-medium text-slate-600" for="cancelRem"
+                  >Remarks (CnlRem)</label
+                >
+                <textarea
+                  id="cancelRem"
+                  formControlName="cancelRem"
+                  rows="3"
+                  placeholder="Enter reason"
+                  class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                ></textarea>
+              </div>
+              @if (cancelUiError()) {
+                <p class="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+                  {{ cancelUiError() }}
+                </p>
+              }
+              <div class="mt-4 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  class="inline-flex min-w-[10rem] cursor-pointer items-center justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60"
+                  [disabled]="cancelLoading()"
+                  (click)="confirmCancelInvoice()"
+                >
+                  @if (cancelLoading()) {
+                    <span>Cancelling…</span>
+                  } @else {
+                    <span>Confirm &amp; cancel</span>
+                  }
+                </button>
+                <button
+                  type="button"
+                  class="inline-flex cursor-pointer items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-red-500 disabled:opacity-60"
+                  [disabled]="cancelLoading()"
+                  (click)="setSheetAction('invoice')"
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="flex flex-wrap gap-3">
+              @if (downloadJsonHref()) {
+                <a
+                  class="inline-flex cursor-pointer items-center rounded-md bg-amber-600 px-3 py-2 text-xs font-medium text-white shadow hover:bg-amber-500 lg:text-sm"
+                  [href]="downloadJsonHref()!"
+                  [download]="downloadFileName()"
+                  >Download acknowledgement (JSON)</a
+                >
+              }
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center rounded-md bg-red-600 px-3 py-2 text-xs font-medium text-white shadow hover:bg-red-500 lg:text-sm"
+                (click)="setSheetAction('Cancel')"
+              >
+                Cancel invoice
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    } @else if (loadState().kind === 'idle') {
+      <p class="py-12 text-center text-sm text-slate-600">Select an e-invoice from the list.</p>
+    }
+  </div>
+</div>

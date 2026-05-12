@@ -1,0 +1,19 @@
+{
+  "name": "einvoice-models-nic",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/einvoice/models/nic/src",
+  "projectType": "library",
+  "tags": ["type:models", "domain:einvoice"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/einvoice/models/nic",
+        "main": "libs/einvoice/models/nic/src/index.ts",
+        "tsConfig": "libs/einvoice/models/nic/tsconfig.lib.json",
+        "assets": ["libs/einvoice/models/nic/*.md"]
+      }
+    }
+  }
+}

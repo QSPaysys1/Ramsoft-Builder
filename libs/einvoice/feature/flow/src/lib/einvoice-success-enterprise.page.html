@@ -1,0 +1,42 @@
+<div class="einv-page">
+  <div class="einv-result">
+    <div class="einv-result-card einv-result-card--success">
+      <h1>Registered successfully</h1>
+      <dl class="einv-result-dl">
+        <div>
+          <dt>IRN</dt>
+          <dd class="einv-mono">{{ store.irn() }}</dd>
+        </div>
+        <div>
+          <dt>Acknowledgement no.</dt>
+          <dd class="einv-mono">{{ store.ackNo() }}</dd>
+        </div>
+        @if (store.ewbNo()) {
+          <div>
+            <dt>E-way bill no.</dt>
+            <dd class="einv-mono">{{ store.ewbNo() }}</dd>
+          </div>
+        }
+        @if (store.ewbValidTill()) {
+          <div>
+            <dt>EWB valid till</dt>
+            <dd>{{ store.ewbValidTill() }}</dd>
+          </div>
+        }
+      </dl>
+      @if (showQr && store.signedQr()) {
+        <div class="einv-qr-wrap">
+          <lib-einvoice-qr-view [data]="store.signedQr()" />
+        </div>
+      }
+      <div class="einv-result-actions">
+        <a routerLink="../create" class="einv-btn einv-btn--primary">New IRN invoice</a>
+        <a routerLink="../create-ewaybill" class="einv-btn">New IRN + EWB</a>
+        <a routerLink="/home" class="einv-btn einv-btn--ghost">Home</a>
+      </div>
+      <p class="einv-result-note">
+        PDF download depends on GSTZen / NIC signed payload availability — add a dedicated export when your backend exposes it.
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,13 @@
+<div class="einv-page">
+  <div class="einv-result">
+    <div class="einv-result-card einv-result-card--error">
+      <h1>Could not register</h1>
+      <p class="einv-result-lead">{{ store.errorMessage() }}</p>
+      <p class="einv-result-note">Your payload was saved to the local outbox and will retry when you are online.</p>
+      <div class="einv-result-actions">
+        <a routerLink="../create" class="einv-btn einv-btn--primary">Back to IRN form</a>
+        <a routerLink="../create-ewaybill" class="einv-btn">IRN + EWB form</a>
+      </div>
+    </div>
+  </div>
+</div>

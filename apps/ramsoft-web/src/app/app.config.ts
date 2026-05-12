@@ -1,3 +1,4 @@
+import { provideHttpClient, withFetch } from '@angular/common/http';
 import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
@@ -9,9 +10,34 @@ import {
   provideClientHydration,
   withEventReplay,
 } from '@angular/platform-browser';
+import { provideSupabaseClient } from '@ramsoft-builder/shared/data-access/supabase';
+import { GSTZEN_EINVOICE_CONFIG } from '@ramsoft-builder/e-invoices/data-access/einvoice';
+import { EINVOICE_GSTZEN_HTTP_CONFIG } from '@ramsoft-builder/einvoice/data-access/api';
+import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    ...provideSupabaseClient(environment.supabase),
+    provideHttpClient(withFetch()),
+    {
+      provide: GSTZEN_EINVOICE_CONFIG,
+      useValue: {
+        einvoiceGenUrl: environment.gstZen.einvoiceGenUrl,
+        einvoiceCancelUrl: environment.gstZen.einvoiceCancelUrl,
+        token: environment.gstZen.token,
+      },
+    },
+    {
+      provide: EINVOICE_GSTZEN_HTTP_CONFIG,
+      useValue: {
+        einvoiceGenUrl: environment.gstZen.einvoiceGenUrl,
+        einvoiceGenEwbUrl: environment.gstZen.einvoiceGenEwbUrl,
+        einvoiceCancelUrl: environment.gstZen.einvoiceCancelUrl,
+        einvoiceCancelEwbUrl: environment.gstZen.einvoiceCancelEwbUrl,
+        einvoiceGetByIrnUrl: environment.gstZen.einvoiceGetByIrnUrl,
+        token: environment.gstZen.token,
+      },
+    },
     provideClientHydration(withEventReplay()),
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),

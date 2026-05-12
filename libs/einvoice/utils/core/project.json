@@ -1,0 +1,19 @@
+{
+  "name": "einvoice-utils-core",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/einvoice/utils/core/src",
+  "projectType": "library",
+  "tags": ["type:utils", "domain:einvoice"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/einvoice/utils/core",
+        "main": "libs/einvoice/utils/core/src/index.ts",
+        "tsConfig": "libs/einvoice/utils/core/tsconfig.lib.json",
+        "assets": ["libs/einvoice/utils/core/*.md"]
+      }
+    }
+  }
+}

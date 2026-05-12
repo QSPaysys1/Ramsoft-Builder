@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+
+/* Global styles — Ramsoft Web (Parkinsans matches legacy usaccounting auth UI) */
+@layer base {
+  html,
+  body {
+    font-family: "Parkinsans", sans-serif;
+  }
+}

@@ -1,0 +1,88 @@
+<div class="einv-page">
+  <div class="einv-page__inner">
+    <header class="einv-header">
+      <div>
+        <h1 class="einv-header__title">
+          @if (flowStore.mode() === 'irn-ewb') {
+            E-invoice + e-way bill
+          } @else {
+            E-invoice (IRN)
+          }
+        </h1>
+        <span class="einv-header__badge">
+          @if (flowStore.mode() === 'irn-ewb') {
+            GSTZen genewb
+          } @else {
+            GSTZen IRN
+          }
+        </span>
+      </div>
+      <div class="einv-toolbar">
+        <button type="button" class="einv-btn einv-btn--ghost" (click)="saveDraft()">Save draft</button>
+        <button type="button" class="einv-btn einv-btn--ghost" (click)="clearDraft()">Clear draft</button>
+        <a routerLink="/home" class="einv-btn">Home</a>
+      </div>
+    </header>
+
+    @if (flowStore.status() === 'error' && flowStore.errorMessage(); as err) {
+      <div class="einv-alert" role="alert">{{ err }}</div>
+    }
+
+    <form id="einv-enterprise-form" [formGroup]="form" class="einv-form-stack" (ngSubmit)="submit()">
+      <div class="einv-meta-grid">
+        <fieldset class="einv-fieldset--compact" formGroupName="tran">
+          <legend>Transaction</legend>
+          <div class="einv-compact-grid einv-compact-grid--2">
+            <label class="einv-compact-label">Tax scheme <input class="einv-compact-input" formControlName="TaxSch" /></label>
+            <label class="einv-compact-label">Supply type <input class="einv-compact-input" formControlName="SupTyp" /></label>
+            <label class="einv-compact-label">Reg reverse <input class="einv-compact-input" formControlName="RegRev" /></label>
+            <label class="einv-compact-label">IGST on intra <input class="einv-compact-input" formControlName="IgstOnIntra" /></label>
+            <label class="einv-compact-label einv-span-2">E-comm GSTIN <input class="einv-compact-input" formControlName="EcmGstin" /></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="einv-fieldset--compact" formGroupName="doc">
+          <legend>Document</legend>
+          <div class="einv-compact-grid einv-compact-grid--3">
+            <label class="einv-compact-label">Type <input class="einv-compact-input" formControlName="Typ" /></label>
+            <label class="einv-compact-label">Number <input class="einv-compact-input" formControlName="No" /></label>
+            <label class="einv-compact-label">Date <input class="einv-compact-input" type="date" formControlName="Dt" /></label>
+          </div>
+        </fieldset>
+      </div>
+
+      <lib-einvoice-seller-section [group]="$any(form.get('seller'))" />
+      <lib-einvoice-buyer-section [group]="$any(form.get('buyer'))" />
+      <lib-einvoice-dispatch-section [group]="$any(form.get('disp'))" />
+      <lib-einvoice-ship-section [group]="$any(form.get('ship'))" />
+
+      <div class="einv-section-head">
+        <h2>Line items</h2>
+        <button type="button" class="einv-btn einv-btn--primary" (click)="addItem()">Add row</button>
+      </div>
+      <lib-einvoice-items-section [array]="$any(form.get('items'))" />
+
+      <lib-einvoice-tax-summary-section [group]="$any(form.get('val'))" />
+
+      @if (flowStore.mode() === 'irn-ewb') {
+        <lib-einvoice-transport-ewb-section [group]="$any(form.get('ewb'))" />
+      }
+    </form>
+  </div>
+
+  <div class="einv-sticky-actions">
+    <button
+      type="submit"
+      class="einv-btn einv-btn--primary"
+      form="einv-enterprise-form"
+      [disabled]="flowStore.status() === 'loading'"
+    >
+      @if (flowStore.status() === 'loading') {
+        Submitting…
+      } @else {
+        Generate
+      }
+    </button>
+    <button type="button" class="einv-btn" (click)="recalcLinesAndTotals()">Recalculate taxes</button>
+  </div>
+</div>

@@ -1,0 +1,976 @@
+<div class="w-full min-h-screen overflow-hidden bg-blue-50 pb-10">
+  <!-- Top bar (legacy usaccounting layout; offset if shell adds fixed header) -->
+  <div
+    class="flex flex-wrap items-center justify-between gap-2 overflow-hidden bg-[#2c4e86] px-4 py-2 sm:flex sm:items-center lg:p-2"
+  >
+    <nav class="flex" aria-label="Breadcrumb">
+      <ol class="flex items-center space-x-2" role="list">
+        <li>
+          <a
+            routerLink="/home"
+            class="cursor-pointer text-[10px] font-medium tracking-wide text-gray-200 hover:text-white lg:text-xs"
+            style="color: #fff !important"
+            >Home</a
+          >
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg
+              class="size-4 shrink-0 text-white lg:size-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span
+              class="ml-2 text-[10px] font-medium tracking-wide text-white lg:text-xs"
+              aria-current="page"
+              >Create E-Invoice</span
+            >
+          </div>
+        </li>
+      </ol>
+    </nav>
+    <div class="flex flex-wrap items-center justify-center gap-2">
+      <button
+        type="button"
+        class="min-w-20 cursor-pointer rounded px-3 py-1 text-[9px] font-medium text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 lg:py-1.5 lg:text-[11px]"
+        style="background: #4f39f6 !important"
+        [disabled]="store.status() === 'loading'"
+        (click)="submit()"
+      >
+        @if (store.status() === 'loading') {
+          <span>Submitting…</span>
+        } @else {
+          Submit
+        }
+      </button>
+      <button
+        type="button"
+        class="rounded border border-white/40 bg-white/10 px-3 py-1 text-[9px] font-medium text-white hover:bg-white/20 lg:text-[11px]"
+        (click)="newInvoice()"
+      >
+        New
+      </button>
+      <button
+        type="button"
+        class="rounded border border-white/40 px-3 py-1 text-[9px] font-medium text-white hover:bg-white/10 lg:text-[11px]"
+        (click)="goHome()"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+
+  <div class="mx-auto mt-4 max-w-[96rem] overflow-hidden rounded-md border border-gray-200 bg-white" style="margin: 20px; padding: 0">
+    @if (store.errorMessage()) {
+      <div class="border-b border-red-200 bg-red-50 px-4 py-2">
+        <lib-einvoice-inline-alert variant="error" [message]="store.errorMessage()" />
+      </div>
+    }
+    @if (store.status() === 'success' && store.lastIrn()) {
+      <div class="border-b border-emerald-200 bg-emerald-50 px-4 py-2">
+        <lib-einvoice-inline-alert
+          variant="success"
+          [message]="'IRN: ' + store.lastIrn() + (store.lastAckNo() ? ' · Ack: ' + store.lastAckNo() : '')"
+        />
+      </div>
+    }
+    @if (formValidationHints()) {
+      <div class="border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-950" role="alert">
+        <span class="font-semibold">Fix before submitting:</span>
+        {{ formValidationHints() }}
+      </div>
+    }
+
+    <form [formGroup]="form" (keydown.enter)="$event.preventDefault()">
+      <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-2 lg:flex-nowrap">
+        <div
+          class="flex items-center justify-center gap-2 rounded bg-blue-50 px-4 py-2 text-[10px] font-semibold tracking-wide text-blue-500 lg:text-xs"
+        >
+          <span>Business to Business</span>
+        </div>
+        <h1 class="text-lg font-semibold uppercase tracking-wide sm:text-xl">E-Invoice</h1>
+        <div
+          class="flex items-center justify-center gap-2 rounded bg-blue-50 px-4 py-2 text-[10px] font-semibold tracking-wide text-blue-500 lg:text-xs"
+        >
+          <span>{{ taxTypeLabel() }}</span>
+        </div>
+      </div>
+
+      <div class="overflow-hidden border-t border-gray-200">
+        <!-- Buyer | Invoice + POS + reverse | Ship -->
+        <div class="grid grid-cols-1 divide-gray-200 border-b border-gray-200 lg:grid-cols-3 lg:divide-x">
+          <div class="border-gray-200 bg-white lg:border-r" formGroupName="buyer">
+            <div class="p-4">
+              <p
+                class="mb-2 inline-block border-b-2 border-dashed border-gray-400 text-sm font-semibold tracking-wide text-black"
+              >
+                Customer Details
+              </p>
+              <div class="space-y-1">
+                <div>
+                  <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                    >GSTIN <span class="text-sm text-red-600">*</span></label
+                  >
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="text"
+                      formControlName="Gstin"
+                      class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                    />
+                    <button
+                      type="button"
+                      class="h-8 w-10 shrink-0 cursor-pointer rounded px-2 text-[9px] font-medium text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 lg:min-w-20 lg:py-1.5 lg:text-[11px]"
+                      style="background: #4f39f6 !important"
+                      [disabled]="gstLoading()"
+                      (click)="checkBuyerGstin()"
+                    >
+                      @if (gstLoading()) {
+                        …
+                      } @else {
+                        Go
+                      }
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                    >Company Name <span class="text-sm text-red-600">*</span></label
+                  >
+                  <input
+                    type="text"
+                    formControlName="LglNm"
+                    class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                  />
+                </div>
+                <div class="flex gap-2">
+                  <div class="w-1/2">
+                    <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                      >Address <span class="text-sm text-red-600">*</span></label
+                    >
+                    <input
+                      type="text"
+                      formControlName="Addr1"
+                      class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                    />
+                  </div>
+                  <div class="w-1/2">
+                    <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                      >City <span class="text-sm text-red-600">*</span></label
+                    >
+                    <input
+                      type="text"
+                      formControlName="Loc"
+                      class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                    />
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <div class="w-1/2">
+                    <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                      >State <span class="text-sm text-red-600">*</span></label
+                    >
+                    <select
+                      formControlName="Stcd"
+                      class="mt-1 h-[24px] w-full rounded-[4px] border border-gray-300 bg-white px-2 py-0 text-[10px] font-medium text-black focus:outline-none lg:px-4 lg:text-sm"
+                      style="padding: 0"
+                    >
+                      <option value="">—</option>
+                      @for (s of states; track s.GSTStateCode) {
+                        <option [value]="s.GSTStateCode">{{ s.State }} - {{ s.GSTStateCode }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="w-1/2">
+                    <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                      >Pincode <span class="text-sm text-red-600">*</span></label
+                    >
+                    <input
+                      type="number"
+                      formControlName="Pin"
+                      class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                    >Trade name</label
+                  >
+                  <input
+                    type="text"
+                    formControlName="TrdNm"
+                    class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                  />
+                </div>
+                <div>
+                  <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                    >Address line 2</label
+                  >
+                  <input
+                    type="text"
+                    formControlName="Addr2"
+                    class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                  />
+                </div>
+                <div class="flex gap-2">
+                  <div class="w-1/2">
+                    <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                      >Phone</label
+                    >
+                    <input
+                      type="text"
+                      formControlName="Ph"
+                      class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                    />
+                  </div>
+                  <div class="w-1/2">
+                    <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                      >Email</label
+                    >
+                    <input
+                      type="email"
+                      formControlName="Em"
+                      class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-gray-200 bg-white lg:border-r">
+            <div class="p-4">
+              <p
+                class="mb-2 inline-block border-b-2 border-dashed border-gray-400 text-sm font-semibold tracking-wide text-black"
+              >
+                Details of Invoice
+              </p>
+              <div class="space-y-1" formGroupName="doc">
+                <div>
+                  <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                    >Invoice Number <span class="text-sm text-red-600">*</span></label
+                  >
+                  <input
+                    type="text"
+                    formControlName="No"
+                    class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                  />
+                </div>
+                <div>
+                  <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                    >Invoice Date <span class="text-sm text-red-600">*</span></label
+                  >
+                  <input
+                    type="date"
+                    formControlName="Dt"
+                    class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                  />
+                </div>
+              </div>
+              <div class="mt-2 space-y-1" formGroupName="buyer">
+                <div>
+                  <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                    >Place of Supply <span class="text-sm text-red-600">*</span></label
+                  >
+                  <select
+                    formControlName="Pos"
+                    class="mt-1 h-[28px] w-full rounded-[4px] border border-gray-300 bg-white px-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:px-4 lg:text-sm"
+                    style="padding-top: 0; padding-bottom: 0"
+                  >
+                    <option value="">—</option>
+                    @for (s of states; track s.GSTStateCode) {
+                      <option [value]="s.GSTStateCode">{{ s.State }} - {{ s.GSTStateCode }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="mt-2">
+                <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                  >Reverse Charge <span class="text-sm text-red-600">*</span></label
+                >
+                <div class="flex items-center gap-2">
+                  <div class="group grid size-3 shrink-0 grid-cols-1 place-items-center lg:size-4">
+                    <input
+                      id="revCharges"
+                      type="checkbox"
+                      class="peer col-start-1 row-start-1 size-3 cursor-pointer rounded border border-gray-500 accent-blue-600 lg:size-4"
+                      [checked]="form.controls.tran.controls.RegRev.value === 'Y'"
+                      (change)="onReverseChargeCheckboxChange($event)"
+                    />
+                  </div>
+                  <label for="revCharges" class="text-[10px] font-medium text-gray-900 xl:text-[13px]">
+                    {{ form.controls.tran.controls.RegRev.value === 'Y' ? 'Yes' : 'No' }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white" formGroupName="ship">
+            <div class="p-4">
+              <div class="mb-2 flex items-center justify-between gap-2">
+                <p
+                  class="inline-block border-b-2 border-dashed border-gray-400 text-sm font-semibold tracking-wide text-black"
+                >
+                  Shippping Details
+                </p>
+                <div class="flex items-center gap-1.5 xl:gap-3">
+                  <div class="grid size-3 shrink-0 place-items-center lg:size-4">
+                    <input
+                      type="checkbox"
+                      formControlName="sameShipping"
+                      id="sameShipping"
+                      class="size-3 rounded border border-gray-500 accent-blue-600 lg:size-4"
+                    />
+                  </div>
+                  <label for="sameShipping" class="text-[10px] font-medium text-gray-900 xl:text-[13px]"
+                    >Same as customer details</label
+                  >
+                </div>
+              </div>
+              <div class="space-y-1">
+                <div>
+                  <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                    >GSTIN <span class="text-sm text-red-600">*</span></label
+                  >
+                  <input
+                    type="text"
+                    formControlName="Gstin"
+                    class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                  />
+                </div>
+                <div>
+                  <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                    >Name <span class="text-sm text-red-600">*</span></label
+                  >
+                  <input
+                    type="text"
+                    formControlName="LglNm"
+                    class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                  />
+                </div>
+                <div class="flex gap-2">
+                  <div class="w-1/2">
+                    <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                      >Address <span class="text-sm text-red-600">*</span></label
+                    >
+                    <input
+                      type="text"
+                      formControlName="Addr1"
+                      class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                    />
+                  </div>
+                  <div class="w-1/2">
+                    <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                      >City <span class="text-sm text-red-600">*</span></label
+                    >
+                    <input
+                      type="text"
+                      formControlName="Loc"
+                      class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                    />
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <div class="w-1/2">
+                    <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                      >State <span class="text-sm text-red-600">*</span></label
+                    >
+                    <select
+                      formControlName="Stcd"
+                      class="mt-1 h-[24px] w-full rounded-[4px] border border-gray-300 bg-white px-2 py-0 text-[10px] font-medium text-black focus:outline-none lg:px-4 lg:text-sm"
+                      style="padding: 0"
+                    >
+                      <option value="">—</option>
+                      @for (s of states; track s.GSTStateCode) {
+                        <option [value]="s.GSTStateCode">{{ s.State }} - {{ s.GSTStateCode }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="w-1/2">
+                    <label class="mb-0.5 block text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                      >Pincode <span class="text-sm text-red-600">*</span></label
+                    >
+                    <input
+                      type="number"
+                      formControlName="Pin"
+                      class="h-6 w-full rounded border border-gray-300 bg-white px-2 py-2 text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:rounded-md lg:text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Line items: mirrors legacy `getVarietyColumns` — Variety is always a `<select>`; options = sorted catalog `productName`s; `(change)` → HSN/SAC fill (same as Handsontable `afterChange`). -->
+        <div class="overflow-hidden border-b border-gray-200">
+          <div class="border-b border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-800">Line items</div>
+          <div class="max-h-[min(70vh,520px)] overflow-auto border border-gray-200 bg-white">
+            <table class="min-w-[1280px] table-fixed border-collapse border-0 text-left text-[10px] lg:text-xs">
+              <thead>
+                <tr class="sticky top-0 z-10 border-b border-gray-200 bg-gray-100 text-gray-800">
+                  <th class="w-8 border border-gray-200 px-1 py-2 font-semibold">#</th>
+                  <th class="w-[160px] border border-gray-200 px-2 py-2 font-semibold">Variety</th>
+                  <th class="min-w-[90px] border border-gray-200 px-2 py-2 font-semibold">{{ itemHsnHeader() }}</th>
+                  <th class="w-[70px] border border-gray-200 px-2 py-2 font-semibold">Brand</th>
+                  <th class="w-[70px] border border-gray-200 px-2 py-2 font-semibold">Bags</th>
+                  <th class="w-[70px] border border-gray-200 px-2 py-2 font-semibold">Unit</th>
+                  <th class="min-w-[100px] border border-gray-200 px-2 py-2 font-semibold">Quantity (Qtls)</th>
+                  <th class="w-[80px] border border-gray-200 px-2 py-2 font-semibold">Rate</th>
+                  <th class="min-w-[100px] border border-gray-200 px-2 py-2 font-semibold">GST Rate(%)</th>
+                  <th class="min-w-[90px] border border-gray-200 px-2 py-2 font-semibold">Rate Excl</th>
+                  @if (taxTypeLabel() === 'Intra Tax Sales') {
+                    <th class="min-w-[90px] border border-gray-200 px-2 py-2 font-semibold">CGST</th>
+                    <th class="min-w-[90px] border border-gray-200 px-2 py-2 font-semibold">SGST</th>
+                  } @else {
+                    <th class="min-w-[90px] border border-gray-200 px-2 py-2 font-semibold">IGST</th>
+                  }
+                  <th class="min-w-[120px] border border-gray-200 px-2 py-2 font-semibold">Taxable Amount</th>
+                  <th class="min-w-[90px] border border-gray-200 px-2 py-2 font-semibold">Amount</th>
+                  <th class="w-10 border border-gray-200 px-1 py-2 font-semibold"></th>
+                </tr>
+              </thead>
+              <tbody formArrayName="items">
+                @for (_ of items.controls; track $index; let i = $index) {
+                  <tr [formGroupName]="i" class="border-b border-gray-100 hover:bg-blue-50/40" (focusin)="focusItemRow(i)">
+                    <td class="border border-gray-200 px-1 py-1 align-middle text-center text-gray-500">
+                      <div class="hidden">
+                        <select formControlName="IsServc" (change)="focusItemRow(i)">
+                          <option value="N">Goods</option>
+                          <option value="Y">Service</option>
+                        </select>
+                        <input type="number" formControlName="FreeQty" />
+                        <input type="number" formControlName="Discount" />
+                        <input type="hidden" formControlName="Unit" />
+                      </div>
+                      {{ i + 1 }}
+                    </td>
+                    <td class="w-[160px] max-w-[160px] border border-gray-200 px-1 py-1 align-middle">
+                      <select
+                        class="w-full min-w-0 truncate rounded border border-gray-200 bg-white px-1 py-1 text-[10px] lg:text-xs"
+                        formControlName="PrdDesc"
+                        (change)="onItemVarietyChange(i)"
+                      >
+                        <option value="">— Variety —</option>
+                        @for (n of itemVarietySelectOptionLabels(i); track n) {
+                          <option [value]="n">{{ n }}</option>
+                        }
+                      </select>
+                    </td>
+                    <td class="border border-gray-200 px-1 py-1 align-middle">
+                      <input
+                        [readOnly]="itemRowHsnReadonly(i)"
+                        class="w-[90px] max-w-full rounded border border-gray-200 px-1 py-1 font-mono text-[10px] text-gray-800"
+                        [class.cursor-not-allowed]="itemRowHsnReadonly(i)"
+                        [class.bg-gray-100]="itemRowHsnReadonly(i)"
+                        formControlName="HsnCd"
+                        title="Filled from variety master when Variety matches catalog; read-only for that row."
+                      />
+                    </td>
+                    <td class="border border-gray-200 px-1 py-1 align-middle">
+                      <input class="w-full min-w-0 rounded border border-gray-200 px-1 py-1" formControlName="Brand" />
+                    </td>
+                    <td class="border border-gray-200 px-1 py-1 align-middle">
+                      <input class="w-full min-w-0 rounded border border-gray-200 px-1 py-1 text-right" type="number" formControlName="Bags" />
+                    </td>
+                    <td class="border border-gray-200 px-1 py-1 align-middle">
+                      <input
+                        class="w-full min-w-0 rounded border border-gray-200 px-1 py-1 text-right"
+                        type="number"
+                        formControlName="UnitType"
+                      />
+                    </td>
+                    <td class="border border-gray-200 px-1 py-1 align-middle">
+                      <input class="w-full min-w-[100px] rounded border border-gray-200 px-1 py-1 text-right" type="number" formControlName="Qty" />
+                    </td>
+                    <td class="border border-gray-200 px-1 py-1 align-middle">
+                      <input class="w-[80px] rounded border border-gray-200 px-1 py-1 text-right" type="number" formControlName="rate" />
+                    </td>
+                    <td class="border border-gray-200 px-1 py-1 align-middle">
+                      <input class="w-full min-w-0 rounded border border-gray-200 px-1 py-1 text-right" type="number" formControlName="GstRt" />
+                    </td>
+                    <td class="border border-gray-200 px-1 py-1 align-middle">
+                      <input class="w-full min-w-0 rounded border border-gray-200 px-1 py-1 text-right" type="number" formControlName="UnitPrice" />
+                    </td>
+                    @if (taxTypeLabel() === 'Intra Tax Sales') {
+                      <td class="border border-gray-200 px-1 py-1 align-middle text-right tabular-nums text-gray-800">
+                        {{ itemAmount(i, 'CgstAmt') | number: '1.0-0' }}
+                      </td>
+                      <td class="border border-gray-200 px-1 py-1 align-middle text-right tabular-nums text-gray-800">
+                        {{ itemAmount(i, 'SgstAmt') | number: '1.0-0' }}
+                      </td>
+                    } @else {
+                      <td class="border border-gray-200 px-1 py-1 align-middle text-right tabular-nums text-gray-800">
+                        {{ itemAmount(i, 'IgstAmt') | number: '1.0-0' }}
+                      </td>
+                    }
+                    <td class="border border-gray-200 px-1 py-1 align-middle text-right tabular-nums text-gray-800">
+                      {{ itemAmount(i, 'TotAmt') | number: '1.0-0' }}
+                    </td>
+                    <td class="border border-gray-200 px-1 py-1 align-middle text-right tabular-nums font-medium text-gray-900">
+                      {{ itemAmount(i, 'TotItemVal') | number: '1.0-0' }}
+                    </td>
+                    <td class="border border-gray-200 px-1 py-1 align-middle text-center">
+                      <button
+                        type="button"
+                        class="rounded bg-red-600 px-2 py-1 text-[10px] font-semibold text-white hover:bg-red-500 disabled:opacity-40"
+                        [disabled]="items.length <= 1"
+                        (click)="removeItemRow(i)"
+                      >
+                        ✕
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="flex flex-wrap gap-2 border-t border-gray-200 bg-white p-3">
+            <button
+              type="button"
+              class="cursor-pointer rounded bg-[#4f39f6] px-4 py-2 text-[10px] font-semibold text-white hover:bg-indigo-500 lg:text-xs"
+              (click)="addItemRow(); focusItemRow(items.length - 1)"
+            >
+              Add line
+            </button>
+          </div>
+        </div>
+
+        <!-- Seller — required by NIC; was hidden → form stayed invalid & Submit silently failed. Prefill from Firestore users/{uid} when present (legacy shapes). -->
+        <div class="border-b border-gray-200 bg-gray-50/80 px-4 py-3" formGroupName="seller">
+          <p class="mb-2 text-sm font-semibold tracking-wide text-gray-900">Seller (your organisation)</p>
+          <p class="mb-3 text-[10px] text-gray-500 lg:text-xs">Required on every e-invoice. May load from your user profile automatically.</p>
+          <div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <label class="mb-0.5 block text-[10px] font-medium text-gray-500 lg:text-[13px]"
+                  >GSTIN <span class="text-red-600">*</span></label
+                >
+                <input
+                  type="text"
+                  formControlName="Gstin"
+                  class="h-8 w-full rounded border border-gray-300 bg-white px-2 font-mono text-[10px] uppercase lg:text-sm"
+                />
+              </div>
+              <div>
+                <label class="mb-0.5 block text-[10px] font-medium text-gray-500 lg:text-[13px]"
+                  >Legal name <span class="text-red-600">*</span></label
+                >
+                <input type="text" formControlName="LglNm" class="h-8 w-full rounded border border-gray-300 px-2 text-[10px] lg:text-sm" />
+              </div>
+              <div>
+                <label class="mb-0.5 block text-[10px] font-medium text-gray-500 lg:text-[13px]">Trade name</label>
+                <input type="text" formControlName="TrdNm" class="h-8 w-full rounded border border-gray-300 px-2 text-[10px] lg:text-sm" />
+              </div>
+              <div class="md:col-span-2">
+                <label class="mb-0.5 block text-[10px] font-medium text-gray-500 lg:text-[13px]"
+                  >Address line 1 <span class="text-red-600">*</span></label
+                >
+                <input type="text" formControlName="Addr1" class="h-8 w-full rounded border border-gray-300 px-2 text-[10px] lg:text-sm" />
+              </div>
+              <div>
+                <label class="mb-0.5 block text-[10px] font-medium text-gray-500 lg:text-[13px]">Address line 2</label>
+                <input type="text" formControlName="Addr2" class="h-8 w-full rounded border border-gray-300 px-2 text-[10px] lg:text-sm" />
+              </div>
+              <div>
+                <label class="mb-0.5 block text-[10px] font-medium text-gray-500 lg:text-[13px]"
+                  >Place <span class="text-red-600">*</span></label
+                >
+                <input type="text" formControlName="Loc" class="h-8 w-full rounded border border-gray-300 px-2 text-[10px] lg:text-sm" />
+              </div>
+              <div>
+                <label class="mb-0.5 block text-[10px] font-medium text-gray-500 lg:text-[13px]"
+                  >PIN <span class="text-red-600">*</span></label
+                >
+                <input type="text" formControlName="Pin" class="h-8 w-full rounded border border-gray-300 px-2 text-[10px] lg:text-sm" />
+              </div>
+              <div>
+                <label class="mb-0.5 block text-[10px] font-medium text-gray-500 lg:text-[13px]"
+                  >State <span class="text-red-600">*</span></label
+                >
+                <select formControlName="Stcd" class="h-8 w-full rounded border border-gray-300 px-2 text-[10px] lg:text-sm">
+                  <option value="">—</option>
+                  @for (s of states; track s.GSTStateCode) {
+                    <option [value]="s.GSTStateCode">{{ s.State }} ({{ s.GSTStateCode }})</option>
+                  }
+                </select>
+              </div>
+              <div>
+                <label class="mb-0.5 block text-[10px] font-medium text-gray-500 lg:text-[13px]">Phone</label>
+                <input type="text" formControlName="Ph" class="h-8 w-full rounded border border-gray-300 px-2 text-[10px] lg:text-sm" />
+              </div>
+              <div>
+                <label class="mb-0.5 block text-[10px] font-medium text-gray-500 lg:text-[13px]">Email</label>
+                <input type="email" formControlName="Em" class="h-8 w-full rounded border border-gray-300 px-2 text-[10px] lg:text-sm" />
+              </div>
+            </div>
+        </div>
+
+        <!-- Bottom: Add/Less + e-way | (empty) | Values — matches legacy 3-column row -->
+        <div class="flex flex-col flex-wrap items-stretch gap-4 border-b border-gray-200 p-4 md:flex-nowrap lg:flex-row">
+          <div class="flex w-full min-w-0 flex-col gap-4 lg:w-1/3">
+            <nav
+              class="isolate mx-auto flex w-full max-w-md divide-x divide-gray-200 overflow-hidden rounded border border-gray-200 text-center"
+              aria-label="Tabs"
+            >
+              <button
+                type="button"
+                class="min-h-[34px] flex-1 cursor-pointer p-2 text-[10px] font-medium lg:text-sm"
+                [class.bg-indigo-50]="parameterAction() === 'Add'"
+                [class.text-indigo-700]="parameterAction() === 'Add'"
+                [class.text-gray-500]="parameterAction() !== 'Add'"
+                (click)="setParameterAction('Add')"
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                class="min-h-[34px] flex-1 cursor-pointer p-2 text-[10px] font-medium lg:text-sm"
+                [class.bg-indigo-50]="parameterAction() === 'Less'"
+                [class.text-indigo-700]="parameterAction() === 'Less'"
+                [class.text-gray-500]="parameterAction() !== 'Less'"
+                (click)="setParameterAction('Less')"
+              >
+                Less
+              </button>
+            </nav>
+            @if (parameterAction() === 'Add') {
+              <div class="mb-4 flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+                <label class="mb-0.5 block w-40 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]">
+                  Other Charges <span class="text-sm text-red-600">*</span>
+                </label>
+                <div class="flex w-full max-w-md flex-1 flex-wrap items-center gap-2">
+                  <select
+                    class="h-8 min-w-[8rem] flex-1 rounded border border-gray-300 bg-white px-2 text-[10px] lg:text-sm"
+                    [formControl]="quickChargeName"
+                  >
+                    <option value="">— Select —</option>
+                    @for (h of chargeHeads; track h) {
+                      <option [value]="h">{{ h }}</option>
+                    }
+                  </select>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Amount"
+                    [formControl]="quickChargeAmount"
+                    class="h-8 w-[6.5rem] shrink-0 rounded border border-gray-300 bg-white px-2 text-right text-[10px] lg:text-sm"
+                  />
+                  <button
+                    type="button"
+                    class="h-8 shrink-0 cursor-pointer rounded bg-[#4f39f6] px-3 text-[10px] font-medium text-white hover:bg-indigo-500 lg:text-[11px]"
+                    (click)="addQuickExtraCharge()"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            }
+            @if (parameterAction() === 'Less') {
+              <div class="mb-4 flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+                <label class="mb-0.5 block w-40 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]">
+                  Other Charges <span class="text-sm text-red-600">*</span>
+                </label>
+                <div class="flex w-full max-w-md flex-1 flex-wrap items-center gap-2">
+                  <select
+                    class="h-8 min-w-[8rem] flex-1 rounded border border-gray-300 bg-white px-2 text-[10px] lg:text-sm"
+                    [formControl]="quickChargeName"
+                  >
+                    <option value="">— Select —</option>
+                    @for (h of chargeHeads; track h) {
+                      <option [value]="h">{{ h }}</option>
+                    }
+                  </select>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Amount"
+                    [formControl]="quickChargeAmount"
+                    class="h-8 w-[6.5rem] shrink-0 rounded border border-gray-300 bg-white px-2 text-right text-[10px] lg:text-sm"
+                  />
+                  <button
+                    type="button"
+                    class="h-8 shrink-0 cursor-pointer rounded bg-[#4f39f6] px-3 text-[10px] font-medium text-white hover:bg-indigo-500 lg:text-[11px]"
+                    (click)="addQuickExtraCharge()"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            }
+
+            <div class="flex items-center gap-2 xl:gap-3">
+              <input type="checkbox" formControlName="ewayEnabled" id="generateEWaybill" class="size-3 shrink-0 lg:size-4" />
+              <label for="generateEWaybill" class="text-[10px] font-medium text-gray-900 lg:text-[13px]"
+                >Generate E-Waybill along with E-Invoice</label
+              >
+            </div>
+            @if (form.controls.ewayEnabled.value) {
+              <div class="space-y-2 pl-1" formGroupName="ewb">
+                <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <label class="block w-40 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]">
+                    Mode of Transport <span class="text-sm text-red-600">*</span>
+                  </label>
+                  <select class="h-8 w-60 max-w-full rounded border border-gray-300 bg-white px-2 text-[10px] lg:text-sm" formControlName="TransMode">
+                    @for (m of transportModes; track m.value) {
+                      <option [value]="m.value">{{ m.name }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <label class="block w-40 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]">
+                    Vehicle Type <span class="text-sm text-red-600">*</span>
+                  </label>
+                  <select class="h-8 w-60 max-w-full rounded border border-gray-300 bg-white px-2 text-[10px] lg:text-sm" formControlName="VehType">
+                    @for (v of vehicleTypes; track v.value) {
+                      <option [value]="v.value">{{ v.name }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <label class="block w-40 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]">
+                    Vehicle Number <span class="text-sm text-red-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    formControlName="VehNo"
+                    minlength="4"
+                    maxlength="20"
+                    class="h-8 w-60 max-w-full rounded border border-gray-300 px-2 font-mono text-[10px] uppercase lg:text-sm"
+                  />
+                </div>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <label class="block w-40 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]">
+                    Transporter ID
+                  </label>
+                  <input
+                    type="text"
+                    formControlName="TransId"
+                    class="h-8 w-60 max-w-full rounded border border-gray-300 px-2 font-mono text-[10px] uppercase lg:text-sm"
+                    placeholder="Optional"
+                  />
+                </div>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <label class="block w-40 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]">
+                    Distance (km)
+                  </label>
+                  <input
+                    type="number"
+                    formControlName="Distance"
+                    min="0"
+                    class="h-8 w-60 max-w-full rounded border border-gray-300 px-2 text-right text-[10px] lg:text-sm"
+                    placeholder="0"
+                  />
+                </div>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <label class="block w-40 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]">
+                    Transport doc. no.
+                  </label>
+                  <input
+                    type="text"
+                    formControlName="TransDocNo"
+                    class="h-8 w-60 max-w-full rounded border border-gray-300 px-2 text-[10px] lg:text-sm"
+                    placeholder="Optional"
+                  />
+                </div>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <label class="block w-40 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]">
+                    Transport doc. date
+                  </label>
+                  <input type="date" formControlName="TransDocDt" class="h-8 w-60 max-w-full rounded border border-gray-300 px-2 text-[10px] lg:text-sm" />
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="hidden min-h-[1px] w-full lg:block lg:w-1/3" aria-hidden="true"></div>
+
+          <div class="flex w-full min-w-0 flex-col gap-2 lg:w-1/3">
+            <div class="space-y-2" formGroupName="val">
+            <div class="flex items-center gap-4">
+              <label
+                class="block min-w-0 flex-1 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                >Total taxable value <span class="text-sm text-red-600">*</span></label
+              >
+              <input
+                type="number"
+                formControlName="AssVal"
+                class="h-8 min-w-0 flex-1 rounded border border-gray-300 bg-white px-2 py-2 text-right text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:text-sm"
+              />
+            </div>
+            @if (taxTypeLabel() === 'Intra Tax Sales') {
+              <div class="flex items-center gap-4">
+                <label
+                  class="block min-w-0 flex-1 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                  >Total CGST <span class="text-sm text-red-600">*</span></label
+                >
+                <input
+                  type="number"
+                  formControlName="CgstVal"
+                  class="h-8 min-w-0 flex-1 rounded border border-gray-300 bg-white px-2 py-2 text-right text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:text-sm"
+                />
+              </div>
+              <div class="flex items-center gap-4">
+                <label
+                  class="block min-w-0 flex-1 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                  >Total SGST <span class="text-sm text-red-600">*</span></label
+                >
+                <input
+                  type="number"
+                  formControlName="SgstVal"
+                  class="h-8 min-w-0 flex-1 rounded border border-gray-300 bg-white px-2 py-2 text-right text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:text-sm"
+                />
+              </div>
+            } @else {
+              <div class="flex items-center gap-4">
+                <label
+                  class="block min-w-0 flex-1 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                  >Total IGST <span class="text-sm text-red-600">*</span></label
+                >
+                <input
+                  type="number"
+                  formControlName="IgstVal"
+                  class="h-8 min-w-0 flex-1 rounded border border-gray-300 bg-white px-2 py-2 text-right text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:text-sm"
+                />
+              </div>
+            }
+            <div class="flex flex-wrap items-center gap-4">
+              <label
+                class="block min-w-0 flex-1 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+                >TCS charges & all other charges <span class="text-sm text-red-600">*</span></label
+              >
+              <div class="flex min-w-0 flex-1 items-center gap-4">
+                <div class="relative w-1/2 min-w-[6rem]">
+                  <input
+                    type="number"
+                    [formControl]="form.controls.percentage"
+                    class="h-8 w-full rounded border border-gray-300 py-2 pr-6 pl-2 text-right text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:text-sm"
+                  />
+                  <span class="pointer-events-none absolute right-0 top-0 bottom-0 flex items-center px-2 text-gray-500">%</span>
+                </div>
+                <input
+                  type="number"
+                  formControlName="OtherChargesDetails"
+                  class="h-8 w-1/2 min-w-[6rem] rounded border border-gray-300 bg-white px-2 py-2 text-right text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:text-sm"
+                />
+              </div>
+            </div>
+            </div>
+
+          <div class="space-y-2 border-t border-gray-200 pt-2" formArrayName="extraParameters">
+            @for (ep of extraParameters.controls; track $index; let ei = $index) {
+              <div class="flex flex-wrap items-center gap-4" [formGroupName]="ei">
+                <label class="block min-w-0 flex-1 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]">
+                  {{ extraParamAt(ei).get('parameter')?.value }}
+                  @if (extraParamAt(ei).get('type')?.value === 'Add') {
+                    <span class="font-semibold text-green-600">(+) </span>
+                  }
+                  @if (extraParamAt(ei).get('type')?.value === 'Less') {
+                    <span class="font-semibold text-red-600">(-) </span>
+                  }
+                  <span class="text-sm text-red-600">*</span>
+                </label>
+                <input
+                  type="number"
+                  formControlName="value"
+                  class="h-8 min-w-0 flex-1 rounded border border-gray-300 px-2 py-2 text-right text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:text-sm"
+                />
+                <button
+                  type="button"
+                  class="flex h-6 min-w-[20px] cursor-pointer items-center justify-center rounded-md bg-red-600 text-white"
+                  (click)="removeExtraChargeRow(ei)"
+                  aria-label="Remove charge"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.667 48.667 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                    />
+                  </svg>
+                </button>
+              </div>
+            }
+          </div>
+
+          <div class="flex items-center gap-4 border-t border-gray-200 pt-2" formGroupName="val">
+            <label
+              class="block min-w-0 flex-1 text-right text-[10px] font-medium tracking-wide text-gray-500 lg:text-[13px]"
+              >Total invoice value <span class="text-sm text-red-600">*</span></label
+            >
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              formControlName="TotInvVal"
+              class="h-8 min-w-0 flex-1 rounded border border-gray-300 bg-white px-2 py-2 text-right tabular-nums text-[10px] font-medium text-gray-600 focus:outline-none lg:h-8 lg:text-sm"
+            />
+          </div>
+          </div>
+        </div>
+
+        @if (amountInWords()) {
+          <div class="border-b border-t border-gray-200 bg-gray-50 p-3 text-center">
+            <h1 class="text-lg font-normal tracking-wide text-black">
+              Total invoice value in words: <span class="font-semibold">{{ amountInWords() }}</span>
+            </h1>
+          </div>
+        }
+
+        <div class="border-b border-gray-200 bg-white">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-2">
+            <h4 class="text-sm font-semibold text-gray-500">Extra parameters</h4>
+            <button
+              type="button"
+              class="cursor-pointer rounded bg-[#4f39f6] px-3 py-1.5 text-[10px] font-medium text-white hover:bg-indigo-500 lg:text-xs"
+              (click)="addExtraPayloadRow()"
+            >
+              Add row
+            </button>
+          </div>
+          @if (extraPayloadParams.length === 0) {
+            <p class="p-4 text-[10px] text-gray-500 lg:text-xs">
+              Optional key/value pairs (e.g. integration metadata). Add a row when your workflow needs them.
+            </p>
+          } @else {
+            <div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4" formArrayName="extraPayloadParams">
+              @for (pp of extraPayloadParams.controls; track $index; let pi = $index) {
+                <div [formGroupName]="pi">
+                  <label class="mb-0.5 block text-[10px] font-medium text-gray-500 lg:text-[13px]">Key</label>
+                  <input
+                    type="text"
+                    formControlName="parameter"
+                    class="h-8 w-full rounded border border-gray-300 px-2 text-[10px] lg:text-sm"
+                  />
+                  <label class="mb-0.5 mt-2 block text-[10px] font-medium text-gray-500 lg:text-[13px]">Value</label>
+                  <div class="flex gap-2">
+                    <input
+                      type="text"
+                      formControlName="value"
+                      class="h-8 min-w-0 flex-1 rounded border border-gray-300 px-2 text-[10px] lg:text-sm"
+                    />
+                    <button
+                      type="button"
+                      class="shrink-0 rounded border border-gray-300 px-2 text-[10px] text-gray-600 hover:bg-gray-50"
+                      (click)="removeExtraPayloadRow(pi)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

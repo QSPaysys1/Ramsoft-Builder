@@ -1,0 +1,25 @@
+<button
+  type="submit"
+  class="relative flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#2b7fff] p-4 text-base font-medium tracking-wide text-white hover:bg-[#1f6fe0] disabled:cursor-not-allowed disabled:opacity-60"
+  [disabled]="disabled() || loading()"
+>
+  @if (loading()) {
+    <span class="lib-auth-spinner" aria-hidden="true"></span>
+    <span class="sr-only">Loading</span>
+  } @else {
+    <span>{{ label() }}</span>
+    <svg
+      class="size-4 shrink-0"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        fill-rule="evenodd"
+        d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z"
+        clip-rule="evenodd"
+      />
+    </svg>
+  }
+</button>

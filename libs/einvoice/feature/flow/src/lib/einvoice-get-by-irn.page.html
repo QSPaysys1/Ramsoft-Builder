@@ -1,0 +1,145 @@
+<div class="einv-page">
+  <div class="einv-page__inner">
+    <header class="einv-header">
+      <div>
+        <h1 class="einv-header__title">Get e-invoice by IRN</h1>
+        <p class="einv-header__badge">GSTZen · geteinv</p>
+        <p class="einv-result-lead" style="margin-top: 0.75rem; max-width: 40rem">
+          Required fields per GSTZen:
+          <code class="einv-mono">SellerDtls.Gstin</code>
+          (your GSTIN) and
+          <code class="einv-mono">Irn</code>
+          (64-character IRN). Optional:
+          <code class="einv-mono">irp</code>
+          (e.g. NIC1, NIC2); if omitted, your configured IRP is used.
+        </p>
+      </div>
+      <nav class="einv-toolbar">
+        <a class="einv-btn einv-btn--ghost" routerLink="/home">Home</a>
+        <a class="einv-btn einv-btn--primary" [href]="docPageUrl" target="_blank" rel="noopener noreferrer">
+          API documentation
+        </a>
+      </nav>
+    </header>
+
+    <section class="einv-fieldset--compact einv-span-2" style="margin-bottom: 1rem">
+      <legend>Endpoint</legend>
+      <p class="einv-mono" style="margin: 0.5rem 0 0; word-break: break-all; font-size: 0.8125rem">
+        {{ apiEndpoint() }}
+      </p>
+      <p class="einv-result-note" style="margin-top: 0.65rem">
+        Docs:
+        <a [href]="docPageUrl" target="_blank" rel="noopener noreferrer">{{ docPageUrl }}</a>
+      </p>
+    </section>
+
+    <section class="einv-fieldset--compact" style="margin-bottom: 1rem">
+      <legend>Minimal payload (reference)</legend>
+      <pre
+        class="einv-mono"
+        style="
+          margin: 0.65rem 0 0;
+          padding: 0.75rem;
+          border-radius: 0.5rem;
+          background: rgb(248 250 252);
+          border: 1px solid rgb(226 232 240);
+          font-size: 0.75rem;
+          line-height: 1.45;
+          overflow: auto;
+        "
+      >{{ minimalPayloadExample }}</pre>
+    </section>
+
+    <form class="einv-form-stack" [formGroup]="form" (ngSubmit)="submit()">
+      <fieldset class="einv-fieldset--compact">
+        <legend>Request</legend>
+        <div class="einv-compact-grid einv-compact-grid--2">
+          <label class="einv-compact-label">
+            Seller GSTIN (15 characters)
+            <input
+              class="einv-compact-input einv-mono"
+              type="text"
+              formControlName="gstin"
+              name="gstin"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="15"
+              placeholder="e.g. 29AADCG4992P1ZP"
+            />
+          </label>
+          <label class="einv-compact-label">
+            IRP (optional)
+            <input
+              class="einv-compact-input einv-mono"
+              type="text"
+              formControlName="irp"
+              name="irp"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="16"
+              placeholder="e.g. NIC1"
+            />
+          </label>
+        </div>
+        <label class="einv-compact-label" style="margin-top: 0.85rem; display: block">
+          IRN (64 hex characters)
+          <input
+            class="einv-compact-input einv-mono"
+            type="text"
+            formControlName="irn"
+            name="irn"
+            autocomplete="off"
+            spellcheck="false"
+            maxlength="64"
+            placeholder="64-character IRN"
+          />
+        </label>
+        @if (form.controls.gstin.touched && form.controls.gstin.invalid) {
+          <p class="einv-alert" style="margin-top: 0.75rem; margin-bottom: 0">
+            Enter a valid 15-character seller GSTIN.
+          </p>
+        }
+        @if (form.controls.irn.touched && form.controls.irn.invalid) {
+          <p class="einv-alert" style="margin-top: 0.75rem; margin-bottom: 0">
+            Enter a valid 64-character hexadecimal IRN.
+          </p>
+        }
+        @if (form.controls.irp.touched && form.controls.irp.invalid) {
+          <p class="einv-alert" style="margin-top: 0.75rem; margin-bottom: 0">
+            IRP must be alphanumeric (e.g. NIC1), or leave blank.
+          </p>
+        }
+      </fieldset>
+
+      @if (errorMessage()) {
+        <div class="einv-alert">{{ errorMessage() }}</div>
+      }
+
+      <div class="einv-toolbar">
+        <button class="einv-btn einv-btn--primary" type="submit" [disabled]="loading()">
+          {{ loading() ? 'Loading…' : 'Fetch e-invoice' }}
+        </button>
+      </div>
+    </form>
+
+    @if (result()) {
+      <section class="einv-fieldset--compact" style="margin-top: 1.25rem">
+        <legend>Response</legend>
+        <pre
+          class="einv-mono"
+          style="
+            margin: 0.65rem 0 0;
+            max-height: min(70vh, 32rem);
+            overflow: auto;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            background: rgb(248 250 252);
+            border: 1px solid rgb(226 232 240);
+            font-size: 0.75rem;
+            line-height: 1.45;
+          "
+        >{{ result() | json }}</pre>
+      </section>
+    }
+  </div>
+</div>
