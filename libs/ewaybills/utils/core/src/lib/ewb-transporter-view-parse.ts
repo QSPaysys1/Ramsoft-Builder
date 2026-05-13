@@ -1,4 +1,6 @@
 import type {
+  EwbTransporterStateViewResult,
+  EwbTransporterStateViewRow,
   EwbTransporterViewResult,
   EwbTransporterViewRow,
 } from '@ramsoft-builder/ewaybills/models/ewb';
@@ -179,4 +181,44 @@ export function parseEwbTransporterViewResponse(payload: unknown): EwbTransporte
     }
   }
   return { records, raw: payload, notice };
+}
+
+/**
+ * Normalize user input to a 2-digit NIC GST state code (`01`–`38`), or `null` if invalid.
+ */
+export function normalizeEwbTransporterStateCode(raw: string): string | null {
+  const digits = String(raw ?? '')
+    .trim()
+    .replace(/\D/g, '');
+  if (!digits) {
+    return null;
+  }
+  const n = Number(digits);
+  if (!Number.isFinite(n) || n < 1 || n > 38) {
+    return null;
+  }
+  return String(n).padStart(2, '0');
+}
+
+/** True when `code` is already normalized (`normalizeEwbTransporterStateCode(code) === code`). */
+export function ewbTransporterStateViewStateCodeValid(code: string): boolean {
+  const s = String(code ?? '').trim();
+  if (!/^\d{2}$/.test(s)) {
+    return false;
+  }
+  return normalizeEwbTransporterStateCode(s) === s;
+}
+
+/**
+ * Normalizes GSTZen `get-ewb-transporter-state-view` JSON into tabular rows (same envelopes as transporter-view).
+ */
+export function parseEwbTransporterStateViewResponse(
+  payload: unknown,
+): EwbTransporterStateViewResult {
+  const base = parseEwbTransporterViewResponse(payload);
+  return {
+    records: base.records as EwbTransporterStateViewRow[],
+    raw: base.raw,
+    notice: base.notice,
+  };
 }

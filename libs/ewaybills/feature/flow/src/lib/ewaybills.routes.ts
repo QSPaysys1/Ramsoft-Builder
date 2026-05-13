@@ -19,6 +19,13 @@ export const ewaybillsRoutes: Routes = [
       import('./pages/transporter-view.page').then((m) => m.TransporterViewPageComponent),
   },
   {
+    path: 'transporter-state-view',
+    loadComponent: () =>
+      import('./pages/transporter-state-view.page').then(
+        (m) => m.TransporterStateViewPageComponent,
+      ),
+  },
+  {
     path: 'update-part-b',
     loadComponent: () =>
       import('./pages/update-part-b.page').then((m) => m.UpdatePartBPageComponent),

@@ -164,6 +164,44 @@ export interface EwbTransporterViewResult {
   notice?: string;
 }
 
+/**
+ * Query string for GSTZen GET `ewbapi/get-ewb-transporter-state-view/` (`date`, `state_code`, `gstin`).
+ *
+ * @see https://my.gstzen.in/docs/api/ewaybill-api/get-ewb-transporter-state-view/
+ */
+export interface EwbTransporterStateViewQuery {
+  /** ISO calendar date `YYYY-MM-DD` (GSTZen `date` query param). */
+  date: string;
+  /** NIC GST state code, typically two digits e.g. `"07"` (`state_code` query param). */
+  state_code: string;
+  /** Transporter GSTIN (`gstin` query param). */
+  gstin: string;
+}
+
+/**
+ * Normalized row from transporter **state** view; column set matches {@link EwbTransporterViewRow} because GSTZen list payloads align.
+ */
+export interface EwbTransporterStateViewRow {
+  ewbNo: string;
+  ewbDate?: string;
+  validUpto?: string;
+  status?: string;
+  docNo?: string;
+  docDate?: string;
+  fromPlace?: string;
+  toPlace?: string;
+  vehicleNo?: string;
+  transMode?: string;
+  raw: Record<string, unknown>;
+}
+
+/** Result of {@link parseEwbTransporterStateViewResponse} / {@link GstZenEwbApiService#getEwbTransporterStateView}. */
+export interface EwbTransporterStateViewResult {
+  records: EwbTransporterStateViewRow[];
+  raw: unknown;
+  notice?: string;
+}
+
 /** NIC Part-B reason codes for vehicle / transport update (GSTZen samples use string codes). */
 export type EwbPartBReasonCode = '1' | '2' | '3' | '4' | '5';
 

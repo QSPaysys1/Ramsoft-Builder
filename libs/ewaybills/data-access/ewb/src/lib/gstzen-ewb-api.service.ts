@@ -20,6 +20,8 @@ import {
   type EwbGenerateRequest,
   type EwbGenerateSuccess,
   type EwbGetRequest,
+  type EwbTransporterStateViewQuery,
+  type EwbTransporterStateViewResult,
   type EwbTransporterViewQuery,
   type EwbTransporterViewResult,
   type EwbUpdatePartBRequest,
@@ -40,6 +42,8 @@ import {
   parseEwbUpdateTransporterResponse,
   parseEwbTransporterViewResponse,
   ewbTransporterViewQueryDateValid,
+  parseEwbTransporterStateViewResponse,
+  ewbTransporterStateViewStateCodeValid,
 } from '@ramsoft-builder/ewaybills/utils/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { EwbGstZenApiError, mapEwbGstZenHttpError } from './gstzen-ewb-api.error';
@@ -57,6 +61,7 @@ import {
   resolveEwbMvGroupPostUrl,
   resolveEwbChangeMultiVehiclesUrl,
   resolveEwbGetTransporterViewUrl,
+  resolveEwbGetTransporterStateViewUrl,
 } from './gstzen-ewb-http.config';
 
 @Injectable({ providedIn: 'root' })
@@ -189,6 +194,71 @@ export class GstZenEwbApiService {
     const params = new HttpParams().set('date', date).set('gstin', gstin);
     return this.http.get<unknown>(url, { headers, params }).pipe(
       map((res) => parseEwbTransporterViewResponse(res)),
+      catchError((err: unknown) => throwError(() => mapEwbGstZenHttpError(err))),
+    );
+  }
+
+  /**
+   * List e-way bills for a transporter GSTIN on a given date, filtered by supply state (`state_code`).
+   * Uses GSTZen GET `ewbapi/get-ewb-transporter-state-view/` with query `date`, `state_code`, `gstin`.
+   *
+   * @see https://my.gstzen.in/docs/api/ewaybill-api/get-ewb-transporter-state-view/
+   */
+  getEwbTransporterStateView(
+    query: EwbTransporterStateViewQuery,
+    fromGstin?: string,
+  ): Observable<EwbTransporterStateViewResult> {
+    const token = this.resolveEwbToken();
+    if (!token) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'GSTZen API token is not configured. Set `environment.gstZen.token` (and optional `ewbTestToken` for the EWB test toggle) plus `GSTZEN_EWB_HTTP_CONFIG`.',
+          ),
+      );
+    }
+    const date = String(query.date ?? '').trim();
+    const gstin = String(query.gstin ?? '').trim().toUpperCase();
+    const stateCode = String(query.state_code ?? '').trim();
+    if (!ewbTransporterViewQueryDateValid(date)) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'Invalid date: use YYYY-MM-DD (e.g. 2024-01-02) for the transporter state view API.',
+          ),
+      );
+    }
+    if (!ewbTransporterStateViewStateCodeValid(stateCode)) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'Invalid state_code: use a 2-digit GST state code from 01 to 38 (e.g. 07).',
+          ),
+      );
+    }
+    if (!gstinValidator(gstin)) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'Invalid GSTIN: transporter state view requires a 15-character GSTIN.',
+          ),
+      );
+    }
+    const url = resolveEwbGetTransporterStateViewUrl(this.cfg);
+    let headers = new HttpHeaders({ Token: token });
+    const headerGstinRaw = (fromGstin ?? gstin).trim().toUpperCase();
+    if (
+      this.headerPrefs.includeGstinHeader() &&
+      gstinValidator(headerGstinRaw)
+    ) {
+      headers = headers.set('gstin', headerGstinRaw);
+    }
+    const params = new HttpParams()
+      .set('date', date)
+      .set('state_code', stateCode)
+      .set('gstin', gstin);
+    return this.http.get<unknown>(url, { headers, params }).pipe(
+      map((res) => parseEwbTransporterStateViewResponse(res)),
       catchError((err: unknown) => throwError(() => mapEwbGstZenHttpError(err))),
     );
   }

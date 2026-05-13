@@ -67,6 +67,9 @@ export const appConfig: ApplicationConfig = {
         getTransporterViewUrl:
           environment.gstZen.ewbGetTransporterViewUrl?.trim() ||
           'https://my.gstzen.in/~gstzen/a/ewbapi/get-ewb-transporter-view/',
+        getTransporterStateViewUrl:
+          environment.gstZen.ewbGetTransporterStateViewUrl?.trim() ||
+          'https://my.gstzen.in/~gstzen/a/ewbapi/get-ewb-transporter-state-view/',
         token: environment.gstZen.token,
         ewbTestToken: environment.gstZen.ewbTestToken?.trim() || undefined,
       },
