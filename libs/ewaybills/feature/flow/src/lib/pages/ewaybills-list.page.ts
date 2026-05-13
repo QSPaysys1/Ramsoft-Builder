@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -14,9 +13,12 @@ import {
 } from '@ramsoft-builder/ewaybills/data-access/ewb';
 import type {
   EwaybillListView,
+  EwaybillSavedListTransportFilter,
   EwbCancelReasonCode,
 } from '@ramsoft-builder/ewaybills/models/ewb';
 import { EwbInlineAlertComponent } from '@ramsoft-builder/ewaybills/ui/form';
+import { EwbSavedBillsTableComponent } from '@ramsoft-builder/ewaybills/ui/table';
+import { filterEwaybillListByTransport } from '@ramsoft-builder/ewaybills/utils/core';
 
 /** NIC `cancelRsnCode` reference values. */
 const CANCEL_REASONS: ReadonlyArray<{ code: EwbCancelReasonCode; label: string }> = [
@@ -29,7 +31,12 @@ const CANCEL_REASONS: ReadonlyArray<{ code: EwbCancelReasonCode; label: string }
 @Component({
   standalone: true,
   selector: 'lib-ewb-list-page',
-  imports: [RouterLink, ReactiveFormsModule, EwbInlineAlertComponent, DatePipe],
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+    EwbInlineAlertComponent,
+    EwbSavedBillsTableComponent,
+  ],
   templateUrl: './ewaybills-list.page.html',
   styleUrl: './ewaybills-list.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,6 +48,16 @@ export class EwaybillsListPageComponent {
   protected readonly cancelReasons = CANCEL_REASONS;
   protected readonly cancelTarget = signal<EwaybillListView | null>(null);
   protected readonly cancelSuccessMessage = signal<string | null>(null);
+
+  protected readonly transportFilter = signal<EwaybillSavedListTransportFilter>('all');
+  protected readonly filteredRows = computed(() =>
+    filterEwaybillListByTransport(this.store.list(), this.transportFilter()),
+  );
+  protected readonly listEmptyHint = computed(() =>
+    this.store.list().length === 0
+      ? 'No saved e-way bills yet.'
+      : 'No e-way bills match this filter.',
+  );
 
   protected readonly cancelForm = this.fb.nonNullable.group({
     cancelRsnCode: this.fb.nonNullable.control<EwbCancelReasonCode>(
@@ -59,6 +76,10 @@ export class EwaybillsListPageComponent {
 
   constructor() {
     void this.store.loadList();
+  }
+
+  protected onTransportFilterChange(f: EwaybillSavedListTransportFilter): void {
+    this.transportFilter.set(f);
   }
 
   protected canCancel(row: EwaybillListView): boolean {

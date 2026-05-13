@@ -29,6 +29,12 @@ export interface GstZenEnvironment {
    * Default: `https://my.gstzen.in/~gstzen/a/ewbapi/getewb/`
    */
   ewbGetUrl?: string;
+  /**
+   * Standalone update Part B (`ewbapi/updatepartb/`).
+   * Default: `https://my.gstzen.in/~gstzen/a/ewbapi/updatepartb/`
+   * @see https://my.gstzen.in/docs/api/ewaybill-api/update-partb/
+   */
+  ewbUpdatePartBUrl?: string;
   /** API `Token` header (primary / “original” GSTZen token). */
   token: string;
   /** Optional token used only for standalone e-way testing when the app toggle is on. */

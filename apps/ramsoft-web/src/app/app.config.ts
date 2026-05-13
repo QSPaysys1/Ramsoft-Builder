@@ -51,6 +51,9 @@ export const appConfig: ApplicationConfig = {
         getUrl:
           environment.gstZen.ewbGetUrl?.trim() ||
           'https://my.gstzen.in/~gstzen/a/ewbapi/getewb/',
+        updatePartBUrl:
+          environment.gstZen.ewbUpdatePartBUrl?.trim() ||
+          'https://my.gstzen.in/~gstzen/a/ewbapi/update-partb/',
         token: environment.gstZen.token,
         ewbTestToken: environment.gstZen.ewbTestToken?.trim() || undefined,
       },

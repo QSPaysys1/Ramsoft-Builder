@@ -5,6 +5,8 @@ import type {
   EwbGenerateRequest,
   EwbGenerateSuccess,
   EwaybillListView,
+  EwaybillDbRow,
+  EwbUpdatePartBRequest,
 } from '@ramsoft-builder/ewaybills/models/ewb';
 import {
   readFinancialYearKeyBrowser,
@@ -41,12 +43,19 @@ function messageFromUnknown(err: unknown, fallback: string): string {
 
 export type EwaybillCreateStatus = 'idle' | 'loading' | 'success' | 'error';
 export type EwaybillCancelStatus = 'idle' | 'loading' | 'success' | 'error';
+export type EwaybillPartBStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export interface EwaybillCancelInput {
   id: string;
   ewbNo: string;
   cancelRsnCode: EwbCancelReasonCode;
   cancelRmrk?: string;
+  fromGstin?: string;
+}
+
+export interface EwaybillPartBSubmitInput {
+  ewaybillId: string;
+  body: EwbUpdatePartBRequest;
   fromGstin?: string;
 }
 
@@ -67,6 +76,10 @@ export class EwaybillStore {
   readonly cancelStatus = signal<EwaybillCancelStatus>('idle');
   readonly cancelError = signal<string | null>(null);
   readonly cancelingId = signal<string | null>(null);
+
+  readonly partBStatus = signal<EwaybillPartBStatus>('idle');
+  readonly partBError = signal<string | null>(null);
+  readonly lastPartBApiResponse = signal<Record<string, unknown> | null>(null);
 
   readonly lastEwbNo = computed(() => this.lastSuccess()?.ewbNo ?? null);
 
@@ -170,6 +183,19 @@ export class EwaybillStore {
     }
   }
 
+  dismissPartBError(): void {
+    if (this.partBStatus() === 'error') {
+      this.partBStatus.set('idle');
+      this.partBError.set(null);
+    }
+  }
+
+  resetPartBUi(): void {
+    this.partBStatus.set('idle');
+    this.partBError.set(null);
+    this.lastPartBApiResponse.set(null);
+  }
+
   async cancelEwaybill(input: EwaybillCancelInput): Promise<void> {
     if (this.cancelStatus() === 'loading') {
       return;
@@ -206,6 +232,110 @@ export class EwaybillStore {
       );
     } finally {
       this.cancelingId.set(null);
+    }
+  }
+
+  async submitPartBUpdate(input: EwaybillPartBSubmitInput): Promise<void> {
+    if (this.partBStatus() === 'loading') {
+      return;
+    }
+    this.partBError.set(null);
+    this.lastPartBApiResponse.set(null);
+    this.partBStatus.set('loading');
+    const uid = this.authStore.user()?.id;
+    if (!uid) {
+      this.partBStatus.set('error');
+      this.partBError.set('Not signed in.');
+      return;
+    }
+    let existing: EwaybillDbRow | null = null;
+    try {
+      existing = await this.repo.getById(uid, input.ewaybillId);
+    } catch {
+      /* ignore */
+    }
+    const veh = (existing?.vehicle_details ?? {}) as Record<string, unknown>;
+    const reqp = (existing?.request_payload ?? {}) as Record<string, unknown>;
+    const tr = (existing?.transporter_details ?? {}) as Record<string, unknown>;
+    const vehicleBefore = String(
+      (typeof veh['vehicleNo'] === 'string' ? veh['vehicleNo'] : '') ||
+        (typeof reqp['vehicleNo'] === 'string' ? reqp['vehicleNo'] : '') ||
+        '',
+    )
+      .toUpperCase()
+      .replace(/\s+/g, '');
+    const vehicleAfter = String(input.body.vehicleNo)
+      .toUpperCase()
+      .replace(/\s+/g, '');
+    const vehicleChanged = !!vehicleAfter && vehicleAfter !== vehicleBefore;
+    const prevCountRaw = existing?.transport_success_count;
+    const prevCount =
+      typeof prevCountRaw === 'number' && Number.isFinite(prevCountRaw)
+        ? prevCountRaw
+        : 0;
+
+    try {
+      const res = await firstValueFrom(
+        this.api.updatePartB(input.body, input.fromGstin),
+      );
+      this.lastPartBApiResponse.set(res.raw);
+      await this.repo.insertTransportUpdate(uid, {
+        eway_bill_id: input.ewaybillId,
+        request_payload: sanitizeUndefinedDeep(
+          input.body as unknown as Record<string, unknown>,
+        ) as Record<string, unknown>,
+        response: sanitizeUndefinedDeep(res.raw) as Record<string, unknown>,
+        status: 'success',
+        vehicle_no_before: vehicleBefore || null,
+        vehicle_no_after: vehicleAfter || null,
+      });
+      await this.repo.updateById(uid, input.ewaybillId, {
+        transport_last_status: 'success',
+        transport_last_at: new Date().toISOString(),
+        transport_success_count: prevCount + 1,
+        transport_last_vehicle_changed: vehicleChanged,
+        vehicle_details: sanitizeUndefinedDeep({
+          ...veh,
+          vehicleNo: input.body.vehicleNo,
+        }) as Record<string, unknown>,
+        transporter_details: sanitizeUndefinedDeep({
+          ...tr,
+          transMode: input.body.transMode,
+          transDocNo: input.body.transDocNo,
+          transDocDate: input.body.transDocDate,
+        }) as Record<string, unknown>,
+      });
+      await this.loadList();
+      this.partBStatus.set('success');
+    } catch (err) {
+      const errMsg = messageFromUnknown(err, 'Update Part B failed.');
+      this.partBError.set(errMsg);
+      let errBody: Record<string, unknown> = { message: errMsg };
+      if (err instanceof EwbGstZenApiError && err.body && typeof err.body === 'object') {
+        errBody = err.body as Record<string, unknown>;
+      }
+      this.lastPartBApiResponse.set(errBody);
+      try {
+        await this.repo.insertTransportUpdate(uid, {
+          eway_bill_id: input.ewaybillId,
+          request_payload: sanitizeUndefinedDeep(
+            input.body as unknown as Record<string, unknown>,
+          ) as Record<string, unknown>,
+          response: sanitizeUndefinedDeep(errBody) as Record<string, unknown>,
+          status: 'failed',
+          error_message: errMsg,
+          vehicle_no_before: vehicleBefore || null,
+          vehicle_no_after: vehicleAfter || null,
+        });
+        await this.repo.updateById(uid, input.ewaybillId, {
+          transport_last_status: 'failed',
+          transport_last_at: new Date().toISOString(),
+        });
+        await this.loadList();
+      } catch {
+        /* best-effort audit */
+      }
+      this.partBStatus.set('error');
     }
   }
 }

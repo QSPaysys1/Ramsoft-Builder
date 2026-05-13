@@ -121,3 +121,47 @@ export interface EwbGetRequest {
   /** 12-digit e-way bill number (number or numeric string in JSON). */
   ewbNo: string | number;
 }
+
+/** NIC Part-B reason codes for vehicle / transport update (GSTZen samples use string codes). */
+export type EwbPartBReasonCode = '1' | '2' | '3' | '4' | '5';
+
+/** Transport mode codes (1 Road … 4 Ship), string in JSON per NIC samples. */
+export type EwbTransModeCode = '1' | '2' | '3' | '4';
+
+/**
+ * GSTZen standalone update Part B POST body (`ewbapi/updatepartb/`).
+ * CamelCase field names match GSTZen e-way API docs (same style as generate/cancel).
+ *
+ * @see https://my.gstzen.in/docs/api/ewaybill-api/update-partb/
+ */
+export interface EwbUpdatePartBRequest {
+  ewbNo: string | number;
+  fromPlace: string;
+  fromState: number;
+  reasonCode: string;
+  reasonRem: string;
+  transDocDate: string;
+  transDocNo: string;
+  transMode: string;
+  vehicleNo: string;
+}
+
+/** Normalized success after {@link parseEwbUpdatePartBResponse}. */
+export interface EwbUpdatePartBSuccess {
+  ewbNo?: string;
+  vehUpdDate?: string;
+  raw: Record<string, unknown>;
+}
+
+export interface EwbUpdatePartBErrorShape {
+  message: string;
+  raw: Record<string, unknown>;
+}
+
+export type EwbUpdatePartBParsed = EwbUpdatePartBSuccess | EwbUpdatePartBErrorShape;
+
+export function isEwbUpdatePartBSuccess(
+  p: EwbUpdatePartBParsed,
+): p is EwbUpdatePartBSuccess {
+  return !('message' in p);
+}

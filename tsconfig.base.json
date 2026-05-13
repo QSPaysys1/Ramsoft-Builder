@@ -65,6 +65,9 @@
       "@ramsoft-builder/ewaybills/ui/form": [
         "libs/ewaybills/ui/form/src/index.ts"
       ],
+      "@ramsoft-builder/ewaybills/ui/table": [
+        "libs/ewaybills/ui/table/src/index.ts"
+      ],
       "@ramsoft-builder/ewaybills/utils/core": [
         "libs/ewaybills/utils/core/src/index.ts"
       ],

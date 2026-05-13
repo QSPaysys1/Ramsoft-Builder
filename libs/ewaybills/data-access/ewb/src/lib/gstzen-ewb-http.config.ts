@@ -3,6 +3,7 @@ import {
   GSTZEN_EWB_CANCEL_URL_DEFAULT,
   GSTZEN_EWB_GENERATE_URL_DEFAULT,
   GSTZEN_EWB_GET_URL_DEFAULT,
+  GSTZEN_EWB_UPDATE_PARTB_URL_DEFAULT,
 } from './ewb.constants';
 
 export interface GstZenEwbHttpConfig {
@@ -12,6 +13,8 @@ export interface GstZenEwbHttpConfig {
   cancelUrl?: string;
   /** Full get-by-number POST URL (optional; default {@link GSTZEN_EWB_GET_URL_DEFAULT}). */
   getUrl?: string;
+  /** Full update Part B POST URL (optional; default {@link GSTZEN_EWB_UPDATE_PARTB_URL_DEFAULT}). */
+  updatePartBUrl?: string;
   /** Primary GSTZen `Token` (e.g. “original” workspace). */
   token: string;
   /** Optional second token for e-way-only testing; used when topbar “EWB test token” is on. */
@@ -35,4 +38,9 @@ export function resolveEwbCancelUrl(cfg: GstZenEwbHttpConfig): string {
 export function resolveEwbGetUrl(cfg: GstZenEwbHttpConfig): string {
   const u = cfg.getUrl?.trim();
   return (u || GSTZEN_EWB_GET_URL_DEFAULT).trim();
+}
+
+export function resolveEwbUpdatePartBUrl(cfg: GstZenEwbHttpConfig): string {
+  const u = cfg.updatePartBUrl?.trim();
+  return (u || GSTZEN_EWB_UPDATE_PARTB_URL_DEFAULT).trim();
 }

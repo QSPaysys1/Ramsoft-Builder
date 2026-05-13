@@ -6,6 +6,8 @@ import type {
   EwbGenerateRequest,
   EwbGenerateSuccess,
   EwbItemLine,
+  EwbUpdatePartBParsed,
+  EwbUpdatePartBSuccess,
 } from '@ramsoft-builder/ewaybills/models/ewb';
 import { normalizeDocDateForApi } from './ewb-date-format';
 
@@ -296,6 +298,54 @@ export function parseEwbCancelResponse(
     message:
       extractGstZenErrorMessage(flat) ||
       'Unexpected response from GSTZen (cancel).',
+    raw: body,
+  };
+}
+
+/** Parse GSTZen / NIC update-vehicle (Part B) JSON. */
+export function parseEwbUpdatePartBResponse(
+  body: Record<string, unknown>,
+): EwbUpdatePartBParsed {
+  const flat = flattenEwbCancelPayload(body);
+  const hasErr =
+    isNicStyleCancelFailure(flat) ||
+    flat['Success'] === 'N' ||
+    flat['Success'] === false ||
+    (Array.isArray(flat['ErrorDetails']) &&
+      (flat['ErrorDetails'] as unknown[]).length > 0);
+  if (hasErr) {
+    return { message: extractGstZenErrorMessage(flat), raw: body };
+  }
+  const vehUpdDate = pickStr(flat, [
+    'VehUpdDate',
+    'vehUpdDate',
+    'VehicleUpdDate',
+    'vehicleUpdDate',
+  ]);
+  const ewbNo =
+    pickStr(flat, ['EwbNo', 'ewbNo', 'ewayBillNo', 'EwbNum']) ||
+    pickNestedSigned(flat) ||
+    pickStrLoose(flat, ['EwbNo', 'ewbNo', 'ewayBillNo', 'EwbNum']);
+  if (vehUpdDate || ewbNo) {
+    const success: EwbUpdatePartBSuccess = {
+      ewbNo,
+      vehUpdDate,
+      raw: body,
+    };
+    return success;
+  }
+  if (isNicStyleCancelSuccess(flat)) {
+    const success: EwbUpdatePartBSuccess = {
+      ewbNo,
+      vehUpdDate,
+      raw: body,
+    };
+    return success;
+  }
+  return {
+    message:
+      extractGstZenErrorMessage(flat) ||
+      'Unexpected response from GSTZen (update Part B).',
     raw: body,
   };
 }

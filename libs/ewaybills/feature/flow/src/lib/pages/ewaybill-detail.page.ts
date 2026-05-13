@@ -3,7 +3,10 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthStore } from '@ramsoft-builder/auth/data-access/auth';
-import type { EwaybillDbRow } from '@ramsoft-builder/ewaybills/models/ewb';
+import type {
+  EwaybillDbRow,
+  EwaybillTransportUpdateDbRow,
+} from '@ramsoft-builder/ewaybills/models/ewb';
 import { EwaybillRepository } from '@ramsoft-builder/ewaybills/data-access/ewb';
 import { EwbInlineAlertComponent } from '@ramsoft-builder/ewaybills/ui/form';
 
@@ -23,6 +26,10 @@ export class EwaybillDetailPageComponent {
 
   protected readonly row = signal<EwaybillDbRow | null | undefined>(undefined);
   protected readonly loadError = signal<string | null>(null);
+  protected readonly transportUpdates = signal<
+    EwaybillTransportUpdateDbRow[] | undefined
+  >(undefined);
+  protected readonly transportLoadError = signal<string | null>(null);
 
   constructor() {
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((pm) => {
@@ -32,22 +39,40 @@ export class EwaybillDetailPageComponent {
 
   private async load(id: string | null): Promise<void> {
     this.loadError.set(null);
+    this.transportLoadError.set(null);
+    this.transportUpdates.set(undefined);
     this.row.set(undefined);
     if (!id) {
       this.row.set(null);
+      this.transportUpdates.set([]);
       return;
     }
     const uid = this.authStore.user()?.id;
     if (!uid) {
       this.row.set(null);
+      this.transportUpdates.set([]);
       return;
     }
     try {
       const r = await this.repo.getById(uid, id);
       this.row.set(r ?? null);
+      if (r) {
+        try {
+          const logs = await this.repo.listTransportUpdatesForEwaybill(uid, id);
+          this.transportUpdates.set(logs);
+        } catch (e) {
+          this.transportLoadError.set(
+            e instanceof Error ? e.message : 'Failed to load Part B history.',
+          );
+          this.transportUpdates.set([]);
+        }
+      } else {
+        this.transportUpdates.set([]);
+      }
     } catch (e) {
       this.loadError.set(e instanceof Error ? e.message : 'Failed to load.');
       this.row.set(null);
+      this.transportUpdates.set([]);
     }
   }
 }

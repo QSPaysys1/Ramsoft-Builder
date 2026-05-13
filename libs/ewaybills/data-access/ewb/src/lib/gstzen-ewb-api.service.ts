@@ -3,17 +3,21 @@ import { inject, Injectable } from '@angular/core';
 import {
   isEwbCancelSuccess,
   isEwbGenerateSuccess,
+  isEwbUpdatePartBSuccess,
   type EwbCancelReasonCode,
   type EwbCancelRequest,
   type EwbCancelSuccess,
   type EwbGenerateRequest,
   type EwbGenerateSuccess,
   type EwbGetRequest,
+  type EwbUpdatePartBRequest,
+  type EwbUpdatePartBSuccess,
 } from '@ramsoft-builder/ewaybills/models/ewb';
 import {
   gstinValidator,
   parseEwbCancelResponse,
   parseEwbGenerateResponse,
+  parseEwbUpdatePartBResponse,
 } from '@ramsoft-builder/ewaybills/utils/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { EwbGstZenApiError, mapEwbGstZenHttpError } from './gstzen-ewb-api.error';
@@ -24,6 +28,7 @@ import {
   resolveEwbCancelUrl,
   resolveEwbGenerateUrl,
   resolveEwbGetUrl,
+  resolveEwbUpdatePartBUrl,
 } from './gstzen-ewb-http.config';
 
 @Injectable({ providedIn: 'root' })
@@ -154,6 +159,62 @@ export class GstZenEwbApiService {
             typeof parsed.message === 'string' && parsed.message.trim()
               ? parsed.message.trim()
               : 'E-way bill could not be cancelled (unrecognized GSTZen response).';
+          throw new EwbGstZenApiError(msg, 200, res);
+        }
+        return parsed;
+      }),
+      catchError((err: unknown) => throwError(() => mapEwbGstZenHttpError(err))),
+    );
+  }
+
+  /**
+   * Update vehicle / Part B via GSTZen `ewbapi/updatepartb/` (URL configurable).
+   *
+   * @see https://my.gstzen.in/docs/api/ewaybill-api/update-partb/
+   * @param body JSON body per GSTZen update Part B documentation.
+   * @param fromGstin Optional GSTIN for the `gstin` header when the app toggle is on.
+   */
+  updatePartB(
+    body: EwbUpdatePartBRequest,
+    fromGstin?: string,
+  ): Observable<EwbUpdatePartBSuccess> {
+    const token = this.resolveEwbToken();
+    if (!token) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'GSTZen API token is not configured. Set `environment.gstZen.token` (and optional `ewbTestToken` for the EWB test toggle) plus `GSTZEN_EWB_HTTP_CONFIG`.',
+          ),
+      );
+    }
+    const url = resolveEwbUpdatePartBUrl(this.cfg);
+    let headers = new HttpHeaders({
+      Token: token,
+      'Content-Type': 'application/json',
+    });
+    if (
+      this.headerPrefs.includeGstinHeader() &&
+      fromGstin &&
+      gstinValidator(fromGstin)
+    ) {
+      headers = headers.set('gstin', String(fromGstin).trim().toUpperCase());
+    }
+    const ewbNoNorm =
+      typeof body.ewbNo === 'string'
+        ? Number(String(body.ewbNo).replace(/\s+/g, ''))
+        : body.ewbNo;
+    const payload: EwbUpdatePartBRequest = {
+      ...body,
+      ewbNo: ewbNoNorm,
+    };
+    return this.http.post<Record<string, unknown>>(url, payload, { headers }).pipe(
+      map((res) => {
+        const parsed = parseEwbUpdatePartBResponse(res);
+        if (!isEwbUpdatePartBSuccess(parsed)) {
+          const msg =
+            typeof parsed.message === 'string' && parsed.message.trim()
+              ? parsed.message.trim()
+              : 'E-way bill Part B could not be updated (unrecognized GSTZen response).';
           throw new EwbGstZenApiError(msg, 200, res);
         }
         return parsed;

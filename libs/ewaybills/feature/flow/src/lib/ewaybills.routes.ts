@@ -18,6 +18,11 @@ export const ewaybillsRoutes: Routes = [
       import('./pages/get-ewaybill.page').then((m) => m.GetEwaybillPageComponent),
   },
   {
+    path: 'update-part-b',
+    loadComponent: () =>
+      import('./pages/update-part-b.page').then((m) => m.UpdatePartBPageComponent),
+  },
+  {
     path: ':id',
     loadComponent: () =>
       import('./pages/ewaybill-detail.page').then((m) => m.EwaybillDetailPageComponent),
