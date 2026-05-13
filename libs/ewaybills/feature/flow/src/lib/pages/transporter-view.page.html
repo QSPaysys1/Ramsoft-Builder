@@ -1,0 +1,166 @@
+<div class="ewb-create">
+  <div class="ewb-create__bg" aria-hidden="true"></div>
+
+  <div class="ewb-create__shell">
+    <header class="ewb-create__hero">
+      <div class="ewb-create__hero-text">
+        <p class="ewb-create__eyebrow">GSTZen · transporter view</p>
+        <h1 class="ewb-create__title">EWB transporter view</h1>
+        <p class="ewb-create__lede">
+          GET
+          <code class="ewb-create__lede-code">date</code>
+          (YYYY-MM-DD) and transporter
+          <code class="ewb-create__lede-code">gstin</code>
+          — lists e-way bills for that transporter on the given date. The
+          <code class="ewb-create__lede-code">Token</code>
+          header matches other standalone e-way calls; optional
+          <code class="ewb-create__lede-code">gstin</code>
+          header follows your top-bar preference.
+        </p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-start">
+        <a routerLink="/home" class="ewb-create__back">
+          <span class="ewb-create__back-icon" aria-hidden="true">←</span>
+          Home
+        </a>
+        <a routerLink="/ewaybills/list" class="ewb-create__back">
+          <span class="ewb-create__back-icon" aria-hidden="true">←</span>
+          All e-way bills
+        </a>
+        <a
+          class="ewb-btn ewb-btn--primary"
+          [href]="docPageUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          style="text-decoration: none"
+        >
+          API documentation
+        </a>
+      </div>
+    </header>
+
+    <p class="ewb-get__endpoint">
+      <strong>Endpoint</strong><br />
+      {{ apiEndpoint() }}
+    </p>
+
+    @if (includeGstinHeader()) {
+      <lib-ewb-inline-alert
+        [message]="
+          'GSTIN header is ON: the transporter GSTIN below is also sent as the gstin HTTP header.'
+        "
+        kind="info"
+      />
+    }
+
+    <form class="ewb-create__form" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="ewb-subsection ewb-subsection--band">
+        <h2 class="ewb-subsection__title">Request</h2>
+        <div class="ewb-grid ewb-grid--2">
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Date <span class="ewb-req">*</span> (YYYY-MM-DD)</span>
+            <input
+              class="ewb-input"
+              type="date"
+              formControlName="date"
+              name="date"
+              autocomplete="off"
+            />
+            @if (form.controls.date.touched && form.controls.date.hasError('required')) {
+              <span class="ewb-field__error">Date is required.</span>
+            }
+            @if (form.controls.date.touched && form.controls.date.hasError('dateInvalid')) {
+              <span class="ewb-field__error">Use a valid calendar date as YYYY-MM-DD.</span>
+            }
+          </label>
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Transporter GSTIN <span class="ewb-req">*</span></span>
+            <input
+              class="ewb-input"
+              type="text"
+              formControlName="gstin"
+              name="gstin"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="15"
+              placeholder="e.g. 29AAFCC9980M1ZR"
+            />
+            @if (form.controls.gstin.touched && form.controls.gstin.hasError('required')) {
+              <span class="ewb-field__error">Transporter GSTIN is required.</span>
+            }
+            @if (form.controls.gstin.touched && form.controls.gstin.hasError('gstin')) {
+              <span class="ewb-field__error">Enter a valid 15-character GSTIN.</span>
+            }
+          </label>
+        </div>
+      </div>
+
+      <lib-ewb-inline-alert [message]="errorMessage()" kind="error" />
+
+      <div class="ewb-create__footer-actions">
+        <button class="ewb-btn ewb-btn--primary" type="submit" [disabled]="loading()">
+          {{ loading() ? 'Loading…' : 'Fetch transporter view' }}
+        </button>
+        @if (errorMessage()) {
+          <button class="ewb-btn" type="button" [disabled]="loading()" (click)="retrySubmit()">
+            Retry
+          </button>
+          <button class="ewb-btn" type="button" [disabled]="loading()" (click)="dismissError()">
+            Dismiss
+          </button>
+        }
+      </div>
+    </form>
+
+    @if (result(); as view) {
+      @if (view.notice && !hasRows()) {
+        <lib-ewb-inline-alert [message]="view.notice" kind="info" />
+      }
+      @if (!hasRows()) {
+        <section class="ewb-get__result">
+          <p class="ewb-create__lede" style="margin: 0">
+            No e-way bill rows were returned for this date and transporter GSTIN. If you expected data,
+            confirm the GSTIN is registered as a transporter in your GSTZen workspace and the date is
+            correct.
+          </p>
+        </section>
+      } @else {
+        <section class="ewb-get__result">
+          <h2 class="ewb-subsection__title">Results ({{ view.records.length }})</h2>
+          <div style="overflow-x: auto">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem">
+              <thead>
+                <tr style="border-bottom: 1px solid #e2e8f0; text-align: left">
+                  <th style="padding: 0.5rem 0.75rem">EWB no.</th>
+                  <th style="padding: 0.5rem 0.75rem">EWB date</th>
+                  <th style="padding: 0.5rem 0.75rem">Valid upto</th>
+                  <th style="padding: 0.5rem 0.75rem">Status</th>
+                  <th style="padding: 0.5rem 0.75rem">Doc no.</th>
+                  <th style="padding: 0.5rem 0.75rem">Vehicle</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of view.records; track $index) {
+                  <tr style="border-bottom: 1px solid #f1f5f9">
+                    <td style="padding: 0.5rem 0.75rem; font-variant-numeric: tabular-nums">
+                      {{ r.ewbNo || '—' }}
+                    </td>
+                    <td style="padding: 0.5rem 0.75rem">{{ r.ewbDate ?? '—' }}</td>
+                    <td style="padding: 0.5rem 0.75rem">{{ r.validUpto ?? '—' }}</td>
+                    <td style="padding: 0.5rem 0.75rem">{{ r.status ?? '—' }}</td>
+                    <td style="padding: 0.5rem 0.75rem">{{ r.docNo ?? '—' }}</td>
+                    <td style="padding: 0.5rem 0.75rem">{{ r.vehicleNo ?? '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+      <section class="ewb-get__result">
+        <h2 class="ewb-subsection__title">Raw response</h2>
+        <pre>{{ view.raw | json }}</pre>
+      </section>
+    }
+  </div>
+</div>

@@ -64,6 +64,9 @@ export const appConfig: ApplicationConfig = {
         mvGroupPostUrl: environment.gstZen.ewbMvGroupPostUrl?.trim() || undefined,
         changeMultiVehiclesUrl:
           environment.gstZen.ewbChangeMultiVehiclesUrl?.trim() || undefined,
+        getTransporterViewUrl:
+          environment.gstZen.ewbGetTransporterViewUrl?.trim() ||
+          'https://my.gstzen.in/~gstzen/a/ewbapi/get-ewb-transporter-view/',
         token: environment.gstZen.token,
         ewbTestToken: environment.gstZen.ewbTestToken?.trim() || undefined,
       },

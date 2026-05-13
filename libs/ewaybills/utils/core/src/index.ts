@@ -5,3 +5,4 @@ export * from './lib/ewb-partb-ui-options';
 export * from './lib/ewb-update-partb-draft';
 export * from './lib/ewb-extend-draft';
 export * from './lib/ewb-saved-list-filter';
+export * from './lib/ewb-transporter-view-parse';

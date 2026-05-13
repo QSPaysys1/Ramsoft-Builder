@@ -8,6 +8,7 @@ import {
   GSTZEN_EWB_MULTI_VEHICLE_URL_DEFAULT,
   GSTZEN_EWB_UPDATE_PARTB_URL_DEFAULT,
   GSTZEN_EWB_UPDATE_TRANSPORTER_URL_DEFAULT,
+  GSTZEN_EWB_GET_TRANSPORTER_VIEW_URL_DEFAULT,
   GSTZEN_EWB_EXTEND_URL_DEFAULT,
 } from './ewb.constants';
 
@@ -36,6 +37,11 @@ export interface GstZenEwbHttpConfig {
    * Defaults to {@link GSTZEN_EWB_CHANGE_MULTI_VEHICLES_URL_DEFAULT}.
    */
   changeMultiVehiclesUrl?: string;
+  /**
+   * GET URL for transporter e-way list (`ewbapi/get-ewb-transporter-view/`, query `date`, `gstin`).
+   * Defaults to {@link GSTZEN_EWB_GET_TRANSPORTER_VIEW_URL_DEFAULT}.
+   */
+  getTransporterViewUrl?: string;
   /** Primary GSTZen `Token` (e.g. “original” workspace). */
   token: string;
   /** Optional second token for e-way-only testing; used when topbar “EWB test token” is on. */
@@ -89,4 +95,9 @@ export function resolveEwbMvGroupPostUrl(cfg: GstZenEwbHttpConfig): string {
 export function resolveEwbChangeMultiVehiclesUrl(cfg: GstZenEwbHttpConfig): string {
   const u = cfg.changeMultiVehiclesUrl?.trim();
   return (u || GSTZEN_EWB_CHANGE_MULTI_VEHICLES_URL_DEFAULT).trim();
+}
+
+export function resolveEwbGetTransporterViewUrl(cfg: GstZenEwbHttpConfig): string {
+  const u = cfg.getTransporterViewUrl?.trim();
+  return (u || GSTZEN_EWB_GET_TRANSPORTER_VIEW_URL_DEFAULT).trim();
 }

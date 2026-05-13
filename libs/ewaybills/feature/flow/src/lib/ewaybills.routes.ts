@@ -12,10 +12,11 @@ export const ewaybillsRoutes: Routes = [
     loadComponent: () =>
       import('./pages/create-ewaybill.page').then((m) => m.CreateEwaybillPageComponent),
   },
+  { path: 'get', loadComponent: () => import('./pages/get-ewaybill.page').then((m) => m.GetEwaybillPageComponent) },
   {
-    path: 'get',
+    path: 'transporter-view',
     loadComponent: () =>
-      import('./pages/get-ewaybill.page').then((m) => m.GetEwaybillPageComponent),
+      import('./pages/transporter-view.page').then((m) => m.TransporterViewPageComponent),
   },
   {
     path: 'update-part-b',

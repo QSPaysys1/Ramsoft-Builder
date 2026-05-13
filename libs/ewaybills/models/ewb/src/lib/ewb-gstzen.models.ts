@@ -122,6 +122,48 @@ export interface EwbGetRequest {
   ewbNo: string | number;
 }
 
+/**
+ * Query string for GSTZen GET `ewbapi/get-ewb-transporter-view/` (`date`, `gstin`).
+ *
+ * @see https://my.gstzen.in/docs/api/ewaybill-api/get-ewb-transporter-view/
+ */
+export interface EwbTransporterViewQuery {
+  /** ISO calendar date `YYYY-MM-DD` (GSTZen `date` query param). */
+  date: string;
+  /** Transporter GSTIN (`gstin` query param). */
+  gstin: string;
+}
+
+/**
+ * One normalized row from the transporter-view list; `raw` keeps the original object for forward compatibility.
+ */
+export interface EwbTransporterViewRow {
+  /** 12-digit EWB number when present on the payload. */
+  ewbNo: string;
+  ewbDate?: string;
+  validUpto?: string;
+  status?: string;
+  docNo?: string;
+  docDate?: string;
+  fromPlace?: string;
+  toPlace?: string;
+  vehicleNo?: string;
+  transMode?: string;
+  raw: Record<string, unknown>;
+}
+
+/** Result of {@link parseEwbTransporterViewResponse} / {@link GstZenEwbApiService#getEwbTransporterView}. */
+export interface EwbTransporterViewResult {
+  records: EwbTransporterViewRow[];
+  /** Original JSON from GSTZen (array, object, or envelope). */
+  raw: unknown;
+  /**
+   * When the API returns HTTP 200 with a message and no list (or empty list),
+   * this surfaces `message` / `error` text for the UI without treating it as a client error.
+   */
+  notice?: string;
+}
+
 /** NIC Part-B reason codes for vehicle / transport update (GSTZen samples use string codes). */
 export type EwbPartBReasonCode = '1' | '2' | '3' | '4' | '5';
 

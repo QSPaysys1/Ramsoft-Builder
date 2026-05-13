@@ -27,6 +27,8 @@ export const environment = {
     ewbMultiVehicleUrl: undefined as string | undefined,
     ewbMvGroupPostUrl: undefined as string | undefined,
     ewbChangeMultiVehiclesUrl: undefined as string | undefined,
+    ewbGetTransporterViewUrl:
+      'https://my.gstzen.in/~gstzen/a/ewbapi/get-ewb-transporter-view/',
     token: '',
     ewbTestToken: undefined as string | undefined,
   } satisfies GstZenEnvironment,

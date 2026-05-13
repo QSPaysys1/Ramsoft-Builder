@@ -42,6 +42,13 @@ export interface GstZenEnvironment {
    */
   ewbUpdateTransporterUrl?: string;
   /**
+   * GET `ewbapi/get-ewb-transporter-view/` (query `date`, `gstin`).
+   * Default: `https://my.gstzen.in/~gstzen/a/ewbapi/get-ewb-transporter-view/`
+   *
+   * @see https://my.gstzen.in/docs/api/ewaybill-api/get-ewb-transporter-view/
+   */
+  ewbGetTransporterViewUrl?: string;
+  /**
    * Standalone extend e-way (`ewbapi/extend/`).
    * Default: `https://my.gstzen.in/~gstzen/a/ewbapi/extend/`
    * @see https://my.gstzen.in/docs/api/ewaybill-api/extend-eway-bill/
