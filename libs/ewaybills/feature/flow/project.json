@@ -8,7 +8,8 @@
   "implicitDependencies": [
     "e-invoices-data-access-einvoice",
     "e-invoices-feature-create",
-    "ewaybills-ui-table"
+    "ewaybills-ui-table",
+    "auth-ui-login"
   ],
   "targets": {
     "lint": {

@@ -15,6 +15,12 @@
         Update Part-B
       </a>
       <a
+        routerLink="/ewaybills/update-transporter"
+        class="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-900"
+      >
+        Update transporter
+      </a>
+      <a
         routerLink="/ewaybills/create"
         class="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
       >
@@ -33,6 +39,7 @@
     [showTransportFilters]="true"
     [transportFilter]="transportFilter()"
     [showUpdatePartB]="true"
+    [showUpdateTransporter]="true"
     [showCancel]="true"
     [skipRowSelect]="true"
     (transportFilterChange)="onTransportFilterChange($event)"

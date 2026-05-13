@@ -19,3 +19,7 @@ export const GSTZEN_EWB_GET_URL_DEFAULT =
 /** GSTZen standalone update Part B (override via environment). */
 export const GSTZEN_EWB_UPDATE_PARTB_URL_DEFAULT =
   'https://my.gstzen.in/~gstzen/a/ewbapi/updatepartb/' as const;
+
+/** GSTZen standalone update transporter (override via environment). */
+export const GSTZEN_EWB_UPDATE_TRANSPORTER_URL_DEFAULT =
+  'https://my.gstzen.in/~gstzen/a/ewbapi/update-transporter/' as const;

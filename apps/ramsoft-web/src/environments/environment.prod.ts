@@ -21,6 +21,8 @@ export const environment = {
     ewbCancelUrl: 'https://my.gstzen.in/~gstzen/a/ewbapi/cancel/',
     ewbGetUrl: 'https://my.gstzen.in/~gstzen/a/ewbapi/getewb/',
     ewbUpdatePartBUrl: 'https://my.gstzen.in/~gstzen/a/ewbapi/updatepartb/',
+    ewbUpdateTransporterUrl:
+      'https://my.gstzen.in/~gstzen/a/ewbapi/update-transporter/',
     token: '',
     ewbTestToken: undefined as string | undefined,
   } satisfies GstZenEnvironment,

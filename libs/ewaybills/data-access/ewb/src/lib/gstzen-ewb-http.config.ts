@@ -4,6 +4,7 @@ import {
   GSTZEN_EWB_GENERATE_URL_DEFAULT,
   GSTZEN_EWB_GET_URL_DEFAULT,
   GSTZEN_EWB_UPDATE_PARTB_URL_DEFAULT,
+  GSTZEN_EWB_UPDATE_TRANSPORTER_URL_DEFAULT,
 } from './ewb.constants';
 
 export interface GstZenEwbHttpConfig {
@@ -15,6 +16,8 @@ export interface GstZenEwbHttpConfig {
   getUrl?: string;
   /** Full update Part B POST URL (optional; default {@link GSTZEN_EWB_UPDATE_PARTB_URL_DEFAULT}). */
   updatePartBUrl?: string;
+  /** Full update transporter POST URL (optional; default {@link GSTZEN_EWB_UPDATE_TRANSPORTER_URL_DEFAULT}). */
+  updateTransporterUrl?: string;
   /** Primary GSTZen `Token` (e.g. “original” workspace). */
   token: string;
   /** Optional second token for e-way-only testing; used when topbar “EWB test token” is on. */
@@ -43,4 +46,9 @@ export function resolveEwbGetUrl(cfg: GstZenEwbHttpConfig): string {
 export function resolveEwbUpdatePartBUrl(cfg: GstZenEwbHttpConfig): string {
   const u = cfg.updatePartBUrl?.trim();
   return (u || GSTZEN_EWB_UPDATE_PARTB_URL_DEFAULT).trim();
+}
+
+export function resolveEwbUpdateTransporterUrl(cfg: GstZenEwbHttpConfig): string {
+  const u = cfg.updateTransporterUrl?.trim();
+  return (u || GSTZEN_EWB_UPDATE_TRANSPORTER_URL_DEFAULT).trim();
 }

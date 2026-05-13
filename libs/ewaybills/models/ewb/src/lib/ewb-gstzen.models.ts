@@ -165,3 +165,36 @@ export function isEwbUpdatePartBSuccess(
 ): p is EwbUpdatePartBSuccess {
   return !('message' in p);
 }
+
+/**
+ * GSTZen update transporter POST body (`ewbapi/update-transporter/`).
+ *
+ * @see https://my.gstzen.in/docs/api/ewaybill-api/update-transporter/
+ */
+export interface EwbUpdateTransporterRequest {
+  ewbNo: string;
+  transporterId: string;
+}
+
+/** Normalized success after {@link parseEwbUpdateTransporterResponse}. */
+export interface EwbUpdateTransporterSuccess {
+  ewbNo?: string;
+  transporterId?: string;
+  transUpdateDate?: string;
+  raw: Record<string, unknown>;
+}
+
+export interface EwbUpdateTransporterErrorShape {
+  message: string;
+  raw: Record<string, unknown>;
+}
+
+export type EwbUpdateTransporterParsed =
+  | EwbUpdateTransporterSuccess
+  | EwbUpdateTransporterErrorShape;
+
+export function isEwbUpdateTransporterSuccess(
+  p: EwbUpdateTransporterParsed,
+): p is EwbUpdateTransporterSuccess {
+  return !('message' in p);
+}

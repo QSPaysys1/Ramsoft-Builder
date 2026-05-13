@@ -13,6 +13,7 @@ import type {
 import {
   canCancelSavedEwaybillRow,
   canUpdatePartBForSavedEwaybillRow,
+  canUpdateTransporterForSavedEwaybillRow,
 } from '@ramsoft-builder/ewaybills/utils/core';
 
 const FILTER_OPTIONS: ReadonlyArray<{
@@ -43,6 +44,8 @@ export class EwbSavedBillsTableComponent {
   readonly showTransportFilters = input(false);
   readonly transportFilter = input<EwaybillSavedListTransportFilter>('all');
   readonly showUpdatePartB = input(true);
+  /** Link to “Update transporter” flow (saved bills with EWB no.). */
+  readonly showUpdateTransporter = input(true);
   readonly showCancel = input(true);
   /** When true, clicking a data row does not emit `rowSelected` (e.g. main list uses row click for nothing). */
   readonly skipRowSelect = input(false);
@@ -72,6 +75,10 @@ export class EwbSavedBillsTableComponent {
 
   protected canUpdatePartB(row: EwaybillListView): boolean {
     return canUpdatePartBForSavedEwaybillRow(row);
+  }
+
+  protected canUpdateTransporter(row: EwaybillListView): boolean {
+    return canUpdateTransporterForSavedEwaybillRow(row);
   }
 
   protected pickFilter(id: EwaybillSavedListTransportFilter): void {

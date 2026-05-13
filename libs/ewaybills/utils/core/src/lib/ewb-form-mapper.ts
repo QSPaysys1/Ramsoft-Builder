@@ -8,6 +8,8 @@ import type {
   EwbItemLine,
   EwbUpdatePartBParsed,
   EwbUpdatePartBSuccess,
+  EwbUpdateTransporterParsed,
+  EwbUpdateTransporterSuccess,
 } from '@ramsoft-builder/ewaybills/models/ewb';
 import { normalizeDocDateForApi } from './ewb-date-format';
 
@@ -16,6 +18,14 @@ const GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 export function gstinValidator(controlValue: string | null | undefined): boolean {
   const v = (controlValue ?? '').trim().toUpperCase();
   return v.length === 15 && GSTIN_RE.test(v);
+}
+
+/** 12-digit e-way bill number string, or `null` if input is not exactly 12 digits. */
+export function normalizeEwbNoTo12Digits(
+  v: string | number | null | undefined,
+): string | null {
+  const digits = String(v ?? '').replace(/\D/g, '');
+  return digits.length === 12 ? digits : null;
 }
 
 export function pincodeValidator(v: string | number | null | undefined): boolean {
@@ -346,6 +356,43 @@ export function parseEwbUpdatePartBResponse(
     message:
       extractGstZenErrorMessage(flat) ||
       'Unexpected response from GSTZen (update Part B).',
+    raw: body,
+  };
+}
+
+/** Parse GSTZen update-transporter JSON (`status`, `ewayBillNo`, `transporterId`, …). */
+export function parseEwbUpdateTransporterResponse(
+  body: Record<string, unknown>,
+): EwbUpdateTransporterParsed {
+  const flat = flattenEwbCancelPayload(body);
+  const hasErr =
+    isNicStyleCancelFailure(flat) ||
+    flat['Success'] === 'N' ||
+    flat['Success'] === false ||
+    (Array.isArray(flat['ErrorDetails']) &&
+      (flat['ErrorDetails'] as unknown[]).length > 0);
+  if (hasErr) {
+    return { message: extractGstZenErrorMessage(flat), raw: body };
+  }
+  const ewbNo =
+    pickStr(flat, ['ewayBillNo', 'EwbNo', 'ewbNo', 'EwbNum']) ||
+    pickNestedSigned(flat) ||
+    pickStrLoose(flat, ['ewayBillNo', 'EwbNo', 'ewbNo', 'EwbNum']);
+  const transporterId = pickStr(flat, ['transporterId', 'TransporterId']);
+  const transUpdateDate = pickStr(flat, ['transUpdateDate', 'TransUpdateDate']);
+  if (isNicStyleCancelSuccess(flat) || ewbNo || transporterId || transUpdateDate) {
+    const success: EwbUpdateTransporterSuccess = {
+      ewbNo,
+      transporterId,
+      transUpdateDate,
+      raw: body,
+    };
+    return success;
+  }
+  return {
+    message:
+      extractGstZenErrorMessage(flat) ||
+      'Unexpected response from GSTZen (update transporter).',
     raw: body,
   };
 }

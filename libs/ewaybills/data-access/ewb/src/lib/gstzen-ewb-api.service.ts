@@ -4,6 +4,7 @@ import {
   isEwbCancelSuccess,
   isEwbGenerateSuccess,
   isEwbUpdatePartBSuccess,
+  isEwbUpdateTransporterSuccess,
   type EwbCancelReasonCode,
   type EwbCancelRequest,
   type EwbCancelSuccess,
@@ -12,12 +13,16 @@ import {
   type EwbGetRequest,
   type EwbUpdatePartBRequest,
   type EwbUpdatePartBSuccess,
+  type EwbUpdateTransporterRequest,
+  type EwbUpdateTransporterSuccess,
 } from '@ramsoft-builder/ewaybills/models/ewb';
 import {
   gstinValidator,
+  normalizeEwbNoTo12Digits,
   parseEwbCancelResponse,
   parseEwbGenerateResponse,
   parseEwbUpdatePartBResponse,
+  parseEwbUpdateTransporterResponse,
 } from '@ramsoft-builder/ewaybills/utils/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { EwbGstZenApiError, mapEwbGstZenHttpError } from './gstzen-ewb-api.error';
@@ -29,6 +34,7 @@ import {
   resolveEwbGenerateUrl,
   resolveEwbGetUrl,
   resolveEwbUpdatePartBUrl,
+  resolveEwbUpdateTransporterUrl,
 } from './gstzen-ewb-http.config';
 
 @Injectable({ providedIn: 'root' })
@@ -215,6 +221,66 @@ export class GstZenEwbApiService {
             typeof parsed.message === 'string' && parsed.message.trim()
               ? parsed.message.trim()
               : 'E-way bill Part B could not be updated (unrecognized GSTZen response).';
+          throw new EwbGstZenApiError(msg, 200, res);
+        }
+        return parsed;
+      }),
+      catchError((err: unknown) => throwError(() => mapEwbGstZenHttpError(err))),
+    );
+  }
+
+  /**
+   * Update transporter via GSTZen `ewbapi/update-transporter/`.
+   *
+   * @see https://my.gstzen.in/docs/api/ewaybill-api/update-transporter/
+   */
+  updateTransporter(
+    body: EwbUpdateTransporterRequest,
+    fromGstin?: string,
+  ): Observable<EwbUpdateTransporterSuccess> {
+    const token = this.resolveEwbToken();
+    if (!token) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'GSTZen API token is not configured. Set `environment.gstZen.token` (and optional `ewbTestToken` for the EWB test toggle) plus `GSTZEN_EWB_HTTP_CONFIG`.',
+          ),
+      );
+    }
+    const ewbNoNorm = normalizeEwbNoTo12Digits(body.ewbNo);
+    const transNorm = String(body.transporterId ?? '').trim().toUpperCase();
+    if (!ewbNoNorm || !gstinValidator(transNorm)) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'Invalid request: ewbNo must be 12 digits and transporterId a valid 15-character GSTIN.',
+          ),
+      );
+    }
+    const url = resolveEwbUpdateTransporterUrl(this.cfg);
+    let headers = new HttpHeaders({
+      Token: token,
+      'Content-Type': 'application/json',
+    });
+    if (
+      this.headerPrefs.includeGstinHeader() &&
+      fromGstin &&
+      gstinValidator(fromGstin)
+    ) {
+      headers = headers.set('gstin', String(fromGstin).trim().toUpperCase());
+    }
+    const payload: EwbUpdateTransporterRequest = {
+      ewbNo: ewbNoNorm,
+      transporterId: transNorm,
+    };
+    return this.http.post<Record<string, unknown>>(url, payload, { headers }).pipe(
+      map((res) => {
+        const parsed = parseEwbUpdateTransporterResponse(res);
+        if (!isEwbUpdateTransporterSuccess(parsed)) {
+          const msg =
+            typeof parsed.message === 'string' && parsed.message.trim()
+              ? parsed.message.trim()
+              : 'E-way bill transporter could not be updated (unrecognized GSTZen response).';
           throw new EwbGstZenApiError(msg, 200, res);
         }
         return parsed;
