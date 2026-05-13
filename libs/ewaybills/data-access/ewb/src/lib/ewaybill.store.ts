@@ -7,6 +7,7 @@ import type {
   EwbGenerateRequest,
   EwbGenerateSuccess,
   EwbMvGroupPostRequest,
+  EwbChangeMultiVehiclesRequest,
   EwaybillListView,
   EwaybillDbRow,
   EwbUpdatePartBRequest,
@@ -93,6 +94,12 @@ export interface EwaybillMvGroupPostSubmitInput {
   fromGstin?: string;
 }
 
+export interface EwaybillChangeMultiVehiclesSubmitInput {
+  ewaybillId: string;
+  body: EwbChangeMultiVehiclesRequest;
+  fromGstin?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EwaybillStore {
   private readonly api = inject(GstZenEwbApiService);
@@ -130,6 +137,10 @@ export class EwaybillStore {
   readonly mvGroupPostStatus = signal<EwaybillExtendStatus>('idle');
   readonly mvGroupPostError = signal<string | null>(null);
   readonly lastMvGroupPostApiResponse = signal<Record<string, unknown> | null>(null);
+
+  readonly changeMultiVehiclesStatus = signal<EwaybillExtendStatus>('idle');
+  readonly changeMultiVehiclesError = signal<string | null>(null);
+  readonly lastChangeMultiVehiclesApiResponse = signal<Record<string, unknown> | null>(null);
 
   readonly lastEwbNo = computed(() => this.lastSuccess()?.ewbNo ?? null);
 
@@ -296,6 +307,19 @@ export class EwaybillStore {
     this.mvGroupPostStatus.set('idle');
     this.mvGroupPostError.set(null);
     this.lastMvGroupPostApiResponse.set(null);
+  }
+
+  dismissChangeMultiVehiclesError(): void {
+    if (this.changeMultiVehiclesStatus() === 'error') {
+      this.changeMultiVehiclesStatus.set('idle');
+      this.changeMultiVehiclesError.set(null);
+    }
+  }
+
+  resetChangeMultiVehiclesUi(): void {
+    this.changeMultiVehiclesStatus.set('idle');
+    this.changeMultiVehiclesError.set(null);
+    this.lastChangeMultiVehiclesApiResponse.set(null);
   }
 
   async cancelEwaybill(input: EwaybillCancelInput): Promise<void> {
@@ -655,6 +679,109 @@ export class EwaybillStore {
         /* best-effort audit */
       }
       this.mvGroupPostStatus.set('error');
+    }
+  }
+
+  async submitChangeMultiVehicles(
+    input: EwaybillChangeMultiVehiclesSubmitInput,
+  ): Promise<void> {
+    if (this.changeMultiVehiclesStatus() === 'loading') {
+      return;
+    }
+    this.changeMultiVehiclesError.set(null);
+    this.lastChangeMultiVehiclesApiResponse.set(null);
+    this.changeMultiVehiclesStatus.set('loading');
+    const uid = this.authStore.user()?.id;
+    if (!uid) {
+      this.changeMultiVehiclesStatus.set('error');
+      this.changeMultiVehiclesError.set('Not signed in.');
+      return;
+    }
+    let existing: EwaybillDbRow | null = null;
+    try {
+      existing = await this.repo.getById(uid, input.ewaybillId);
+    } catch {
+      /* ignore */
+    }
+    const veh = (existing?.vehicle_details ?? {}) as Record<string, unknown>;
+    const tr = (existing?.transporter_details ?? {}) as Record<string, unknown>;
+
+    const vehicleBefore = String(input.body.oldvehicleNo ?? '')
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, '');
+    const vehicleAfter = String(input.body.newVehicleNo ?? '')
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, '');
+    const vehicleChanged = !!vehicleAfter && vehicleAfter !== vehicleBefore;
+    const prevCountRaw = existing?.transport_success_count;
+    const prevCount =
+      typeof prevCountRaw === 'number' && Number.isFinite(prevCountRaw)
+        ? prevCountRaw
+        : 0;
+
+    const auditRequest = sanitizeUndefinedDeep({
+      [EWB_TRANSPORT_AUDIT_KIND_KEY]: 'change_multi_vehicles' as const,
+      ...input.body,
+    }) as Record<string, unknown>;
+
+    try {
+      const res = await firstValueFrom(
+        this.api.changeMultiVehicles(input.body, input.fromGstin),
+      );
+      this.lastChangeMultiVehiclesApiResponse.set(res.raw as Record<string, unknown>);
+      await this.repo.insertTransportUpdate(uid, {
+        eway_bill_id: input.ewaybillId,
+        request_payload: auditRequest,
+        response: sanitizeUndefinedDeep(res.raw) as Record<string, unknown>,
+        status: 'success',
+        vehicle_no_before: vehicleBefore || null,
+        vehicle_no_after: vehicleAfter || null,
+      });
+      await this.repo.updateById(uid, input.ewaybillId, {
+        transport_last_status: 'success',
+        transport_last_at: new Date().toISOString(),
+        transport_success_count: prevCount + 1,
+        transport_last_vehicle_changed: vehicleChanged,
+        vehicle_details: sanitizeUndefinedDeep({
+          ...veh,
+          vehicleNo: vehicleAfter,
+        }) as Record<string, unknown>,
+        transporter_details: sanitizeUndefinedDeep({
+          ...tr,
+          transDocNo: input.body.newTranNo,
+        }) as Record<string, unknown>,
+      });
+      await this.loadList();
+      this.changeMultiVehiclesStatus.set('success');
+    } catch (err) {
+      const errMsg = messageFromUnknown(err, 'Change multi vehicles failed.');
+      this.changeMultiVehiclesError.set(errMsg);
+      let errBody: Record<string, unknown> = { message: errMsg };
+      if (err instanceof EwbGstZenApiError && err.body && typeof err.body === 'object') {
+        errBody = err.body as Record<string, unknown>;
+      }
+      this.lastChangeMultiVehiclesApiResponse.set(errBody);
+      try {
+        await this.repo.insertTransportUpdate(uid, {
+          eway_bill_id: input.ewaybillId,
+          request_payload: auditRequest,
+          response: sanitizeUndefinedDeep(errBody) as Record<string, unknown>,
+          status: 'failed',
+          error_message: errMsg,
+          vehicle_no_before: vehicleBefore || null,
+          vehicle_no_after: vehicleAfter || null,
+        });
+        await this.repo.updateById(uid, input.ewaybillId, {
+          transport_last_status: 'failed',
+          transport_last_at: new Date().toISOString(),
+        });
+        await this.loadList();
+      } catch {
+        /* best-effort audit */
+      }
+      this.changeMultiVehiclesStatus.set('error');
     }
   }
 

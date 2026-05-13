@@ -51,6 +51,11 @@ export function canPostMvGroupForSavedEwaybillRow(row: EwaybillListView): boolea
   return canInitiateMultiVehicleForSavedEwaybillRow(row);
 }
 
+/** Same eligibility as add multi vehicles; active bill with NIC EWB number. */
+export function canChangeMultiVehiclesForSavedEwaybillRow(row: EwaybillListView): boolean {
+  return canPostMvGroupForSavedEwaybillRow(row);
+}
+
 /** Same eligibility as Part B: active bill with NIC EWB number. */
 export function canUpdateTransporterForSavedEwaybillRow(row: EwaybillListView): boolean {
   return row.status === 'generated' && !!row.ewbNumber;

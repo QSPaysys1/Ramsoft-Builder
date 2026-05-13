@@ -2,11 +2,14 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
   isEwbCancelSuccess,
+  isEwbChangeMultiVehiclesSuccess,
   isEwbExtendSuccess,
   isEwbGenerateSuccess,
   isEwbMvGroupPostSuccess,
   isEwbUpdatePartBSuccess,
   isEwbUpdateTransporterSuccess,
+  type EwbChangeMultiVehiclesRequest,
+  type EwbChangeMultiVehiclesSuccess,
   type EwbMvGroupPostRequest,
   type EwbMvGroupPostSuccess,
   type EwbCancelReasonCode,
@@ -29,6 +32,7 @@ import {
   parseEwbCancelResponse,
   parseEwbExtendResponse,
   parseEwbGenerateResponse,
+  parseEwbChangeMultiVehiclesResponse,
   parseEwbMvGroupPostResponse,
   parseEwbUpdatePartBResponse,
   parseEwbUpdateTransporterResponse,
@@ -47,6 +51,7 @@ import {
   resolveEwbExtendUrl,
   resolveEwbMultiVehicleUrl,
   resolveEwbMvGroupPostUrl,
+  resolveEwbChangeMultiVehiclesUrl,
 } from './gstzen-ewb-http.config';
 
 @Injectable({ providedIn: 'root' })
@@ -369,6 +374,71 @@ export class GstZenEwbApiService {
             typeof parsed.message === 'string' && parsed.message.trim()
               ? parsed.message.trim()
               : 'Add multi-vehicles request did not succeed (unrecognized GSTZen response).';
+          throw new EwbGstZenApiError(msg, 200, res);
+        }
+        return parsed;
+      }),
+      catchError((err: unknown) => throwError(() => mapEwbGstZenHttpError(err))),
+    );
+  }
+
+  /**
+   * Change vehicle / transport within a multi-vehicle group (`ewbapi/change-multi-vehicles/`).
+   * Payload keys (`oldvehicleNo`, etc.) follow NIC / GSTZen JSON samples.
+   */
+  changeMultiVehicles(
+    body: EwbChangeMultiVehiclesRequest,
+    fromGstin?: string,
+  ): Observable<EwbChangeMultiVehiclesSuccess> {
+    const token = this.resolveEwbToken();
+    if (!token) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'GSTZen API token is not configured. Set `environment.gstZen.token` (and optional `ewbTestToken` for the EWB test toggle) plus `GSTZEN_EWB_HTTP_CONFIG`.',
+          ),
+      );
+    }
+    const url = resolveEwbChangeMultiVehiclesUrl(this.cfg);
+    let headers = new HttpHeaders({
+      Token: token,
+      'Content-Type': 'application/json',
+    });
+    if (
+      this.headerPrefs.includeGstinHeader() &&
+      fromGstin &&
+      gstinValidator(fromGstin)
+    ) {
+      headers = headers.set('gstin', String(fromGstin).trim().toUpperCase());
+    }
+    const ewbNoNorm = Number(String(body.ewbNo).replace(/\s+/g, ''));
+    const groupNorm = Math.trunc(Number(body.groupNo));
+    const payload: EwbChangeMultiVehiclesRequest = {
+      ewbNo: ewbNoNorm,
+      groupNo: groupNorm,
+      oldvehicleNo: String(body.oldvehicleNo ?? '')
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, ''),
+      newVehicleNo: String(body.newVehicleNo ?? '')
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, ''),
+      oldTranNo: String(body.oldTranNo ?? '').trim(),
+      newTranNo: String(body.newTranNo ?? '').trim(),
+      fromPlace: String(body.fromPlace ?? '').trim(),
+      fromState: Math.trunc(Number(body.fromState)),
+      reasonCode: String(body.reasonCode ?? '').trim(),
+      reasonRem: String(body.reasonRem ?? '').trim(),
+    };
+    return this.http.post<Record<string, unknown>>(url, payload, { headers }).pipe(
+      map((res) => {
+        const parsed = parseEwbChangeMultiVehiclesResponse(res);
+        if (!isEwbChangeMultiVehiclesSuccess(parsed)) {
+          const msg =
+            typeof parsed.message === 'string' && parsed.message.trim()
+              ? parsed.message.trim()
+              : 'Change multi vehicles request did not succeed (unrecognized GSTZen response).';
           throw new EwbGstZenApiError(msg, 200, res);
         }
         return parsed;

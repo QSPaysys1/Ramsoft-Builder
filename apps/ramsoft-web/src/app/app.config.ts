@@ -62,6 +62,8 @@ export const appConfig: ApplicationConfig = {
           'https://my.gstzen.in/~gstzen/a/ewbapi/extend/',
         multiVehicleUrl: environment.gstZen.ewbMultiVehicleUrl?.trim() || undefined,
         mvGroupPostUrl: environment.gstZen.ewbMvGroupPostUrl?.trim() || undefined,
+        changeMultiVehiclesUrl:
+          environment.gstZen.ewbChangeMultiVehiclesUrl?.trim() || undefined,
         token: environment.gstZen.token,
         ewbTestToken: environment.gstZen.ewbTestToken?.trim() || undefined,
       },

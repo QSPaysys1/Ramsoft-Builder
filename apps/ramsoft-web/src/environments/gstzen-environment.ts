@@ -57,6 +57,11 @@ export interface GstZenEnvironment {
    * Default: `https://my.gstzen.in/~gstzen/a/ewbapi/add-multi-vehicles/`
    */
   ewbMvGroupPostUrl?: string;
+  /**
+   * POST `ewbapi/change-multi-vehicles/` (change vehicle / transport in a multi-vehicle group).
+   * Default: `https://my.gstzen.in/~gstzen/a/ewbapi/change-multi-vehicles/`
+   */
+  ewbChangeMultiVehiclesUrl?: string;
   /** API `Token` header (primary / “original” GSTZen token). */
   token: string;
   /** Optional token used only for standalone e-way testing when the app toggle is on. */

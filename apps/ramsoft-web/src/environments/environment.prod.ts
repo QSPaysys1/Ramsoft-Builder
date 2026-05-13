@@ -26,6 +26,7 @@ export const environment = {
     ewbExtendUrl: 'https://my.gstzen.in/~gstzen/a/ewbapi/extend/',
     ewbMultiVehicleUrl: undefined as string | undefined,
     ewbMvGroupPostUrl: undefined as string | undefined,
+    ewbChangeMultiVehiclesUrl: undefined as string | undefined,
     token: '',
     ewbTestToken: undefined as string | undefined,
   } satisfies GstZenEnvironment,

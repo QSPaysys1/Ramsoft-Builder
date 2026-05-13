@@ -14,6 +14,8 @@ import type {
   EwbUpdateTransporterSuccess,
   EwbMvGroupPostParsed,
   EwbMvGroupPostSuccess,
+  EwbChangeMultiVehiclesParsed,
+  EwbChangeMultiVehiclesSuccess,
 } from '@ramsoft-builder/ewaybills/models/ewb';
 import { normalizeDocDateForApi } from './ewb-date-format';
 
@@ -458,6 +460,50 @@ export function parseEwbMvGroupPostResponse(
     message:
       extractGstZenErrorMessage(flat) ||
       'Unexpected response from GSTZen (add multi-vehicles).',
+    raw: body,
+  };
+}
+
+/** Parse GSTZen change-multi-vehicles JSON (NIC-style envelope). */
+export function parseEwbChangeMultiVehiclesResponse(
+  body: Record<string, unknown>,
+): EwbChangeMultiVehiclesParsed {
+  if (isNicStyleCancelFailure(body)) {
+    const flat = flattenEwbCancelPayload(body);
+    return { message: extractGstZenErrorMessage(flat), raw: body };
+  }
+  const flat = flattenEwbCancelPayload(body);
+  const hasErr =
+    isNicStyleCancelFailure(flat) ||
+    flat['Success'] === 'N' ||
+    flat['Success'] === false ||
+    (Array.isArray(flat['ErrorDetails']) &&
+      (flat['ErrorDetails'] as unknown[]).length > 0);
+  if (hasErr) {
+    return { message: extractGstZenErrorMessage(flat), raw: body };
+  }
+  const ewbNo =
+    pickStr(flat, ['ewayBillNo', 'EwbNo', 'ewbNo', 'EwbNum']) ||
+    pickNestedSigned(flat) ||
+    pickStrLoose(flat, ['ewayBillNo', 'EwbNo', 'ewbNo', 'EwbNum']);
+  const apiStatus = flat['status'];
+  const statusText = typeof apiStatus === 'string' ? apiStatus.trim().toLowerCase() : '';
+  const statusOk =
+    apiStatus === true ||
+    statusText === 'success' ||
+    statusText === '1' ||
+    statusText === 'act';
+  if (ewbNo || statusOk || isNicStyleCancelSuccess(flat)) {
+    const success: EwbChangeMultiVehiclesSuccess = {
+      ewbNo,
+      raw: body,
+    };
+    return success;
+  }
+  return {
+    message:
+      extractGstZenErrorMessage(flat) ||
+      'Unexpected response from GSTZen (change multi vehicles).',
     raw: body,
   };
 }

@@ -12,6 +12,7 @@ import type {
 } from '@ramsoft-builder/ewaybills/models/ewb';
 import {
   canCancelSavedEwaybillRow,
+  canChangeMultiVehiclesForSavedEwaybillRow,
   canExtendEwaybillForSavedEwaybillRow,
   canInitiateMultiVehicleForSavedEwaybillRow,
   canPostMvGroupForSavedEwaybillRow,
@@ -54,6 +55,8 @@ export class EwbSavedBillsTableComponent {
   readonly initiateMultiVehicleDialogMode = input(false);
   /** Nav link to GSTZen `ewbapi/add-multi-vehicles/`. Name avoids `AddMultiVehicles` metadata collision. */
   readonly showMvGroupPostNav = input(false);
+  /** Nav link to `ewbapi/change-multi-vehicles/`. */
+  readonly showChangeMultiVehiclesNav = input(false);
   /** Link to “Update transporter” flow (saved bills with EWB no.). */
   readonly showUpdateTransporter = input(true);
   readonly showCancel = input(true);
@@ -102,6 +105,10 @@ export class EwbSavedBillsTableComponent {
 
   protected canPostMvGroupForRow(row: EwaybillListView): boolean {
     return canPostMvGroupForSavedEwaybillRow(row);
+  }
+
+  protected canChangeMultiVehicles(row: EwaybillListView): boolean {
+    return canChangeMultiVehiclesForSavedEwaybillRow(row);
   }
 
   protected pickFilter(id: EwaybillSavedListTransportFilter): void {

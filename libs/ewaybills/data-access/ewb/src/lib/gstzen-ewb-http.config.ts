@@ -1,6 +1,7 @@
 import { InjectionToken } from '@angular/core';
 import {
   GSTZEN_EWB_MV_GROUP_POST_URL_DEFAULT,
+  GSTZEN_EWB_CHANGE_MULTI_VEHICLES_URL_DEFAULT,
   GSTZEN_EWB_CANCEL_URL_DEFAULT,
   GSTZEN_EWB_GENERATE_URL_DEFAULT,
   GSTZEN_EWB_GET_URL_DEFAULT,
@@ -30,6 +31,11 @@ export interface GstZenEwbHttpConfig {
   multiVehicleUrl?: string;
   /** Multi-vehicle group POST URL (optional; default {@link GSTZEN_EWB_MV_GROUP_POST_URL_DEFAULT}). */
   mvGroupPostUrl?: string;
+  /**
+   * Change multi vehicles POST URL (optional).
+   * Defaults to {@link GSTZEN_EWB_CHANGE_MULTI_VEHICLES_URL_DEFAULT}.
+   */
+  changeMultiVehiclesUrl?: string;
   /** Primary GSTZen `Token` (e.g. “original” workspace). */
   token: string;
   /** Optional second token for e-way-only testing; used when topbar “EWB test token” is on. */
@@ -78,4 +84,9 @@ export function resolveEwbMultiVehicleUrl(cfg: GstZenEwbHttpConfig): string {
 export function resolveEwbMvGroupPostUrl(cfg: GstZenEwbHttpConfig): string {
   const u = cfg.mvGroupPostUrl?.trim();
   return (u || GSTZEN_EWB_MV_GROUP_POST_URL_DEFAULT).trim();
+}
+
+export function resolveEwbChangeMultiVehiclesUrl(cfg: GstZenEwbHttpConfig): string {
+  const u = cfg.changeMultiVehiclesUrl?.trim();
+  return (u || GSTZEN_EWB_CHANGE_MULTI_VEHICLES_URL_DEFAULT).trim();
 }

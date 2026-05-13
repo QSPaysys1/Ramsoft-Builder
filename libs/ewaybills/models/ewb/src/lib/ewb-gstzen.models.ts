@@ -258,6 +258,7 @@ export type EwbTransportAuditOp =
   | 'extend'
   | 'multi_vehicle'
   | 'add_multi_vehicles'
+  | 'change_multi_vehicles'
   | 'update_part_b'
   | 'update_transporter';
 
@@ -293,6 +294,44 @@ export type EwbMvGroupPostParsed =
 export function isEwbMvGroupPostSuccess(
   p: EwbMvGroupPostParsed,
 ): p is EwbMvGroupPostSuccess {
+  return !('message' in p);
+}
+
+/**
+ * GSTZen change multi vehicles POST body (`ewbapi/change-multi-vehicles/`).
+ * Field `oldvehicleNo` matches NIC sample spelling (lowercase `vehicle` segment).
+ */
+export interface EwbChangeMultiVehiclesRequest {
+  ewbNo: number;
+  groupNo: number;
+  oldvehicleNo: string;
+  newVehicleNo: string;
+  oldTranNo: string;
+  newTranNo: string;
+  fromPlace: string;
+  fromState: number;
+  reasonCode: string;
+  reasonRem: string;
+}
+
+/** Normalized success after {@link parseEwbChangeMultiVehiclesResponse}. */
+export interface EwbChangeMultiVehiclesSuccess {
+  ewbNo?: string;
+  raw: Record<string, unknown>;
+}
+
+export interface EwbChangeMultiVehiclesErrorShape {
+  message: string;
+  raw: Record<string, unknown>;
+}
+
+export type EwbChangeMultiVehiclesParsed =
+  | EwbChangeMultiVehiclesSuccess
+  | EwbChangeMultiVehiclesErrorShape;
+
+export function isEwbChangeMultiVehiclesSuccess(
+  p: EwbChangeMultiVehiclesParsed,
+): p is EwbChangeMultiVehiclesSuccess {
   return !('message' in p);
 }
 

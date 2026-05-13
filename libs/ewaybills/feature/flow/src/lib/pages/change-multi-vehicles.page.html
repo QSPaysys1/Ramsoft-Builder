@@ -1,0 +1,239 @@
+<div class="ewb-create">
+  <div class="ewb-create__bg" aria-hidden="true"></div>
+
+  <div class="ewb-create__shell">
+    <header class="ewb-create__hero">
+      <div class="ewb-create__hero-text">
+        <p class="ewb-create__eyebrow">GSTZen · change multi vehicles</p>
+        <h1 class="ewb-create__title">Change multi vehicles</h1>
+        <p class="ewb-create__lede">
+          Select a saved e-way bill to pre-fill transport context, edit old/new vehicle and transport numbers, then POST to GSTZen
+          <code class="ewb-create__lede-code">ewbapi/change-multi-vehicles/</code>
+          (<code class="ewb-create__lede-code">oldvehicleNo</code>
+          spelling matches NIC JSON).
+        </p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-start">
+        <a routerLink="/home" class="ewb-create__back">
+          <span class="ewb-create__back-icon" aria-hidden="true">←</span>
+          Home
+        </a>
+        <a routerLink="/ewaybills/list" class="ewb-create__back">
+          <span class="ewb-create__back-icon" aria-hidden="true">←</span>
+          All e-way bills
+        </a>
+      </div>
+    </header>
+
+    <lib-ewb-inline-alert [message]="store.listError()" kind="error" />
+
+    <section class="ewb-subsection ewb-subsection--band">
+      <h2 class="ewb-subsection__title">E-Way bills</h2>
+      <p class="ewb-get__hint" style="margin-bottom: 0.75rem">
+        Click a row to load EWB number, vehicle, transport doc., and dispatch place/state. Use
+        <strong>Change multi vehicles</strong>
+        in the actions column when available.
+      </p>
+      <lib-ewb-saved-bills-table
+        [rows]="filteredRows()"
+        [selectedId]="selectedEwaybillId()"
+        [loading]="store.listLoading()"
+        [emptyMessage]="listEmptyHint()"
+        [showTransportFilters]="true"
+        [transportFilter]="transportFilter()"
+        [showUpdatePartB]="true"
+        [showExtendEwaybill]="true"
+        [showInitiateMultiVehicle]="true"
+        [showMvGroupPostNav]="true"
+        [showChangeMultiVehiclesNav]="true"
+        [showUpdateTransporter]="true"
+        [showCancel]="false"
+        (transportFilterChange)="onTransportFilterChange($event)"
+        (rowSelected)="onRowSelected($event)"
+      />
+    </section>
+
+    <lib-ewb-inline-alert [message]="loadRowError()" kind="error" />
+
+    @if (selectedEwaybillId() && fullRow()) {
+      <section class="ewb-partb-form ewb-subsection ewb-subsection--band">
+        <h2 class="ewb-subsection__title">Change vehicle / transport</h2>
+        <p class="ewb-get__hint" style="margin-bottom: 1rem">
+          JSON keys sent to GSTZen must match NIC:
+          <code class="ewb-create__lede-code">ewbNo</code>,
+          <code class="ewb-create__lede-code">groupNo</code>,
+          <code class="ewb-create__lede-code">oldvehicleNo</code>,
+          <code class="ewb-create__lede-code">newVehicleNo</code>,
+          <code class="ewb-create__lede-code">oldTranNo</code>,
+          <code class="ewb-create__lede-code">newTranNo</code>,
+          <code class="ewb-create__lede-code">fromPlace</code>,
+          <code class="ewb-create__lede-code">fromState</code>,
+          <code class="ewb-create__lede-code">reasonCode</code>,
+          <code class="ewb-create__lede-code">reasonRem</code>.
+        </p>
+
+        <lib-ewb-inline-alert
+          [message]="
+            headerPrefs.includeGstinHeader()
+              ? 'GSTIN header is ON: ensure the seller GSTIN on this record is valid for API calls.'
+              : null
+          "
+          kind="info"
+        />
+
+        <form class="ewb-create__form ewb-grid ewb-grid--2" [formGroup]="form" (ngSubmit)="submit()">
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">EWB no. <span class="ewb-req">*</span></span>
+            <input class="ewb-input font-mono" formControlName="ewbNo" inputmode="numeric" autocomplete="off" />
+            @if (form.controls.ewbNo.touched && form.controls.ewbNo.hasError('required')) {
+              <span class="ewb-field__error">EWB number is required.</span>
+            }
+            @if (form.controls.ewbNo.touched && form.controls.ewbNo.hasError('ewbNo12')) {
+              <span class="ewb-field__error">Enter exactly 12 digits.</span>
+            }
+          </label>
+
+          <label class="ewb-field">
+            <span class="ewb-field__label">Group no. <span class="ewb-req">*</span></span>
+            <input class="ewb-input font-mono" formControlName="groupNo" inputmode="numeric" autocomplete="off" maxlength="8" />
+            @if (form.controls.groupNo.touched && form.controls.groupNo.hasError('required')) {
+              <span class="ewb-field__error">Group number is required.</span>
+            }
+            @if (form.controls.groupNo.touched && form.controls.groupNo.hasError('groupNoInt')) {
+              <span class="ewb-field__error">Enter a positive whole number.</span>
+            }
+            @if (form.controls.groupNo.touched && form.controls.groupNo.hasError('maxlength')) {
+              <span class="ewb-field__error">Too long.</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Old vehicle no. <span class="ewb-req">*</span></span>
+            <input class="ewb-input font-mono uppercase" formControlName="oldvehicleNo" maxlength="20" autocomplete="off" />
+            @if (form.controls.oldvehicleNo.touched && form.controls.oldvehicleNo.hasError('required')) {
+              <span class="ewb-field__error">Required.</span>
+            }
+            @if (form.controls.oldvehicleNo.touched && form.controls.oldvehicleNo.hasError('vehicleFormat')) {
+              <span class="ewb-field__error">Enter a valid vehicle number (4–20 characters).</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">New vehicle no. <span class="ewb-req">*</span></span>
+            <input class="ewb-input font-mono uppercase" formControlName="newVehicleNo" maxlength="20" autocomplete="off" />
+            @if (form.controls.newVehicleNo.touched && form.controls.newVehicleNo.hasError('required')) {
+              <span class="ewb-field__error">Required.</span>
+            }
+            @if (form.controls.newVehicleNo.touched && form.controls.newVehicleNo.hasError('vehicleFormat')) {
+              <span class="ewb-field__error">Enter a valid vehicle number (4–20 characters).</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Old transport no. <span class="ewb-req">*</span></span>
+            <input class="ewb-input" formControlName="oldTranNo" maxlength="50" autocomplete="off" />
+            @if (form.controls.oldTranNo.touched && form.controls.oldTranNo.hasError('required')) {
+              <span class="ewb-field__error">Required.</span>
+            }
+            @if (form.controls.oldTranNo.touched && form.controls.oldTranNo.hasError('maxlength')) {
+              <span class="ewb-field__error">Too long.</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">New transport no. <span class="ewb-req">*</span></span>
+            <input class="ewb-input" formControlName="newTranNo" maxlength="50" autocomplete="off" />
+            @if (form.controls.newTranNo.touched && form.controls.newTranNo.hasError('required')) {
+              <span class="ewb-field__error">Required.</span>
+            }
+            @if (form.controls.newTranNo.touched && form.controls.newTranNo.hasError('maxlength')) {
+              <span class="ewb-field__error">Too long.</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">From place <span class="ewb-req">*</span></span>
+            <input class="ewb-input" formControlName="fromPlace" maxlength="100" autocomplete="off" />
+            @if (form.controls.fromPlace.touched && form.controls.fromPlace.hasError('required')) {
+              <span class="ewb-field__error">Required.</span>
+            }
+          </label>
+
+          <label class="ewb-field">
+            <span class="ewb-field__label">From state <span class="ewb-req">*</span></span>
+            <input class="ewb-input font-mono" type="number" formControlName="fromState" min="1" max="99" />
+            @if (form.controls.fromState.touched && form.controls.fromState.invalid) {
+              <span class="ewb-field__error">Enter NIC state code 1–99.</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Reason code <span class="ewb-req">*</span></span>
+            <select class="ewb-input" formControlName="reasonCode">
+              @for (opt of reasonOptions; track opt.code) {
+                <option [value]="opt.code">{{ opt.code }} — {{ opt.label }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Reason remark</span>
+            <input class="ewb-input" type="text" formControlName="reasonRem" maxlength="100" />
+            @if (form.controls.reasonRem.touched && form.controls.reasonRem.hasError('maxlength')) {
+              <span class="ewb-field__error">Too long.</span>
+            }
+          </label>
+
+          <div class="ewb-field ewb-field--full" style="grid-column: 1 / -1">
+            <lib-ewb-inline-alert [message]="store.changeMultiVehiclesError()" kind="error" />
+            <lib-ewb-inline-alert
+              [message]="
+                store.changeMultiVehiclesStatus() === 'success'
+                  ? 'GSTZen accepted the request. Audit row saved.'
+                  : null
+              "
+              kind="success"
+            />
+            <div class="ewb-create__footer-actions" style="margin-top: 0.75rem">
+              <button
+                class="ewb-btn ewb-btn--primary"
+                type="submit"
+                [disabled]="store.changeMultiVehiclesStatus() === 'loading'"
+              >
+                @if (store.changeMultiVehiclesStatus() === 'loading') {
+                  <span>Submitting…</span>
+                } @else {
+                  <span>Change multi vehicles</span>
+                }
+              </button>
+              <button
+                type="button"
+                class="ewb-btn ewb-btn--secondary"
+                [disabled]="store.changeMultiVehiclesStatus() === 'loading'"
+                (click)="retrySubmit()"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      @if (previewJson().length > 0) {
+        <section class="ewb-create__json-panel" aria-label="GSTZen request body preview">
+          <details class="ewb-create__json-details" open>
+            <summary class="ewb-create__json-summary">Preview payload (POST body)</summary>
+            <pre class="ewb-create__json-pre" tabindex="0">{{ previewJson() }}</pre>
+          </details>
+        </section>
+      }
+
+      @if (store.lastChangeMultiVehiclesApiResponse(); as apiRes) {
+        <section class="ewb-get__result">
+          <h2 class="ewb-subsection__title">API response</h2>
+          <pre>{{ apiRes | json }}</pre>
+        </section>
+      }
+    }
+  </div>
+</div>

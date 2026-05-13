@@ -27,7 +27,6 @@ import type {
   EwaybillDbRow,
   EwaybillListView,
   EwaybillSavedListTransportFilter,
-  EwbPartBReasonCode,
   EwbTransModeCode,
   EwbUpdatePartBRequest,
 } from '@ramsoft-builder/ewaybills/models/ewb';
@@ -35,6 +34,7 @@ import { EwbInlineAlertComponent } from '@ramsoft-builder/ewaybills/ui/form';
 import { EwbSavedBillsTableComponent } from '@ramsoft-builder/ewaybills/ui/table';
 import {
   buildUpdatePartBRequestFromEwaybillRow,
+  EWB_PARTB_UI_REASONS,
   filterEwaybillListByTransport,
   gstinValidator,
   mergeGetEwbResponseIntoUpdatePartBRequest,
@@ -43,14 +43,6 @@ import {
   transDocDateToDateInputValue,
 } from '@ramsoft-builder/ewaybills/utils/core';
 import { finalize, startWith } from 'rxjs';
-
-const PARTB_REASONS: ReadonlyArray<{ code: EwbPartBReasonCode; label: string }> = [
-  { code: '1', label: 'Vehicle break down' },
-  { code: '2', label: 'Transshipment' },
-  { code: '3', label: 'Not available' },
-  { code: '4', label: 'Natural calamity' },
-  { code: '5', label: 'Law and order situation' },
-];
 
 const PARTB_TRANS_MODES: ReadonlyArray<{ code: EwbTransModeCode; label: string }> = [
   { code: '1', label: 'Road' },
@@ -84,7 +76,7 @@ export class UpdatePartBPageComponent {
   private readonly api = inject(GstZenEwbApiService);
   protected readonly headerPrefs = inject(GstZenEwbHeaderPrefsService);
 
-  protected readonly partBReasons = PARTB_REASONS;
+  protected readonly partBReasons = EWB_PARTB_UI_REASONS;
   protected readonly transModes = PARTB_TRANS_MODES;
 
   protected readonly transportFilter = signal<EwaybillSavedListTransportFilter>('all');

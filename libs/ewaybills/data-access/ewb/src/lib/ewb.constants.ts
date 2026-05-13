@@ -37,3 +37,7 @@ export const GSTZEN_EWB_MULTI_VEHICLE_URL_DEFAULT = 'https://my.gstzen.in/~gstze
 /** GSTZen POST `ewbapi/add-multi-vehicles/` (add vehicles to multi-vehicle group). */
 export const GSTZEN_EWB_MV_GROUP_POST_URL_DEFAULT =
   'https://my.gstzen.in/~gstzen/a/ewbapi/add-multi-vehicles/' as const;
+
+/** GSTZen POST `ewbapi/change-multi-vehicles/` (swap vehicle / transport within a multi-vehicle group). */
+export const GSTZEN_EWB_CHANGE_MULTI_VEHICLES_URL_DEFAULT =
+  'https://my.gstzen.in/~gstzen/a/ewbapi/change-multi-vehicles/' as const;

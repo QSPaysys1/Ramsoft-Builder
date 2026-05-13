@@ -145,6 +145,20 @@
                     Add multi-vehicles
                   </a>
                 }
+                @if (showChangeMultiVehiclesNav()) {
+                  <a
+                    class="inline-flex items-center rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-950 no-underline hover:bg-amber-100 disabled:pointer-events-none disabled:opacity-50"
+                    [class.pointer-events-none]="!canChangeMultiVehicles(r)"
+                    [attr.aria-disabled]="!canChangeMultiVehicles(r)"
+                    [routerLink]="['/ewaybills/change-multi-vehicles']"
+                    [queryParams]="{ id: r.id }"
+                    (click)="
+                      !canChangeMultiVehicles(r) && $event.preventDefault(); $event.stopPropagation()
+                    "
+                  >
+                    Change multi vehicles
+                  </a>
+                }
                 @if (showUpdateTransporter()) {
                   <a
                     class="inline-flex items-center rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-900 no-underline hover:bg-violet-100 disabled:pointer-events-none disabled:opacity-50"
