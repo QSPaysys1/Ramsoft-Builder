@@ -28,6 +28,13 @@ export const ewaybillsRoutes: Routes = [
       import('./pages/extend-ewaybill.page').then((m) => m.ExtendEwaybillPageComponent),
   },
   {
+    path: 'multi-vehicle',
+    loadComponent: () =>
+      import('./pages/initiate-multi-vehicle-movement.page').then(
+        (m) => m.InitiateMultiVehicleMovementPageComponent,
+      ),
+  },
+  {
     path: 'update-transporter',
     loadComponent: () =>
       import('./pages/update-transporter.page').then((m) => m.UpdateTransporterPageComponent),

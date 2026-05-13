@@ -68,7 +68,7 @@ function pickValidUptoFromExtendRaw(raw: Record<string, unknown> | null): string
 
 @Component({
   standalone: true,
-  selector: 'lib-extend-ewaybill-page',
+  selector: 'lib-initiate-multi-vehicle-movement-page',
   imports: [
     RouterLink,
     ReactiveFormsModule,
@@ -76,11 +76,11 @@ function pickValidUptoFromExtendRaw(raw: Record<string, unknown> | null): string
     EwbInlineAlertComponent,
     EwbSavedBillsTableComponent,
   ],
-  templateUrl: './extend-ewaybill.page.html',
+  templateUrl: './initiate-multi-vehicle-movement.page.html',
   styleUrls: ['./create-ewaybill.page.scss', './update-part-b.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ExtendEwaybillPageComponent {
+export class InitiateMultiVehicleMovementPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
@@ -113,9 +113,9 @@ export class ExtendEwaybillPageComponent {
       : 'No e-way bills match this filter.',
   );
 
-  protected readonly extendForm = buildEwbExtendMovementFormGroup(this.fb);
+  protected readonly movementForm = buildEwbExtendMovementFormGroup(this.fb);
 
-  private readonly formTick = toSignal(this.extendForm.valueChanges.pipe(startWith(null)), {
+  private readonly formTick = toSignal(this.movementForm.valueChanges.pipe(startWith(null)), {
     initialValue: null,
   });
 
@@ -126,7 +126,7 @@ export class ExtendEwaybillPageComponent {
     if (ewbNo == null || !base) {
       return null;
     }
-    const v = this.extendForm.getRawValue();
+    const v = this.movementForm.getRawValue();
     const merged: EwbExtendDraftFormValues = {
       ...base,
       ...v,
@@ -161,7 +161,7 @@ export class ExtendEwaybillPageComponent {
   }
 
   private patchFormFromDraft(d: EwbExtendDraftFormValues): void {
-    this.extendForm.patchValue({
+    this.movementForm.patchValue({
       vehicleNo: d.vehicleNo,
       fromPlace: d.fromPlace,
       fromState: d.fromState || 0,
@@ -178,14 +178,14 @@ export class ExtendEwaybillPageComponent {
   }
 
   private async selectByEwaybillId(id: string): Promise<void> {
-    this.store.resetExtendUi();
-    this.store.dismissExtendError();
+    this.store.resetMultiVehicleUi();
+    this.store.dismissMultiVehicleError();
     this.selectedEwaybillId.set(id);
     this.selectedEwbNo.set(null);
     this.loadRowError.set(null);
     this.fullRow.set(null);
     this.baseDraft.set(null);
-    this.extendForm.reset({
+    this.movementForm.reset({
       vehicleNo: '',
       fromPlace: '',
       fromState: 0,
@@ -306,8 +306,8 @@ export class ExtendEwaybillPageComponent {
     if (!id || !payload) {
       return;
     }
-    this.extendForm.markAllAsTouched();
-    if (this.extendForm.invalid) {
+    this.movementForm.markAllAsTouched();
+    if (this.movementForm.invalid) {
       this.toast.show('error', 'Fix validation errors before submitting.', 5500);
       return;
     }
@@ -324,27 +324,27 @@ export class ExtendEwaybillPageComponent {
       return;
     }
     this.fetchError.set(null);
-    await this.store.submitExtendUpdate({
+    await this.store.submitMultiVehicleMovement({
       ewaybillId: id,
       body: payload,
       fromGstin: gstin,
     });
-    if (this.store.extendStatus() === 'success') {
-      const raw = this.store.lastExtendApiResponse();
+    if (this.store.multiVehicleStatus() === 'success') {
+      const raw = this.store.lastMultiVehicleApiResponse();
       const vu = pickValidUptoFromExtendRaw(raw);
       const tail = vu ? ` Valid upto: ${vu}.` : '';
-      this.toast.show('success', `E-way bill extended.${tail}`, 6000);
-    } else if (this.store.extendStatus() === 'error') {
+      this.toast.show('success', `Multi-vehicle movement initiated.${tail}`, 6000);
+    } else if (this.store.multiVehicleStatus() === 'error') {
       this.toast.show(
         'error',
-        this.store.extendError() ?? 'Extend e-way bill failed.',
+        this.store.multiVehicleError() ?? 'Initiate multi-vehicle movement failed.',
         6500,
       );
     }
   }
 
   protected async retrySubmit(): Promise<void> {
-    this.store.dismissExtendError();
+    this.store.dismissMultiVehicleError();
     await this.submit();
   }
 }

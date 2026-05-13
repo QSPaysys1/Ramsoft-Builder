@@ -13,6 +13,7 @@ import type {
 import {
   canCancelSavedEwaybillRow,
   canExtendEwaybillForSavedEwaybillRow,
+  canInitiateMultiVehicleForSavedEwaybillRow,
   canUpdatePartBForSavedEwaybillRow,
   canUpdateTransporterForSavedEwaybillRow,
 } from '@ramsoft-builder/ewaybills/utils/core';
@@ -45,8 +46,11 @@ export class EwbSavedBillsTableComponent {
   readonly showTransportFilters = input(false);
   readonly transportFilter = input<EwaybillSavedListTransportFilter>('all');
   readonly showUpdatePartB = input(true);
-  /** Link to “Extend e-way bill” flow. */
   readonly showExtendEwaybill = input(false);
+  /** Initiate multi-vehicle (same NIC extend-shaped API). */
+  readonly showInitiateMultiVehicle = input(false);
+  /** Use dialog flow (emit {@link initiateMultiVehicleClick}) instead of routing to the full page. */
+  readonly initiateMultiVehicleDialogMode = input(false);
   /** Link to “Update transporter” flow (saved bills with EWB no.). */
   readonly showUpdateTransporter = input(true);
   readonly showCancel = input(true);
@@ -56,6 +60,7 @@ export class EwbSavedBillsTableComponent {
   readonly transportFilterChange = output<EwaybillSavedListTransportFilter>();
   readonly rowSelected = output<EwaybillListView>();
   readonly cancelClick = output<EwaybillListView>();
+  readonly initiateMultiVehicleClick = output<EwaybillListView>();
 
   protected readonly filterOptions = FILTER_OPTIONS;
 
@@ -88,6 +93,10 @@ export class EwbSavedBillsTableComponent {
     return canExtendEwaybillForSavedEwaybillRow(row);
   }
 
+  protected canInitiateMultiVehicle(row: EwaybillListView): boolean {
+    return canInitiateMultiVehicleForSavedEwaybillRow(row);
+  }
+
   protected pickFilter(id: EwaybillSavedListTransportFilter): void {
     this.transportFilterChange.emit(id);
   }
@@ -102,5 +111,10 @@ export class EwbSavedBillsTableComponent {
   protected onCancel(row: EwaybillListView, ev: Event): void {
     ev.stopPropagation();
     this.cancelClick.emit(row);
+  }
+
+  protected onInitiateMultiVehicle(row: EwaybillListView, ev: Event): void {
+    ev.stopPropagation();
+    this.initiateMultiVehicleClick.emit(row);
   }
 }

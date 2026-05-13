@@ -254,4 +254,14 @@ export function isEwbExtendSuccess(p: EwbExtendParsed): p is EwbExtendSuccess {
 
 /** Stored on `eway_bill_transport_updates.request_payload` to distinguish extend vs Part-B vs transporter. */
 export const EWB_TRANSPORT_AUDIT_KIND_KEY = '__transportOp' as const;
-export type EwbTransportAuditOp = 'extend' | 'update_part_b' | 'update_transporter';
+export type EwbTransportAuditOp =
+  | 'extend'
+  | 'multi_vehicle'
+  | 'update_part_b'
+  | 'update_transporter';
+
+/**
+ * NIC uses the same `ewbapi/extend/` body for extension and for initiating multi-vehicle movement
+ * (`consignmentStatus` etc.). Alias keeps call sites self-documenting.
+ */
+export type EwbMultiVehicleMovementRequest = EwbExtendRequest;

@@ -27,3 +27,9 @@ export const GSTZEN_EWB_UPDATE_TRANSPORTER_URL_DEFAULT =
 /** GSTZen standalone extend e-way bill validity (override via environment). */
 export const GSTZEN_EWB_EXTEND_URL_DEFAULT =
   'https://my.gstzen.in/~gstzen/a/ewbapi/extend/' as const;
+
+/**
+ * Initiate multi-vehicle movement — same NIC endpoint as extend unless GSTZen documents otherwise.
+ * Override separately only if their API path diverges.
+ */
+export const GSTZEN_EWB_MULTI_VEHICLE_URL_DEFAULT = 'https://my.gstzen.in/~gstzen/a/ewbapi/extend/' as const;

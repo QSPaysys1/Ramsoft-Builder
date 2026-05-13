@@ -47,6 +47,11 @@ export interface GstZenEnvironment {
    * @see https://my.gstzen.in/docs/api/ewaybill-api/extend-eway-bill/
    */
   ewbExtendUrl?: string;
+  /**
+   * Multi-vehicle movement POST URL. Defaults to the same path as extend when omitted
+   * (NIC uses the extend-shaped payload).
+   */
+  ewbMultiVehicleUrl?: string;
   /** API `Token` header (primary / “original” GSTZen token). */
   token: string;
   /** Optional token used only for standalone e-way testing when the app toggle is on. */

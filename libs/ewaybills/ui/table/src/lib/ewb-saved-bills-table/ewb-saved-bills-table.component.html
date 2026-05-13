@@ -101,6 +101,36 @@
                     Extend
                   </a>
                 }
+                @if (showInitiateMultiVehicle()) {
+                  @if (initiateMultiVehicleDialogMode()) {
+                    <button
+                      type="button"
+                      class="inline-flex items-center rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-950 hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      [disabled]="!canInitiateMultiVehicle(r)"
+                      [title]="
+                        canInitiateMultiVehicle(r)
+                          ? 'Initiate multi-vehicle movement'
+                          : 'Requires an active e-way bill with EWB number'
+                      "
+                      (click)="onInitiateMultiVehicle(r, $event)"
+                    >
+                      Initiate multi-vehicle
+                    </button>
+                  } @else {
+                    <a
+                      class="inline-flex items-center rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-950 no-underline hover:bg-cyan-100 disabled:pointer-events-none disabled:opacity-50"
+                      [class.pointer-events-none]="!canInitiateMultiVehicle(r)"
+                      [attr.aria-disabled]="!canInitiateMultiVehicle(r)"
+                      [routerLink]="['/ewaybills/multi-vehicle']"
+                      [queryParams]="{ id: r.id }"
+                      (click)="
+                        !canInitiateMultiVehicle(r) && $event.preventDefault(); $event.stopPropagation()
+                      "
+                    >
+                      Initiate multi-vehicle
+                    </a>
+                  }
+                }
                 @if (showUpdateTransporter()) {
                   <a
                     class="inline-flex items-center rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-900 no-underline hover:bg-violet-100 disabled:pointer-events-none disabled:opacity-50"

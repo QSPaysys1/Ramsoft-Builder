@@ -1,14 +1,16 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal, type WritableSignal } from '@angular/core';
 import { AuthStore } from '@ramsoft-builder/auth/data-access/auth';
 import type {
   EwbCancelReasonCode,
   EwbExtendRequest,
+  EwbExtendSuccess,
   EwbGenerateRequest,
   EwbGenerateSuccess,
   EwaybillListView,
   EwaybillDbRow,
   EwbUpdatePartBRequest,
   EwbUpdateTransporterRequest,
+  EwbTransportAuditOp,
 } from '@ramsoft-builder/ewaybills/models/ewb';
 import { EWB_TRANSPORT_AUDIT_KIND_KEY } from '@ramsoft-builder/ewaybills/models/ewb';
 import {
@@ -16,7 +18,7 @@ import {
   sanitizeUndefinedDeep,
   splitPersistParts,
 } from '@ramsoft-builder/ewaybills/utils/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { EwaybillRepository } from './ewaybill.repository';
 import { EwbGstZenApiError } from './gstzen-ewb-api.error';
 import { GstZenEwbApiService } from './gstzen-ewb-api.service';
@@ -105,6 +107,10 @@ export class EwaybillStore {
   readonly extendStatus = signal<EwaybillExtendStatus>('idle');
   readonly extendError = signal<string | null>(null);
   readonly lastExtendApiResponse = signal<Record<string, unknown> | null>(null);
+
+  readonly multiVehicleStatus = signal<EwaybillExtendStatus>('idle');
+  readonly multiVehicleError = signal<string | null>(null);
+  readonly lastMultiVehicleApiResponse = signal<Record<string, unknown> | null>(null);
 
   readonly lastEwbNo = computed(() => this.lastSuccess()?.ewbNo ?? null);
 
@@ -241,10 +247,23 @@ export class EwaybillStore {
     }
   }
 
+  dismissMultiVehicleError(): void {
+    if (this.multiVehicleStatus() === 'error') {
+      this.multiVehicleStatus.set('idle');
+      this.multiVehicleError.set(null);
+    }
+  }
+
   resetExtendUi(): void {
     this.extendStatus.set('idle');
     this.extendError.set(null);
     this.lastExtendApiResponse.set(null);
+  }
+
+  resetMultiVehicleUi(): void {
+    this.multiVehicleStatus.set('idle');
+    this.multiVehicleError.set(null);
+    this.lastMultiVehicleApiResponse.set(null);
   }
 
   async cancelEwaybill(input: EwaybillCancelInput): Promise<void> {
@@ -480,16 +499,54 @@ export class EwaybillStore {
   }
 
   async submitExtendUpdate(input: EwaybillExtendSubmitInput): Promise<void> {
-    if (this.extendStatus() === 'loading') {
+    await this.submitEwbExtendLike(input, {
+      auditOp: 'extend',
+      apiCall: (body, fromGstin) => this.api.extend(body, fromGstin),
+      status: this.extendStatus,
+      error: this.extendError,
+      lastResponse: this.lastExtendApiResponse,
+      errorFallback: 'Extend e-way bill failed.',
+    });
+  }
+
+  async submitMultiVehicleMovement(input: EwaybillExtendSubmitInput): Promise<void> {
+    await this.submitEwbExtendLike(input, {
+      auditOp: 'multi_vehicle',
+      apiCall: (body, fromGstin) => this.api.initiateMultiVehicleMovement(body, fromGstin),
+      status: this.multiVehicleStatus,
+      error: this.multiVehicleError,
+      lastResponse: this.lastMultiVehicleApiResponse,
+      errorFallback: 'Initiate multi-vehicle movement failed.',
+    });
+  }
+
+  /**
+   * Shared transport audit + DB updates for GSTZen extend-shaped POSTs (extend vs multi-vehicle).
+   */
+  private async submitEwbExtendLike(
+    input: EwaybillExtendSubmitInput,
+    ctx: {
+      auditOp: EwbTransportAuditOp;
+      apiCall: (
+        body: EwbExtendRequest,
+        fromGstin?: string,
+      ) => Observable<EwbExtendSuccess>;
+      status: WritableSignal<EwaybillExtendStatus>;
+      error: WritableSignal<string | null>;
+      lastResponse: WritableSignal<Record<string, unknown> | null>;
+      errorFallback: string;
+    },
+  ): Promise<void> {
+    if (ctx.status() === 'loading') {
       return;
     }
-    this.extendError.set(null);
-    this.lastExtendApiResponse.set(null);
-    this.extendStatus.set('loading');
+    ctx.error.set(null);
+    ctx.lastResponse.set(null);
+    ctx.status.set('loading');
     const uid = this.authStore.user()?.id;
     if (!uid) {
-      this.extendStatus.set('error');
-      this.extendError.set('Not signed in.');
+      ctx.status.set('error');
+      ctx.error.set('Not signed in.');
       return;
     }
     let existing: EwaybillDbRow | null = null;
@@ -519,13 +576,13 @@ export class EwaybillStore {
         : 0;
 
     const auditRequest = sanitizeUndefinedDeep({
-      [EWB_TRANSPORT_AUDIT_KIND_KEY]: 'extend',
+      [EWB_TRANSPORT_AUDIT_KIND_KEY]: ctx.auditOp,
       ...input.body,
     }) as Record<string, unknown>;
 
     try {
-      const res = await firstValueFrom(this.api.extend(input.body, input.fromGstin));
-      this.lastExtendApiResponse.set(res.raw);
+      const res = await firstValueFrom(ctx.apiCall(input.body, input.fromGstin));
+      ctx.lastResponse.set(res.raw as Record<string, unknown>);
       await this.repo.insertTransportUpdate(uid, {
         eway_bill_id: input.ewaybillId,
         request_payload: auditRequest,
@@ -550,18 +607,19 @@ export class EwaybillStore {
           transDocDate: input.body.transDocDate,
           lastExtendValidUpto: res.validUpto ?? null,
           lastExtendExtnRsnCode: input.body.extnRsnCode,
+          lastConsignmentStatus: input.body.consignmentStatus,
         }) as Record<string, unknown>,
       });
       await this.loadList();
-      this.extendStatus.set('success');
+      ctx.status.set('success');
     } catch (err) {
-      const errMsg = messageFromUnknown(err, 'Extend e-way bill failed.');
-      this.extendError.set(errMsg);
+      const errMsg = messageFromUnknown(err, ctx.errorFallback);
+      ctx.error.set(errMsg);
       let errBody: Record<string, unknown> = { message: errMsg };
       if (err instanceof EwbGstZenApiError && err.body && typeof err.body === 'object') {
         errBody = err.body as Record<string, unknown>;
       }
-      this.lastExtendApiResponse.set(errBody);
+      ctx.lastResponse.set(errBody);
       try {
         await this.repo.insertTransportUpdate(uid, {
           eway_bill_id: input.ewaybillId,
@@ -580,7 +638,7 @@ export class EwaybillStore {
       } catch {
         /* best-effort audit */
       }
-      this.extendStatus.set('error');
+      ctx.status.set('error');
     }
   }
 }

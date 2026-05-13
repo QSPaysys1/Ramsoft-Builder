@@ -35,6 +35,21 @@ export function pincodeValidator(v: string | number | null | undefined): boolean
   return /^\d{6}$/.test(s);
 }
 
+/**
+ * Vehicle no after NIC-style normalization (trim, uppercase, remove spaces).
+ * Allows A–Z, 0–9, hyphen; length 4–20.
+ */
+export function ewbVehicleNoFormatValid(v: string | null | undefined): boolean {
+  const s = String(v ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, '');
+  if (s.length < 4 || s.length > 20) {
+    return false;
+  }
+  return /^[A-Z0-9-]+$/.test(s);
+}
+
 function num(v: unknown, fallback = 0): number {
   const n = typeof v === 'number' ? v : Number(v);
   return Number.isFinite(n) ? n : fallback;
@@ -426,7 +441,14 @@ export function parseEwbExtendResponse(body: Record<string, unknown>): EwbExtend
     pickNestedSigned(flat) ||
     pickStrLoose(flat, ['EwbNo', 'ewbNo', 'ewayBillNo', 'EwbNum']);
   const extnRemarks = pickStr(flat, ['extnRemarks', 'ExtnRemarks', 'ExtnRmrk']);
-  if (validUpto || ewbNo || extnRemarks) {
+  const apiStatus = flat['status'];
+  const statusText = typeof apiStatus === 'string' ? apiStatus.trim().toLowerCase() : '';
+  const statusOk =
+    apiStatus === true ||
+    statusText === 'success' ||
+    statusText === '1' ||
+    statusText === 'act';
+  if (validUpto || ewbNo || extnRemarks || statusOk) {
     const success: EwbExtendSuccess = {
       ewbNo,
       validUpto,

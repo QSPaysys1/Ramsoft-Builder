@@ -22,6 +22,7 @@ import {
 import {
   gstinValidator,
   normalizeEwbNoTo12Digits,
+  normalizeEwbTransModeForApi,
   parseEwbCancelResponse,
   parseEwbExtendResponse,
   parseEwbGenerateResponse,
@@ -40,6 +41,7 @@ import {
   resolveEwbUpdatePartBUrl,
   resolveEwbUpdateTransporterUrl,
   resolveEwbExtendUrl,
+  resolveEwbMultiVehicleUrl,
 } from './gstzen-ewb-http.config';
 
 @Injectable({ providedIn: 'root' })
@@ -300,6 +302,25 @@ export class GstZenEwbApiService {
    * @see https://my.gstzen.in/docs/api/ewaybill-api/extend-eway-bill/
    */
   extend(body: EwbExtendRequest, fromGstin?: string): Observable<EwbExtendSuccess> {
+    return this.postEwbExtendEndpoint(resolveEwbExtendUrl(this.cfg), body, fromGstin);
+  }
+
+  /**
+   * Initiate multi-vehicle movement — NIC uses the same JSON body and (by default) the same
+   * `ewbapi/extend/` URL as “extend”; override `multiVehicleUrl` only if GSTZen maps a different path.
+   */
+  initiateMultiVehicleMovement(
+    body: EwbExtendRequest,
+    fromGstin?: string,
+  ): Observable<EwbExtendSuccess> {
+    return this.postEwbExtendEndpoint(resolveEwbMultiVehicleUrl(this.cfg), body, fromGstin);
+  }
+
+  private postEwbExtendEndpoint(
+    url: string,
+    body: EwbExtendRequest,
+    fromGstin?: string,
+  ): Observable<EwbExtendSuccess> {
     const token = this.resolveEwbToken();
     if (!token) {
       return throwError(
@@ -309,7 +330,6 @@ export class GstZenEwbApiService {
           ),
       );
     }
-    const url = resolveEwbExtendUrl(this.cfg);
     let headers = new HttpHeaders({
       Token: token,
       'Content-Type': 'application/json',
@@ -322,13 +342,26 @@ export class GstZenEwbApiService {
       headers = headers.set('gstin', String(fromGstin).trim().toUpperCase());
     }
     const ewbNoNorm = Number(String(body.ewbNo).replace(/\s+/g, ''));
+    const consignment = String(body.consignmentStatus ?? '')
+      .trim()
+      .toUpperCase();
     const payload: EwbExtendRequest = {
       ...body,
       ewbNo: ewbNoNorm,
+      vehicleNo: String(body.vehicleNo ?? '')
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, ''),
+      fromPlace: String(body.fromPlace ?? '').trim(),
       fromState: Math.trunc(Number(body.fromState)),
       fromPincode: Math.trunc(Number(body.fromPincode)),
       remainingDistance: Math.max(0, Math.round(Number(body.remainingDistance))),
+      transDocNo: String(body.transDocNo ?? '').trim(),
+      transMode: normalizeEwbTransModeForApi(String(body.transMode)),
       extnRsnCode: Math.trunc(Number(body.extnRsnCode)),
+      extnRemarks: String(body.extnRemarks ?? '').trim(),
+      transitType: body.transitType != null ? String(body.transitType).trim() : '',
+      consignmentStatus: consignment === 'T' ? 'T' : 'M',
     };
     return this.http.post<Record<string, unknown>>(url, payload, { headers }).pipe(
       map((res) => {
@@ -337,7 +370,7 @@ export class GstZenEwbApiService {
           const msg =
             typeof parsed.message === 'string' && parsed.message.trim()
               ? parsed.message.trim()
-              : 'E-way bill could not be extended (unrecognized GSTZen response).';
+              : 'The GSTZen e-way bill request did not succeed (unrecognized response).';
           throw new EwbGstZenApiError(msg, 200, res);
         }
         return parsed;

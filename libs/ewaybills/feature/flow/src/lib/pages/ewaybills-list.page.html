@@ -15,6 +15,12 @@
         Extend E-Way Bill
       </a>
       <a
+        routerLink="/ewaybills/multi-vehicle"
+        class="rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-950"
+      >
+        Initiate Multi Vehicle
+      </a>
+      <a
         routerLink="/ewaybills/update-part-b"
         class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-900"
       >
@@ -46,11 +52,14 @@
     [transportFilter]="transportFilter()"
     [showUpdatePartB]="true"
     [showExtendEwaybill]="true"
+    [showInitiateMultiVehicle]="true"
+    [initiateMultiVehicleDialogMode]="true"
     [showUpdateTransporter]="true"
     [showCancel]="true"
     [skipRowSelect]="true"
     (transportFilterChange)="onTransportFilterChange($event)"
     (cancelClick)="openCancelDialog($event)"
+    (initiateMultiVehicleClick)="openMultiVehicleDialog($event)"
   />
 </div>
 
@@ -133,6 +142,264 @@
           >
         </p>
       </form>
+    </div>
+  </div>
+}
+
+@if (multiVehicleTarget(); as mvTarget) {
+  <div
+    class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="ewb-mvm-title"
+  >
+    <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white shadow-xl">
+      <div class="sticky top-0 border-b border-slate-100 bg-white px-5 py-4">
+        <h2 id="ewb-mvm-title" class="text-lg font-semibold text-slate-900">
+          Initiate multi-vehicle movement
+        </h2>
+        <p class="mt-1 text-sm text-slate-600">
+          EWB
+          <span class="font-mono font-semibold text-slate-900">{{ mvTarget.ewbNumber }}</span>
+          · posts to GSTZen extend-shaped API (
+          <a
+            class="underline"
+            href="https://my.gstzen.in/docs/api/ewaybill-api/extend-eway-bill/"
+            target="_blank"
+            rel="noreferrer"
+            >docs</a
+          >).
+        </p>
+      </div>
+
+      @if (multiVehicleFormBusy()) {
+        <p class="px-5 py-6 text-sm text-slate-600">Loading bill details…</p>
+      } @else if (multiVehicleLoadError(); as le) {
+        <div class="space-y-3 px-5 py-4">
+          <lib-ewb-inline-alert [message]="le" kind="error" />
+          <button
+            type="button"
+            class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800"
+            (click)="closeMultiVehicleDialog()"
+          >
+            Close
+          </button>
+        </div>
+      } @else if (multiVehicleEwbNo() !== null && multiVehicleBaseDraft()) {
+        <form
+          [formGroup]="multiVehicleForm"
+          (ngSubmit)="submitMultiVehicle()"
+          class="space-y-3 px-5 py-4"
+        >
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              EWB number
+            </span>
+            <input
+              type="text"
+              class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-mono"
+              [value]="mvTarget.ewbNumber ?? ''"
+              readonly
+            />
+          </label>
+
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Vehicle no <span class="text-rose-600">*</span>
+            </span>
+            <input
+              class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm uppercase"
+              formControlName="vehicleNo"
+            />
+            @if (
+              multiVehicleForm.controls.vehicleNo.touched &&
+              multiVehicleForm.controls.vehicleNo.invalid
+            ) {
+              <span class="text-xs text-rose-600">
+                @if (multiVehicleForm.controls.vehicleNo.errors?.['required']) {
+                  Required.
+                } @else if (multiVehicleForm.controls.vehicleNo.errors?.['vehicleFormat']) {
+                  4–20 letters, digits, or hyphens.
+                } @else {
+                  Check vehicle number.
+                }
+              </span>
+            }
+          </label>
+
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              From place <span class="text-rose-600">*</span>
+            </span>
+            <input class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" formControlName="fromPlace" maxlength="100" />
+            @if (
+              multiVehicleForm.controls.fromPlace.touched &&
+              multiVehicleForm.controls.fromPlace.invalid
+            ) {
+              <span class="text-xs text-rose-600">Required.</span>
+            }
+          </label>
+
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="block">
+              <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+                From state <span class="text-rose-600">*</span>
+              </span>
+              <input
+                class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                type="number"
+                formControlName="fromState"
+                min="1"
+                max="99"
+              />
+              @if (
+                multiVehicleForm.controls.fromState.touched &&
+                multiVehicleForm.controls.fromState.invalid
+              ) {
+                <span class="text-xs text-rose-600">1–99.</span>
+              }
+            </label>
+            <label class="block">
+              <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+                From pincode <span class="text-rose-600">*</span>
+              </span>
+              <input
+                class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                type="number"
+                formControlName="fromPincode"
+              />
+              @if (
+                multiVehicleForm.controls.fromPincode.touched &&
+                multiVehicleForm.controls.fromPincode.invalid
+              ) {
+                <span class="text-xs text-rose-600">6-digit pincode.</span>
+              }
+            </label>
+          </div>
+
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Remaining distance (km) <span class="text-rose-600">*</span>
+            </span>
+            <input
+              class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              type="number"
+              formControlName="remainingDistance"
+              min="1"
+            />
+            @if (
+              multiVehicleForm.controls.remainingDistance.touched &&
+              multiVehicleForm.controls.remainingDistance.invalid
+            ) {
+              <span class="text-xs text-rose-600">Positive number.</span>
+            }
+          </label>
+
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Transport mode <span class="text-rose-600">*</span>
+            </span>
+            <select class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" formControlName="transMode">
+              @for (m of transModes; track m.code) {
+                <option [value]="m.code">{{ m.code }} — {{ m.label }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Transport document no <span class="text-rose-600">*</span>
+            </span>
+            <input class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" formControlName="transDocNo" maxlength="50" />
+            @if (
+              multiVehicleForm.controls.transDocNo.touched &&
+              multiVehicleForm.controls.transDocNo.invalid
+            ) {
+              <span class="text-xs text-rose-600">Required.</span>
+            }
+          </label>
+
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Transport document date <span class="text-rose-600">*</span>
+            </span>
+            <input class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" type="date" formControlName="transDocDate" />
+            <p class="mt-0.5 text-xs text-slate-500">Converted to DD/MM/YYYY for the API. No future dates.</p>
+            @if (
+              multiVehicleForm.controls.transDocDate.touched &&
+              multiVehicleForm.controls.transDocDate.invalid
+            ) {
+              <span class="text-xs text-rose-600">
+                @if (multiVehicleForm.controls.transDocDate.errors?.['required']) {
+                  Required.
+                } @else if (multiVehicleForm.controls.transDocDate.errors?.['futureDate']) {
+                  Cannot be in the future.
+                } @else if (multiVehicleForm.controls.transDocDate.errors?.['tooOld']) {
+                  Date too far in the past.
+                } @else {
+                  Invalid date.
+                }
+              </span>
+            }
+          </label>
+
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Extension reason <span class="text-rose-600">*</span>
+            </span>
+            <select class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" formControlName="extnRsnCode">
+              @for (r of extnReasons; track r.code) {
+                <option [value]="'' + r.code">{{ r.code }} — {{ r.label }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Extension remarks
+            </span>
+            <input class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" formControlName="extnRemarks" maxlength="100" />
+          </label>
+
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Transit type
+            </span>
+            <input class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" formControlName="transitType" maxlength="30" />
+          </label>
+
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Consignment status <span class="text-rose-600">*</span>
+            </span>
+            <select class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" formControlName="consignmentStatus">
+              @for (c of consignmentStatuses; track c.code) {
+                <option [value]="c.code">{{ c.code }} — {{ c.label }}</option>
+              }
+            </select>
+          </label>
+
+          <lib-ewb-inline-alert [message]="store.multiVehicleError()" kind="error" />
+
+          <div class="flex flex-wrap items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 disabled:opacity-50"
+              [disabled]="multiVehicleInFlight()"
+              (click)="closeMultiVehicleDialog()"
+            >
+              Close
+            </button>
+            <button
+              type="submit"
+              class="rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-60"
+              [disabled]="multiVehicleInFlight()"
+            >
+              {{ multiVehicleInFlight() ? 'Submitting…' : 'Submit' }}
+            </button>
+          </div>
+        </form>
+      }
     </div>
   </div>
 }
