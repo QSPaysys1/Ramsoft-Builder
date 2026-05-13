@@ -7,6 +7,13 @@
       </a>
       @if (row()?.id; as rid) {
         <a
+          class="text-sm font-semibold text-teal-800 underline"
+          [routerLink]="['/ewaybills/extend']"
+          [queryParams]="{ id: rid }"
+        >
+          Extend validity
+        </a>
+        <a
           class="text-sm font-semibold text-sky-800 underline"
           [routerLink]="['/ewaybills/update-part-b']"
           [queryParams]="{ id: rid }"
@@ -69,7 +76,14 @@
 
     <section class="rounded-xl border border-slate-200 bg-white p-4">
       <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-sm font-semibold text-slate-800">Update Part B (API logs)</h2>
+        <h2 class="text-sm font-semibold text-slate-800">Transport / extend API logs</h2>
+        <a
+          class="text-xs font-semibold text-teal-800 underline"
+          [routerLink]="['/ewaybills/extend']"
+          [queryParams]="{ id: doc.id }"
+        >
+          Open extend
+        </a>
         <a
           class="text-xs font-semibold text-sky-800 underline"
           [routerLink]="['/ewaybills/update-part-b']"
@@ -81,7 +95,7 @@
       @if (transportUpdates() === undefined) {
         <p class="text-sm text-slate-600">Loading history…</p>
       } @else if (transportUpdates()!.length === 0) {
-        <p class="text-sm text-slate-600">No Part B update attempts logged yet.</p>
+        <p class="text-sm text-slate-600">No transport or extend API calls logged yet.</p>
       } @else {
         <div class="space-y-3">
           @for (log of transportUpdates()!; track log.id) {

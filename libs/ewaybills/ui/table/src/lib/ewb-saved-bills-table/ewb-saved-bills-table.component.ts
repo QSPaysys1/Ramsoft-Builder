@@ -12,6 +12,7 @@ import type {
 } from '@ramsoft-builder/ewaybills/models/ewb';
 import {
   canCancelSavedEwaybillRow,
+  canExtendEwaybillForSavedEwaybillRow,
   canUpdatePartBForSavedEwaybillRow,
   canUpdateTransporterForSavedEwaybillRow,
 } from '@ramsoft-builder/ewaybills/utils/core';
@@ -44,6 +45,8 @@ export class EwbSavedBillsTableComponent {
   readonly showTransportFilters = input(false);
   readonly transportFilter = input<EwaybillSavedListTransportFilter>('all');
   readonly showUpdatePartB = input(true);
+  /** Link to “Extend e-way bill” flow. */
+  readonly showExtendEwaybill = input(false);
   /** Link to “Update transporter” flow (saved bills with EWB no.). */
   readonly showUpdateTransporter = input(true);
   readonly showCancel = input(true);
@@ -79,6 +82,10 @@ export class EwbSavedBillsTableComponent {
 
   protected canUpdateTransporter(row: EwaybillListView): boolean {
     return canUpdateTransporterForSavedEwaybillRow(row);
+  }
+
+  protected canExtendEwaybill(row: EwaybillListView): boolean {
+    return canExtendEwaybillForSavedEwaybillRow(row);
   }
 
   protected pickFilter(id: EwaybillSavedListTransportFilter): void {

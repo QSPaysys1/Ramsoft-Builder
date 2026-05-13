@@ -198,3 +198,60 @@ export function isEwbUpdateTransporterSuccess(
 ): p is EwbUpdateTransporterSuccess {
   return !('message' in p);
 }
+
+/**
+ * NIC extension reason (`extnRsnCode`) values used by GSTZen `ewbapi/extend/`.
+ * @see https://my.gstzen.in/docs/api/ewaybill-api/extend-eway-bill/
+ */
+export type EwbExtensionReasonCode = 1 | 2 | 3 | 4 | 5;
+
+/** Consignment status for extension (`consignmentStatus`). */
+export type EwbConsignmentStatusCode = 'M' | 'T';
+
+/**
+ * GSTZen extend e-way bill POST body (`ewbapi/extend/`).
+ *
+ * Numeric fields are sent as JSON numbers; `transMode` stays a string (`"1"`…`"4"`).
+ *
+ * @see https://my.gstzen.in/docs/api/ewaybill-api/extend-eway-bill/
+ */
+export interface EwbExtendRequest {
+  ewbNo: number;
+  vehicleNo: string;
+  fromPlace: string;
+  fromState: number;
+  fromPincode: number;
+  remainingDistance: number;
+  transDocNo: string;
+  /** DD/MM/YYYY */
+  transDocDate: string;
+  transMode: string;
+  extnRsnCode: number;
+  extnRemarks: string;
+  transitType: string;
+  consignmentStatus: string;
+}
+
+/** Normalized success after {@link parseEwbExtendResponse}. */
+export interface EwbExtendSuccess {
+  ewbNo?: string;
+  /** Extended validity end / update timestamp when present on the NIC response. */
+  validUpto?: string;
+  extnRemarks?: string;
+  raw: Record<string, unknown>;
+}
+
+export interface EwbExtendErrorShape {
+  message: string;
+  raw: Record<string, unknown>;
+}
+
+export type EwbExtendParsed = EwbExtendSuccess | EwbExtendErrorShape;
+
+export function isEwbExtendSuccess(p: EwbExtendParsed): p is EwbExtendSuccess {
+  return !('message' in p);
+}
+
+/** Stored on `eway_bill_transport_updates.request_payload` to distinguish extend vs Part-B vs transporter. */
+export const EWB_TRANSPORT_AUDIT_KIND_KEY = '__transportOp' as const;
+export type EwbTransportAuditOp = 'extend' | 'update_part_b' | 'update_transporter';

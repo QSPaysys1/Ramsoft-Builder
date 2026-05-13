@@ -1,0 +1,239 @@
+<div class="ewb-create">
+  <div class="ewb-create__bg" aria-hidden="true"></div>
+
+  <div class="ewb-create__shell">
+    <header class="ewb-create__hero">
+      <div class="ewb-create__hero-text">
+        <p class="ewb-create__eyebrow">GSTZen · extend e-way bill</p>
+        <h1 class="ewb-create__title">Extend E-Way Bill</h1>
+        <p class="ewb-create__lede">
+          Select a saved bill, complete distance and extension details, preview JSON, then POST to GSTZen
+          <code class="ewb-create__lede-code">ewbapi/extend/</code>
+          (
+          <a
+            href="https://my.gstzen.in/docs/api/ewaybill-api/extend-eway-bill/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >docs</a
+          >).
+        </p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-start">
+        <a routerLink="/home" class="ewb-create__back">
+          <span class="ewb-create__back-icon" aria-hidden="true">←</span>
+          Home
+        </a>
+        <a routerLink="/ewaybills/list" class="ewb-create__back">
+          <span class="ewb-create__back-icon" aria-hidden="true">←</span>
+          All e-way bills
+        </a>
+      </div>
+    </header>
+
+    <lib-ewb-inline-alert [message]="store.listError()" kind="error" />
+
+    <section class="ewb-subsection ewb-subsection--band">
+      <h2 class="ewb-subsection__title">E-Way bills</h2>
+      <p class="ewb-get__hint" style="margin-bottom: 0.75rem">
+        Click a row or use <strong>Extend</strong> in the actions column. Required numeric fields are enforced
+        before submit.
+      </p>
+      <lib-ewb-saved-bills-table
+        [rows]="filteredRows()"
+        [selectedId]="selectedEwaybillId()"
+        [loading]="store.listLoading()"
+        [emptyMessage]="listEmptyHint()"
+        [showTransportFilters]="true"
+        [transportFilter]="transportFilter()"
+        [showExtendEwaybill]="true"
+        [showUpdatePartB]="true"
+        [showUpdateTransporter]="true"
+        [showCancel]="false"
+        (transportFilterChange)="onTransportFilterChange($event)"
+        (rowSelected)="onRowSelected($event)"
+      />
+    </section>
+
+    <lib-ewb-inline-alert [message]="loadRowError()" kind="error" />
+
+    @if (selectedEwaybillId() && selectedEwbNo() !== null && baseDraft()) {
+      <section class="ewb-partb-form ewb-subsection ewb-subsection--band">
+        <h2 class="ewb-subsection__title">Extension details</h2>
+        <p class="ewb-get__hint" style="margin-bottom: 1rem">
+          <strong>EWB</strong>
+          {{ selectedEwbNo() }} — consignment place / state / pincode must match movement context.
+        </p>
+
+        <lib-ewb-inline-alert
+          [message]="
+            headerPrefs.includeGstinHeader()
+              ? 'GSTIN header is ON: ensure the seller GSTIN on this record is valid for API calls.'
+              : null
+          "
+          kind="info"
+        />
+
+        <div class="ewb-partb-toolbar">
+          <button
+            type="button"
+            class="ewb-btn ewb-btn--secondary"
+            [disabled]="fetchLoading()"
+            (click)="fetchLatestFromGstZen()"
+          >
+            {{ fetchLoading() ? 'Fetching…' : 'Fetch latest from GSTZen' }}
+          </button>
+        </div>
+        <lib-ewb-inline-alert [message]="fetchError()" kind="error" />
+
+        <form class="ewb-create__form ewb-grid ewb-grid--2" [formGroup]="extendForm" (ngSubmit)="submit()">
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Vehicle no <span class="ewb-req">*</span></span>
+            <input class="ewb-input ewb-input--vehicle" type="text" formControlName="vehicleNo" />
+            @if (extendForm.controls.vehicleNo.touched && extendForm.controls.vehicleNo.invalid) {
+              <span class="ewb-field__error">Vehicle number is required.</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">From place <span class="ewb-req">*</span></span>
+            <input class="ewb-input" type="text" formControlName="fromPlace" maxlength="100" />
+            @if (extendForm.controls.fromPlace.touched && extendForm.controls.fromPlace.invalid) {
+              <span class="ewb-field__error">Place is required.</span>
+            }
+          </label>
+
+          <label class="ewb-field">
+            <span class="ewb-field__label">From state code <span class="ewb-req">*</span></span>
+            <input class="ewb-input" type="number" formControlName="fromState" min="1" max="99" />
+            @if (extendForm.controls.fromState.touched && extendForm.controls.fromState.invalid) {
+              <span class="ewb-field__error">NIC state code (1–99).</span>
+            }
+          </label>
+
+          <label class="ewb-field">
+            <span class="ewb-field__label">From pincode <span class="ewb-req">*</span></span>
+            <input class="ewb-input" type="number" formControlName="fromPincode" />
+            @if (extendForm.controls.fromPincode.touched && extendForm.controls.fromPincode.invalid) {
+              <span class="ewb-field__error">Enter a valid 6-digit pincode.</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Remaining distance (km) <span class="ewb-req">*</span></span>
+            <input class="ewb-input" type="number" formControlName="remainingDistance" min="1" />
+            @if (extendForm.controls.remainingDistance.touched && extendForm.controls.remainingDistance.invalid) {
+              <span class="ewb-field__error">Enter remaining distance (positive number).</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Transport mode <span class="ewb-req">*</span></span>
+            <select class="ewb-input" formControlName="transMode">
+              @for (m of transModes; track m.code) {
+                <option [value]="m.code">{{ m.code }} — {{ m.label }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Transport document no</span>
+            <input class="ewb-input" type="text" formControlName="transDocNo" maxlength="50" />
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Transport document date <span class="ewb-req">*</span></span>
+            <input class="ewb-input" type="date" formControlName="transDocDate" />
+            <p class="ewb-get__hint" style="margin-top: 0.25rem">
+              GSTZen expects <code class="ewb-create__lede-code">DD/MM/YYYY</code> — converted automatically.
+            </p>
+            @if (extendForm.controls.transDocDate.touched && extendForm.controls.transDocDate.invalid) {
+              <span class="ewb-field__error">Date is required.</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Extension reason code <span class="ewb-req">*</span></span>
+            <select class="ewb-input" formControlName="extnRsnCode">
+              @for (r of extnReasons; track r.code) {
+                <option [value]="'' + r.code">{{ r.code }} — {{ r.label }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Extension remarks</span>
+            <input class="ewb-input" type="text" formControlName="extnRemarks" maxlength="100" />
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Transit type</span>
+            <input class="ewb-input" type="text" formControlName="transitType" maxlength="30" />
+            <p class="ewb-get__hint" style="margin-top: 0.25rem">Optional; leave blank if not applicable.</p>
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Consignment status <span class="ewb-req">*</span></span>
+            <select class="ewb-input" formControlName="consignmentStatus">
+              @for (c of consignmentStatuses; track c.code) {
+                <option [value]="c.code">{{ c.code }} — {{ c.label }}</option>
+              }
+            </select>
+          </label>
+
+          <div class="ewb-field ewb-field--full" style="grid-column: 1 / -1">
+            <lib-ewb-inline-alert [message]="store.extendError()" kind="error" />
+            <lib-ewb-inline-alert
+              [message]="
+                store.extendStatus() === 'success'
+                  ? 'GSTZen accepted the extension. Audit row saved; list refreshed.'
+                  : null
+              "
+              kind="success"
+            />
+            <div class="ewb-create__footer-actions" style="margin-top: 0.75rem">
+              <button class="ewb-btn ewb-btn--primary" type="submit" [disabled]="store.extendStatus() === 'loading'">
+                @if (store.extendStatus() === 'loading') {
+                  <span>Submitting…</span>
+                } @else {
+                  <span>Submit extension</span>
+                }
+              </button>
+              <button
+                type="button"
+                class="ewb-btn ewb-btn--secondary"
+                [disabled]="store.extendStatus() === 'loading'"
+                (click)="retrySubmit()"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      @if (previewPayload()) {
+        <section class="ewb-create__json-panel" aria-label="GSTZen request body preview">
+          <details class="ewb-create__json-details" open>
+            <summary class="ewb-create__json-summary">Preview payload (POST body)</summary>
+            <div class="ewb-create__json-toolbar">
+              <button type="button" class="ewb-btn ewb-btn--secondary" (click)="copyPreviewJson()">
+                Copy JSON
+              </button>
+            </div>
+            @if (copyHint(); as hint) {
+              <p class="ewb-get__hint">{{ hint }}</p>
+            }
+            <pre class="ewb-create__json-pre" tabindex="0">{{ previewJson() }}</pre>
+          </details>
+        </section>
+      }
+
+      @if (store.lastExtendApiResponse(); as apiRes) {
+        <section class="ewb-get__result">
+          <h2 class="ewb-subsection__title">API response</h2>
+          <pre>{{ apiRes | json }}</pre>
+        </section>
+      }
+    }
+  </div>
+</div>

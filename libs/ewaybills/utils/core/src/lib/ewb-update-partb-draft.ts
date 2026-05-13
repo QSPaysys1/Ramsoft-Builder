@@ -53,7 +53,8 @@ function numState(r: Record<string, unknown>): number {
   return 0;
 }
 
-function pickEwbNo(row: EwaybillDbRow): string | null {
+/** 12-digit EWB number from DB row (`ewb_number`, generate response, or request). */
+export function pickEwbNoFromEwaybillRow(row: EwaybillDbRow): string | null {
   if (row.ewb_number?.trim()) {
     return row.ewb_number.trim();
   }
@@ -75,7 +76,7 @@ function pickEwbNo(row: EwaybillDbRow): string | null {
 export function buildUpdatePartBRequestFromEwaybillRow(
   row: EwaybillDbRow,
 ): EwbUpdatePartBRequest | null {
-  const ewbRaw = pickEwbNo(row);
+  const ewbRaw = pickEwbNoFromEwaybillRow(row);
   if (!ewbRaw) {
     return null;
   }

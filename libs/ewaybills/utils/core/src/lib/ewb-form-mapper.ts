@@ -2,6 +2,8 @@ import type {
   EwaybillPersistParts,
   EwbCancelParsed,
   EwbCancelSuccess,
+  EwbExtendParsed,
+  EwbExtendSuccess,
   EwbGenerateParsed,
   EwbGenerateRequest,
   EwbGenerateSuccess,
@@ -393,6 +395,59 @@ export function parseEwbUpdateTransporterResponse(
     message:
       extractGstZenErrorMessage(flat) ||
       'Unexpected response from GSTZen (update transporter).',
+    raw: body,
+  };
+}
+
+/** Parse GSTZen extend e-way JSON (`ewbapi/extend/`). */
+export function parseEwbExtendResponse(body: Record<string, unknown>): EwbExtendParsed {
+  const flat = flattenEwbCancelPayload(body);
+  const hasErr =
+    isNicStyleCancelFailure(flat) ||
+    flat['Success'] === 'N' ||
+    flat['Success'] === false ||
+    (Array.isArray(flat['ErrorDetails']) &&
+      (flat['ErrorDetails'] as unknown[]).length > 0);
+  if (hasErr) {
+    return { message: extractGstZenErrorMessage(flat), raw: body };
+  }
+  const validUpto = pickStr(flat, [
+    'ValidUpto',
+    'validUpto',
+    'ExtnValidUpto',
+    'extnValidUpto',
+    'ExtendedValidUpto',
+    'extendedValidUpto',
+    'VehUpdDate',
+    'vehUpdDate',
+  ]);
+  const ewbNo =
+    pickStr(flat, ['EwbNo', 'ewbNo', 'ewayBillNo', 'EwbNum']) ||
+    pickNestedSigned(flat) ||
+    pickStrLoose(flat, ['EwbNo', 'ewbNo', 'ewayBillNo', 'EwbNum']);
+  const extnRemarks = pickStr(flat, ['extnRemarks', 'ExtnRemarks', 'ExtnRmrk']);
+  if (validUpto || ewbNo || extnRemarks) {
+    const success: EwbExtendSuccess = {
+      ewbNo,
+      validUpto,
+      extnRemarks,
+      raw: body,
+    };
+    return success;
+  }
+  if (isNicStyleCancelSuccess(flat)) {
+    const success: EwbExtendSuccess = {
+      ewbNo,
+      validUpto,
+      extnRemarks,
+      raw: body,
+    };
+    return success;
+  }
+  return {
+    message:
+      extractGstZenErrorMessage(flat) ||
+      'Unexpected response from GSTZen (extend).',
     raw: body,
   };
 }

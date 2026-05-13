@@ -23,3 +23,7 @@ export const GSTZEN_EWB_UPDATE_PARTB_URL_DEFAULT =
 /** GSTZen standalone update transporter (override via environment). */
 export const GSTZEN_EWB_UPDATE_TRANSPORTER_URL_DEFAULT =
   'https://my.gstzen.in/~gstzen/a/ewbapi/update-transporter/' as const;
+
+/** GSTZen standalone extend e-way bill validity (override via environment). */
+export const GSTZEN_EWB_EXTEND_URL_DEFAULT =
+  'https://my.gstzen.in/~gstzen/a/ewbapi/extend/' as const;

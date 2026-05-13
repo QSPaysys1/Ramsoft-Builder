@@ -37,6 +37,11 @@ export function canUpdatePartBForSavedEwaybillRow(row: EwaybillListView): boolea
 }
 
 /** Same eligibility as Part B: active bill with NIC EWB number. */
+export function canExtendEwaybillForSavedEwaybillRow(row: EwaybillListView): boolean {
+  return row.status === 'generated' && !!row.ewbNumber;
+}
+
+/** Same eligibility as Part B: active bill with NIC EWB number. */
 export function canUpdateTransporterForSavedEwaybillRow(row: EwaybillListView): boolean {
   return row.status === 'generated' && !!row.ewbNumber;
 }

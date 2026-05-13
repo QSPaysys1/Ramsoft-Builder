@@ -2,12 +2,15 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
   isEwbCancelSuccess,
+  isEwbExtendSuccess,
   isEwbGenerateSuccess,
   isEwbUpdatePartBSuccess,
   isEwbUpdateTransporterSuccess,
   type EwbCancelReasonCode,
   type EwbCancelRequest,
   type EwbCancelSuccess,
+  type EwbExtendRequest,
+  type EwbExtendSuccess,
   type EwbGenerateRequest,
   type EwbGenerateSuccess,
   type EwbGetRequest,
@@ -20,6 +23,7 @@ import {
   gstinValidator,
   normalizeEwbNoTo12Digits,
   parseEwbCancelResponse,
+  parseEwbExtendResponse,
   parseEwbGenerateResponse,
   parseEwbUpdatePartBResponse,
   parseEwbUpdateTransporterResponse,
@@ -35,6 +39,7 @@ import {
   resolveEwbGetUrl,
   resolveEwbUpdatePartBUrl,
   resolveEwbUpdateTransporterUrl,
+  resolveEwbExtendUrl,
 } from './gstzen-ewb-http.config';
 
 @Injectable({ providedIn: 'root' })
@@ -281,6 +286,58 @@ export class GstZenEwbApiService {
             typeof parsed.message === 'string' && parsed.message.trim()
               ? parsed.message.trim()
               : 'E-way bill transporter could not be updated (unrecognized GSTZen response).';
+          throw new EwbGstZenApiError(msg, 200, res);
+        }
+        return parsed;
+      }),
+      catchError((err: unknown) => throwError(() => mapEwbGstZenHttpError(err))),
+    );
+  }
+
+  /**
+   * Extend e-way bill validity via GSTZen `ewbapi/extend/`.
+   *
+   * @see https://my.gstzen.in/docs/api/ewaybill-api/extend-eway-bill/
+   */
+  extend(body: EwbExtendRequest, fromGstin?: string): Observable<EwbExtendSuccess> {
+    const token = this.resolveEwbToken();
+    if (!token) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'GSTZen API token is not configured. Set `environment.gstZen.token` (and optional `ewbTestToken` for the EWB test toggle) plus `GSTZEN_EWB_HTTP_CONFIG`.',
+          ),
+      );
+    }
+    const url = resolveEwbExtendUrl(this.cfg);
+    let headers = new HttpHeaders({
+      Token: token,
+      'Content-Type': 'application/json',
+    });
+    if (
+      this.headerPrefs.includeGstinHeader() &&
+      fromGstin &&
+      gstinValidator(fromGstin)
+    ) {
+      headers = headers.set('gstin', String(fromGstin).trim().toUpperCase());
+    }
+    const ewbNoNorm = Number(String(body.ewbNo).replace(/\s+/g, ''));
+    const payload: EwbExtendRequest = {
+      ...body,
+      ewbNo: ewbNoNorm,
+      fromState: Math.trunc(Number(body.fromState)),
+      fromPincode: Math.trunc(Number(body.fromPincode)),
+      remainingDistance: Math.max(0, Math.round(Number(body.remainingDistance))),
+      extnRsnCode: Math.trunc(Number(body.extnRsnCode)),
+    };
+    return this.http.post<Record<string, unknown>>(url, payload, { headers }).pipe(
+      map((res) => {
+        const parsed = parseEwbExtendResponse(res);
+        if (!isEwbExtendSuccess(parsed)) {
+          const msg =
+            typeof parsed.message === 'string' && parsed.message.trim()
+              ? parsed.message.trim()
+              : 'E-way bill could not be extended (unrecognized GSTZen response).';
           throw new EwbGstZenApiError(msg, 200, res);
         }
         return parsed;

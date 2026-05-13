@@ -41,6 +41,12 @@ export interface GstZenEnvironment {
    * @see https://my.gstzen.in/docs/api/ewaybill-api/update-transporter/
    */
   ewbUpdateTransporterUrl?: string;
+  /**
+   * Standalone extend e-way (`ewbapi/extend/`).
+   * Default: `https://my.gstzen.in/~gstzen/a/ewbapi/extend/`
+   * @see https://my.gstzen.in/docs/api/ewaybill-api/extend-eway-bill/
+   */
+  ewbExtendUrl?: string;
   /** API `Token` header (primary / “original” GSTZen token). */
   token: string;
   /** Optional token used only for standalone e-way testing when the app toggle is on. */

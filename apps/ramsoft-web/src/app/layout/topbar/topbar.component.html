@@ -81,6 +81,13 @@
         EWB Part-B
       </button>
       <button
+        routerLink="/ewaybills/extend"
+        type="button"
+        class="min-w-20 cursor-pointer rounded bg-teal-700 px-3 py-1 text-[10px] font-medium text-white shadow-sm hover:bg-teal-700/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 lg:py-1.5 lg:text-xs"
+      >
+        EWB Extend
+      </button>
+      <button
         routerLink="/versions"
         type="button"
         class="min-w-20 cursor-pointer rounded bg-[#2c4e86] px-3 py-1 text-[10px] font-medium text-white shadow-sm hover:bg-[#2c4e86]/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 lg:py-1.5 lg:text-xs"
@@ -244,6 +251,13 @@
               class="w-full border-b border-gray-600 p-4 text-left text-[15px] font-semibold tracking-wider text-white hover:bg-white/5"
             >
               E-Invoices
+            </button>
+            <button
+              type="button"
+              (click)="navigateTo('/ewaybills/extend')"
+              class="w-full border-b border-gray-600 p-4 text-left text-[15px] font-semibold tracking-wider text-white hover:bg-white/5"
+            >
+              EWB Extend
             </button>
             <button
               type="button"

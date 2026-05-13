@@ -9,7 +9,7 @@ End-to-end module for **standalone** e-way bill generation via **GSTZen** (`ewba
 | [`libs/ewaybills/models/ewb`](models/ewb) | TypeScript types: GSTZen request/response shapes, DB row types, status union |
 | [`libs/ewaybills/utils/core`](utils/core) | Pure helpers: form → API JSON, response parsing, GSTIN/PIN validators, `sanitizeUndefinedDeep` |
 | [`libs/ewaybills/data-access/ewb`](data-access/ewb) | `GstZenEwbApiService`, `EwaybillRepository`, `EwaybillStore`, HTTP config token |
-| [`libs/ewaybills/feature/flow`](feature/flow) | Lazy routes: `/ewaybills/list`, `/ewaybills/create`, `/ewaybills/:id` |
+| [`libs/ewaybills/feature/flow`](feature/flow) | Lazy routes: list, create, get, extend, update Part-B, update transporter, `:id` detail |
 | [`libs/ewaybills/ui/form`](ui/form) | Reusable `lib-ewb-section-card`, `lib-ewb-inline-alert` |
 
 **Dependency direction:** `feature` → `data-access` → `models` / `utils`; `ui` has no dependency on `data-access`.
@@ -36,6 +36,7 @@ Configure in [`apps/ramsoft-web/src/environments/environment.ts`](../../apps/ram
 | `gstZen.token` | Primary GSTZen `Token` (e-invoice APIs and default standalone e-way) |
 | `gstZen.ewbTestToken` | Optional second token; standalone e-way uses it when topbar **EWB test token** is on |
 | `gstZen.ewbGenerateUrl` | Optional override; default `https://my.gstzen.in/~gstzen/a/ewbapi/generate/` |
+| `gstZen.ewbExtendUrl` | Optional override for extend; default `https://my.gstzen.in/~gstzen/a/ewbapi/extend/` |
 
 Runtime wiring: [`apps/ramsoft-web/src/app/app.config.ts`](../../apps/ramsoft-web/src/app/app.config.ts) provides `GSTZEN_EWB_HTTP_CONFIG` alongside existing GSTZen providers.
 
@@ -149,6 +150,8 @@ For testing, either register both parties’ GSTINs in GSTZen or temporarily use
 **Example success response (illustrative):** GSTZen/NIC may return `EwbNo`, `EwbDt`, `ValidUpto`, or nest values under `SignedEwb`. The parser in [`parseEwbGenerateResponse`](utils/core/src/lib/ewb-form-mapper.ts) normalizes several variants.
 
 **Errors:** Logical errors often return HTTP 200 with `Success: "N"` or `ErrorDetails[]`. These are turned into `EwbGstZenApiError` with a readable message.
+
+**Extend:** [`extend()`](data-access/ewb/src/lib/gstzen-ewb-api.service.ts) POSTs typed `EwbExtendRequest` to `ewbapi/extend/`; responses are normalized by [`parseEwbExtendResponse`](utils/core/src/lib/ewb-form-mapper.ts). Successful extends are logged into `eway_bill_transport_updates` with `__transportOp: 'extend'` on `request_payload` (see [`EwaybillStore.submitExtendUpdate`](data-access/ewb/src/lib/ewaybill.store.ts)).
 
 ## Persistence policy
 

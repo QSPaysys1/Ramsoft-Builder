@@ -23,6 +23,7 @@ export const environment = {
     ewbUpdatePartBUrl: 'https://my.gstzen.in/~gstzen/a/ewbapi/updatepartb/',
     ewbUpdateTransporterUrl:
       'https://my.gstzen.in/~gstzen/a/ewbapi/update-transporter/',
+    ewbExtendUrl: 'https://my.gstzen.in/~gstzen/a/ewbapi/extend/',
     token: '',
     ewbTestToken: undefined as string | undefined,
   } satisfies GstZenEnvironment,
