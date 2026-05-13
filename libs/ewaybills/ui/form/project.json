@@ -1,0 +1,13 @@
+{
+  "name": "ewaybills-ui-form",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ewaybills/ui/form/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:ui", "domain:ewaybills"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

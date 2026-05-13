@@ -9,6 +9,11 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthStore, type AppUser } from '@ramsoft-builder/auth/data-access/auth';
+import {
+  GSTZEN_EWB_HTTP_CONFIG,
+  GstZenEwbHeaderPrefsService,
+  GstZenEwbTokenPrefsService,
+} from '@ramsoft-builder/ewaybills/data-access/ewb';
 
 @Component({
   standalone: true,
@@ -21,6 +26,13 @@ export class TopbarComponent {
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
   readonly authStore = inject(AuthStore);
+  readonly ewbGstinHeaderPrefs = inject(GstZenEwbHeaderPrefsService);
+  readonly ewbTokenPrefs = inject(GstZenEwbTokenPrefsService);
+  readonly ewbHttp = inject(GSTZEN_EWB_HTTP_CONFIG);
+
+  readonly ewbTestTokenAvailable = computed(() =>
+    Boolean(this.ewbHttp.ewbTestToken?.trim()),
+  );
 
   readonly menuOpen = signal(false);
   readonly mobileMenuOpen = signal(false);
@@ -61,6 +73,16 @@ export class TopbarComponent {
 
   toggleMobileMenu(): void {
     this.mobileMenuOpen.update((v) => !v);
+  }
+
+  onEwbGstinHeaderChange(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    this.ewbGstinHeaderPrefs.setIncludeGstinHeader(el.checked);
+  }
+
+  onEwbTestTokenChange(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    this.ewbTokenPrefs.setUseEwbTestToken(el.checked);
   }
 
   navigateTo(path: string): void {

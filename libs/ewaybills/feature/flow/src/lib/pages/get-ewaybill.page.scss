@@ -1,0 +1,57 @@
+/* Get E-Way Bill — reuses create page shell; add fetch-only bits */
+
+.ewb-get__endpoint {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: rgb(248 250 252);
+  border: 1px solid rgb(226 232 240);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  word-break: break-all;
+  color: rgb(51 65 85);
+}
+
+.ewb-get__payload {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: rgb(255 255 255);
+  border: 1px solid rgb(226 232 240);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  overflow: auto;
+}
+
+.ewb-get__result {
+  margin-top: 1.25rem;
+}
+
+.ewb-get__result pre {
+  margin: 0.65rem 0 0;
+  max-height: min(70vh, 32rem);
+  overflow: auto;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: rgb(248 250 252);
+  border: 1px solid rgb(226 232 240);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.ewb-field__error {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(220 38 38);
+}
+
+.ewb-create__lede-code {
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+  font-size: 0.88em;
+  font-weight: 600;
+  background: rgb(241 245 249);
+  color: rgb(51 65 85);
+}

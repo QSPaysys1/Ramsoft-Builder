@@ -11,6 +11,7 @@ import {
   withEventReplay,
 } from '@angular/platform-browser';
 import { provideSupabaseClient } from '@ramsoft-builder/shared/data-access/supabase';
+import { GSTZEN_EWB_HTTP_CONFIG } from '@ramsoft-builder/ewaybills/data-access/ewb';
 import { GSTZEN_EINVOICE_CONFIG } from '@ramsoft-builder/e-invoices/data-access/einvoice';
 import { EINVOICE_GSTZEN_HTTP_CONFIG } from '@ramsoft-builder/einvoice/data-access/api';
 import { environment } from '../environments/environment';
@@ -36,6 +37,22 @@ export const appConfig: ApplicationConfig = {
         einvoiceCancelEwbUrl: environment.gstZen.einvoiceCancelEwbUrl,
         einvoiceGetByIrnUrl: environment.gstZen.einvoiceGetByIrnUrl,
         token: environment.gstZen.token,
+      },
+    },
+    {
+      provide: GSTZEN_EWB_HTTP_CONFIG,
+      useValue: {
+        generateUrl:
+          environment.gstZen.ewbGenerateUrl?.trim() ||
+          'https://my.gstzen.in/~gstzen/a/ewbapi/generate/',
+        cancelUrl:
+          environment.gstZen.ewbCancelUrl?.trim() ||
+          'https://my.gstzen.in/~gstzen/a/ewbapi/cancel/',
+        getUrl:
+          environment.gstZen.ewbGetUrl?.trim() ||
+          'https://my.gstzen.in/~gstzen/a/ewbapi/getewb/',
+        token: environment.gstZen.token,
+        ewbTestToken: environment.gstZen.ewbTestToken?.trim() || undefined,
       },
     },
     provideClientHydration(withEventReplay()),

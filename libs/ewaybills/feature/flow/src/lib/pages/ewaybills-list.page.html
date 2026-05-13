@@ -1,0 +1,174 @@
+<div class="mx-auto max-w-5xl space-y-4 p-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-xl font-bold text-slate-900">E-Way Bills</h1>
+    <div class="flex gap-2">
+      <a
+        routerLink="/home"
+        class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800"
+      >
+        Home
+      </a>
+      <a
+        routerLink="/ewaybills/create"
+        class="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
+      >
+        Create E-Way Bill
+      </a>
+    </div>
+  </div>
+
+  <lib-ewb-inline-alert [message]="store.listError()" kind="error" />
+  <lib-ewb-inline-alert [message]="cancelSuccessMessage()" kind="success" />
+
+  @if (store.listLoading()) {
+    <p class="text-sm text-slate-600">Loading…</p>
+  } @else if (store.list().length === 0) {
+    <p class="text-sm text-slate-600">No saved e-way bills yet.</p>
+  } @else {
+    <div class="overflow-x-auto rounded-xl border border-slate-200">
+      <table class="min-w-full text-left text-sm">
+        <thead class="bg-slate-50 text-slate-700">
+          <tr>
+            <th class="px-3 py-2">Doc</th>
+            <th class="px-3 py-2">EWB no</th>
+            <th class="px-3 py-2">Status</th>
+            <th class="px-3 py-2">Created</th>
+            <th class="px-3 py-2 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of store.list(); track r.id) {
+            <tr class="border-t border-slate-100">
+              <td class="px-3 py-2">
+                {{ r.docNo ?? '—' }}
+                @if (r.docDate) {
+                  <span class="text-slate-500">({{ r.docDate }})</span>
+                }
+              </td>
+              <td class="px-3 py-2 font-mono">{{ r.ewbNumber ?? '—' }}</td>
+              <td class="px-3 py-2 capitalize">
+                <span
+                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold"
+                  [class]="
+                    r.status === 'cancelled'
+                      ? 'bg-rose-50 text-rose-700'
+                      : r.status === 'generated'
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : r.status === 'error'
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'bg-slate-100 text-slate-700'
+                  "
+                >
+                  {{ r.status }}
+                </span>
+              </td>
+              <td class="px-3 py-2 text-slate-600">{{ r.createdAt | date: 'medium' }}</td>
+              <td class="px-3 py-2">
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                  <a
+                    [routerLink]="['/ewaybills', r.id]"
+                    class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 no-underline hover:bg-slate-50"
+                  >
+                    View
+                  </a>
+                  <button
+                    type="button"
+                    class="inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    [disabled]="!canCancel(r)"
+                    [title]="canCancel(r) ? 'Cancel this e-way bill' : 'Only generated e-way bills with an EWB number can be cancelled'"
+                    (click)="openCancelDialog(r)"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (cancelTarget(); as target) {
+  <div
+    class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="ewb-cancel-title"
+  >
+    <div class="w-full max-w-md rounded-xl bg-white shadow-xl">
+      <div class="border-b border-slate-100 px-5 py-4">
+        <h2 id="ewb-cancel-title" class="text-lg font-semibold text-slate-900">
+          Cancel e-way bill
+        </h2>
+        <p class="mt-1 text-sm text-slate-600">
+          EWB
+          <span class="font-mono font-semibold text-slate-900">{{ target.ewbNumber }}</span>
+          will be cancelled with GSTZen.
+        </p>
+      </div>
+      <form
+        [formGroup]="cancelForm"
+        (ngSubmit)="submitCancel()"
+        class="space-y-4 px-5 py-4"
+      >
+        <label class="block">
+          <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+            Reason
+          </span>
+          <select
+            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+            formControlName="cancelRsnCode"
+          >
+            @for (opt of cancelReasons; track opt.code) {
+              <option [ngValue]="opt.code">{{ opt.code }}. {{ opt.label }}</option>
+            }
+          </select>
+        </label>
+        <label class="block">
+          <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+            Remarks (optional, max 50 chars)
+          </span>
+          <input
+            type="text"
+            maxlength="50"
+            placeholder="e.g. Vehicle details not updated"
+            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+            formControlName="cancelRmrk"
+          />
+        </label>
+
+        <lib-ewb-inline-alert [message]="store.cancelError()" kind="error" />
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button
+            type="button"
+            class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 disabled:opacity-50"
+            [disabled]="cancelInFlight()"
+            (click)="closeCancelDialog()"
+          >
+            Close
+          </button>
+          <button
+            type="submit"
+            class="rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
+            [disabled]="cancelInFlight()"
+          >
+            {{ cancelInFlight() ? 'Cancelling…' : 'Confirm cancel' }}
+          </button>
+        </div>
+        <p class="text-xs text-slate-500">
+          Reference:
+          <a
+            class="underline"
+            href="https://my.gstzen.in/docs/api/ewaybill-api/cancel-eway-bill/"
+            target="_blank"
+            rel="noreferrer"
+            >GSTZen cancel e-way bill API</a
+          >
+        </p>
+      </form>
+    </div>
+  </div>
+}

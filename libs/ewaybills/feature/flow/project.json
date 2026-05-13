@@ -1,0 +1,14 @@
+{
+  "name": "ewaybills-feature-flow",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ewaybills/feature/flow/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:feature", "domain:ewaybills"],
+  "implicitDependencies": ["e-invoices-data-access-einvoice", "e-invoices-feature-create"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

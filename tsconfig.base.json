@@ -53,6 +53,21 @@
       "@ramsoft-builder/einvoice/utils/core": [
         "libs/einvoice/utils/core/src/index.ts"
       ],
+      "@ramsoft-builder/ewaybills/data-access/ewb": [
+        "libs/ewaybills/data-access/ewb/src/index.ts"
+      ],
+      "@ramsoft-builder/ewaybills/feature/flow": [
+        "libs/ewaybills/feature/flow/src/index.ts"
+      ],
+      "@ramsoft-builder/ewaybills/models/ewb": [
+        "libs/ewaybills/models/ewb/src/index.ts"
+      ],
+      "@ramsoft-builder/ewaybills/ui/form": [
+        "libs/ewaybills/ui/form/src/index.ts"
+      ],
+      "@ramsoft-builder/ewaybills/utils/core": [
+        "libs/ewaybills/utils/core/src/index.ts"
+      ],
       "@ramsoft-builder/shared/data-access/supabase": [
         "libs/shared/data-access/supabase/src/index.ts"
       ]

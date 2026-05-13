@@ -17,6 +17,10 @@ export const environment = {
       'https://my.gstzen.in/~gstzen/a/post-einvoice-data/einvoice-json/cancelewb/',
     einvoiceGetByIrnUrl:
       'https://my.gstzen.in/~gstzen/a/post-einvoice-data/einvoice-json/geteinv/',
+    ewbGenerateUrl: 'https://my.gstzen.in/~gstzen/a/ewbapi/generate/',
+    ewbCancelUrl: 'https://my.gstzen.in/~gstzen/a/ewbapi/cancel/',
+    ewbGetUrl: 'https://my.gstzen.in/~gstzen/a/ewbapi/getewb/',
     token: '',
+    ewbTestToken: undefined as string | undefined,
   } satisfies GstZenEnvironment,
 };

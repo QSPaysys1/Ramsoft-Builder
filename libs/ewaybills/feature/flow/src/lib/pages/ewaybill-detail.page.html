@@ -1,0 +1,57 @@
+<div class="mx-auto max-w-5xl space-y-4 p-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-xl font-bold text-slate-900">E-Way Bill detail</h1>
+    <a routerLink="/ewaybills/list" class="text-sm font-semibold text-slate-700 underline">
+      Back to list
+    </a>
+  </div>
+
+  <lib-ewb-inline-alert [message]="loadError()" kind="error" />
+
+  @if (row() === undefined) {
+    <p class="text-sm text-slate-600">Loading…</p>
+  } @else if (row() === null) {
+    <p class="text-sm text-slate-600">Record not found.</p>
+  } @else {
+    @let doc = row()!;
+    <dl class="grid gap-2 rounded-xl border border-slate-200 bg-white p-4 text-sm sm:grid-cols-2">
+      <div>
+        <dt class="text-slate-500">EWB number</dt>
+        <dd class="font-mono font-semibold">{{ doc.ewb_number ?? '—' }}</dd>
+      </div>
+      <div>
+        <dt class="text-slate-500">Status</dt>
+        <dd class="capitalize">{{ doc.status }}</dd>
+      </div>
+      <div>
+        <dt class="text-slate-500">Created</dt>
+        <dd>{{ doc.created_at | date: 'medium' }}</dd>
+      </div>
+      <div>
+        <dt class="text-slate-500">Updated</dt>
+        <dd>{{ doc.updated_at | date: 'medium' }}</dd>
+      </div>
+    </dl>
+
+    <section class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <h2 class="mb-2 text-sm font-semibold text-slate-800">Invoice details (JSON)</h2>
+      <pre class="max-h-64 overflow-auto text-xs">{{ doc.invoice_details | json }}</pre>
+    </section>
+    <section class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <h2 class="mb-2 text-sm font-semibold text-slate-800">Transporter (JSON)</h2>
+      <pre class="max-h-48 overflow-auto text-xs">{{ doc.transporter_details | json }}</pre>
+    </section>
+    <section class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <h2 class="mb-2 text-sm font-semibold text-slate-800">Vehicle (JSON)</h2>
+      <pre class="max-h-48 overflow-auto text-xs">{{ doc.vehicle_details | json }}</pre>
+    </section>
+    <section class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <h2 class="mb-2 text-sm font-semibold text-slate-800">Request sent (JSON)</h2>
+      <pre class="max-h-64 overflow-auto text-xs">{{ doc.request_payload | json }}</pre>
+    </section>
+    <section class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <h2 class="mb-2 text-sm font-semibold text-slate-800">GSTZen response (JSON)</h2>
+      <pre class="max-h-96 overflow-auto text-xs">{{ doc.generated_response | json }}</pre>
+    </section>
+  }
+</div>

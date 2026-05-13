@@ -14,6 +14,23 @@ export interface GstZenEnvironment {
   einvoiceCancelEwbUrl?: string;
   /** Optional override for “get e-invoice by IRN” (`geteinv`). */
   einvoiceGetByIrnUrl?: string;
-  /** API `Token` header; use a proxy or CI secrets in production — never commit live tokens. */
+  /**
+   * Standalone e-way bill generate (`ewbapi/generate/`).
+   * Default: `https://my.gstzen.in/~gstzen/a/ewbapi/generate/`
+   */
+  ewbGenerateUrl?: string;
+  /**
+   * Standalone e-way bill cancel (`ewbapi/cancel/`).
+   * Default: `https://my.gstzen.in/~gstzen/a/ewbapi/cancel/`
+   */
+  ewbCancelUrl?: string;
+  /**
+   * Standalone fetch e-way bill by number (`ewbapi/getewb/`).
+   * Default: `https://my.gstzen.in/~gstzen/a/ewbapi/getewb/`
+   */
+  ewbGetUrl?: string;
+  /** API `Token` header (primary / “original” GSTZen token). */
   token: string;
+  /** Optional token used only for standalone e-way testing when the app toggle is on. */
+  ewbTestToken?: string;
 }

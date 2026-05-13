@@ -1,0 +1,119 @@
+<div class="ewb-create">
+  <div class="ewb-create__bg" aria-hidden="true"></div>
+
+  <div class="ewb-create__shell">
+    <header class="ewb-create__hero">
+      <div class="ewb-create__hero-text">
+        <p class="ewb-create__eyebrow">GSTZen · get e-way bill</p>
+        <h1 class="ewb-create__title">Get e-way bill</h1>
+        <p class="ewb-create__lede">
+          POST <code class="ewb-create__lede-code">ewbNo</code> (12 digits) to fetch bill JSON from GSTZen. Optional
+          <code class="ewb-create__lede-code">gstin</code> is sent as the HTTP header when your app has “include GSTIN
+          header” enabled.
+        </p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-start">
+        <a routerLink="/home" class="ewb-create__back">
+          <span class="ewb-create__back-icon" aria-hidden="true">←</span>
+          Home
+        </a>
+        <a routerLink="/ewaybills/list" class="ewb-create__back">
+          <span class="ewb-create__back-icon" aria-hidden="true">←</span>
+          All e-way bills
+        </a>
+        <a
+          class="ewb-btn ewb-btn--primary"
+          [href]="docPageUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          style="text-decoration: none"
+        >
+          API documentation
+        </a>
+      </div>
+    </header>
+
+    <p class="ewb-get__endpoint">
+      <strong>Endpoint</strong><br />
+      {{ apiEndpoint() }}
+    </p>
+
+    <section>
+      <h2 class="ewb-subsection__title" style="margin-bottom: 0.5rem">Minimal payload (reference)</h2>
+      <pre class="ewb-get__payload">{{ minimalPayloadExample }}</pre>
+    </section>
+
+    @if (includeGstinHeader()) {
+      <lib-ewb-inline-alert
+        [message]="
+          'GSTIN header is ON: enter your 15-character GSTIN below so the request can include the gstin header.'
+        "
+        kind="info"
+      />
+    }
+
+    <form class="ewb-create__form" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="ewb-subsection ewb-subsection--band">
+        <h2 class="ewb-subsection__title">Request</h2>
+        <div class="ewb-grid ewb-grid--2">
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">E-way bill number <span class="ewb-req">*</span> (12 digits)</span>
+            <input
+              class="ewb-input"
+              type="text"
+              formControlName="ewbNo"
+              name="ewbNo"
+              inputmode="numeric"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="14"
+              placeholder="e.g. 141010270204"
+            />
+            @if (form.controls.ewbNo.touched && form.controls.ewbNo.invalid) {
+              <span class="ewb-field__error">Enter exactly 12 digits (spaces allowed).</span>
+            }
+          </label>
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">
+              GSTIN @if (includeGstinHeader()) {
+                <span class="ewb-req">*</span>
+              }
+            </span>
+            <input
+              class="ewb-input"
+              type="text"
+              formControlName="gstin"
+              name="gstin"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="15"
+              placeholder="e.g. 29AADCG4992P1ZP"
+            />
+            <p class="ewb-get__hint">
+              Used as the <code>gstin</code> HTTP header when enabled in settings. Optional when the header toggle is
+              off.
+            </p>
+            @if (form.controls.gstin.touched && form.controls.gstin.invalid) {
+              <span class="ewb-field__error">Invalid GSTIN format.</span>
+            }
+          </label>
+        </div>
+      </div>
+
+      <lib-ewb-inline-alert [message]="errorMessage()" kind="error" />
+
+      <div class="ewb-create__footer-actions">
+        <button class="ewb-btn ewb-btn--primary" type="submit" [disabled]="loading()">
+          {{ loading() ? 'Loading…' : 'Fetch e-way bill' }}
+        </button>
+      </div>
+    </form>
+
+    @if (result()) {
+      <section class="ewb-get__result">
+        <h2 class="ewb-subsection__title">Response</h2>
+        <pre>{{ result() | json }}</pre>
+      </section>
+    }
+  </div>
+</div>

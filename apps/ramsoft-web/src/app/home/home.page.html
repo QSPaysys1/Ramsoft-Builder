@@ -71,9 +71,9 @@
             {{ dashboardCount('cinvoices') }}
           </p>
         </div>
-        <div
-          class="div-menu-tab cursor-pointer rounded-xl border border-gray-100 bg-slate-100 p-4 text-center"
-          routerLink="/e-invoices/ewaybills"
+        <a
+          class="div-menu-tab cursor-pointer rounded-xl border border-gray-100 bg-slate-100 p-4 text-center no-underline text-inherit"
+          routerLink="/ewaybills/list"
         >
           <div>
             <svg
@@ -101,100 +101,8 @@
           >
             {{ dashboardCount('ewaybills') }}
           </p>
-        </div>
-        <div
-          class="div-menu-tab cursor-pointer rounded-xl border border-gray-100 bg-slate-100 p-4 text-center"
-          routerLink="/e-invoices/creditnotes"
-        >
-          <div>
-            <svg
-              class="img-invert mx-auto mb-4 h-14 w-14 text-[#222f3f]"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l-3 3m3-3 3 3"
-              />
-            </svg>
-          </div>
-          <h6 class="mb-2 text-base font-semibold uppercase tracking-wider text-[#222f3f]">
-            Credit Notes
-          </h6>
-          <p
-            class="inline-block rounded-lg border-2 border-gray-100 bg-white px-5 py-1.5 text-base font-semibold tracking-wide"
-            style="color: red"
-          >
-            {{ dashboardCount('creditnotes') }}
-          </p>
-        </div>
-        <div
-          class="div-menu-tab cursor-pointer rounded-xl border border-gray-100 bg-slate-100 p-4 text-center"
-          routerLink="/e-invoices/debitnotes"
-        >
-          <div>
-            <svg
-              class="mx-auto mb-4 h-14 w-14 text-[#222f3f]"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6 7.5H8.25m6 7.5H8.25M3 8.25h.008v.008H3zm3 0h.008v.008H6zm3 0h.008v.008H9z"
-              />
-            </svg>
-          </div>
-          <h6 class="mb-2 text-base font-semibold uppercase tracking-wider text-[#222f3f]">
-            Debit Notes
-          </h6>
-          <p
-            class="inline-block rounded-lg border-2 border-gray-100 bg-white px-5 py-1.5 text-base font-semibold tracking-wide"
-            style="color: red"
-          >
-            {{ dashboardCount('debitnotes') }}
-          </p>
-        </div>
-        <div
-          class="div-menu-tab cursor-pointer rounded-xl border border-gray-100 bg-slate-100 p-4 text-center"
-          routerLink="/e-invoices/gsttrack"
-        >
-          <div>
-            <svg
-              class="mx-auto mb-4 h-14 w-14 text-[#222f3f]"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75Zm9.75-6.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v13.125c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V6.75Zm6.75-4.875c0-.621.504-1.125 1.125-1.125h2.25C20.496 1.5 21 2.004 21 2.625v17.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V1.875Z"
-              />
-            </svg>
-          </div>
-          <h6 class="mb-2 text-base font-semibold uppercase tracking-wider text-[#222f3f]">
-            My GST Returns
-          </h6>
-          <p
-            class="inline-block rounded-lg border-2 border-gray-100 bg-white px-5 py-1.5 text-base font-semibold tracking-wide"
-            style="color: red"
-          >
-            Tracking
-          </p>
-        </div>
+        </a>
+       
         <a
           class="div-menu-tab cursor-pointer rounded-xl border border-gray-100 bg-slate-100 p-4 text-center no-underline text-inherit"
           routerLink="/e-invoice/create"
@@ -248,6 +156,33 @@
           <p class="text-sm font-medium text-slate-600">GSTZen geteinv</p>
         </a>
         <a
+          class="div-menu-tab cursor-pointer rounded-xl border border-gray-100 bg-slate-100 p-4 
+          text-center no-underline text-inherit"
+          routerLink="/ewaybills/get"
+        >
+          <div>
+            <svg
+              class="mx-auto mb-4 h-14 w-14 text-[#222f3f]"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+              />
+            </svg>
+          </div>
+          <h6 class="mb-2 text-base font-semibold uppercase tracking-wider text-[#222f3f]">
+            Get e-way bill
+          </h6>
+          <p class="text-sm font-medium text-slate-600">GSTZen · ewbNo</p>
+        </a>
+        <a
           class="div-menu-tab cursor-pointer rounded-xl border border-gray-100 bg-slate-100 p-4 text-center no-underline text-inherit"
           routerLink="/e-invoice/create-ewaybill"
         >
@@ -274,12 +209,59 @@
           <p class="text-sm font-medium text-slate-600">IRN and EWB together</p>
         </a>
       </div>
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between gap-3">
         <div></div>
-        <a
-          class="flex cursor-pointer items-center justify-between no-underline"
-          routerLink="/e-invoices/create"
-        >
+        <div class="flex flex-wrap items-center justify-end gap-3">
+          <a
+            class="flex cursor-pointer items-center justify-between no-underline"
+            routerLink="/ewaybills/get"
+          >
+            <div
+              class="flex items-center rounded-full border border-gray-100 bg-white py-3 pr-4 pl-3 text-[#222f3f] shadow-sm"
+            >
+              <svg
+                class="mr-2.5 size-6 rounded-full bg-slate-600 p-1 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.365 5.548l4.553 4.553a.75.75 0 0 1-1.06 1.06l-4.553-4.553A8.25 8.25 0 0 1 2.25 10.5Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <h4 class="text-base font-semibold tracking-widest">Get E-Way Bill</h4>
+            </div>
+          </a>
+          <a
+            class="flex cursor-pointer items-center justify-between no-underline"
+            routerLink="/ewaybills/create"
+          >
+            <div
+              class="flex items-center rounded-full border border-gray-100 bg-white py-3 pr-4 pl-3 text-[#222f3f] shadow-sm"
+            >
+              <svg
+                class="mr-2.5 size-6 rounded-full bg-[#222f3f] p-1 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <h4 class="text-base font-semibold tracking-widest">Create E-Way Bill</h4>
+            </div>
+          </a>
+          <a
+            class="flex cursor-pointer items-center justify-between no-underline"
+            routerLink="/e-invoices/create"
+          >
           <div
             class="flex items-center rounded-full border border-gray-100 bg-[#222f3f] py-3 pr-4 pl-3 text-white"
           >
@@ -299,6 +281,7 @@
             <h4 class="text-base font-semibold tracking-widest">Create E-Invoice</h4>
           </div>
         </a>
+        </div>
       </div>
     </div>
   </div>

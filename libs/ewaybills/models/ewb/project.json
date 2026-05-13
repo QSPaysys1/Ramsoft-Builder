@@ -1,0 +1,19 @@
+{
+  "name": "ewaybills-models-ewb",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ewaybills/models/ewb/src",
+  "projectType": "library",
+  "tags": ["type:models", "domain:ewaybills"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/ewaybills/models/ewb",
+        "main": "libs/ewaybills/models/ewb/src/index.ts",
+        "tsConfig": "libs/ewaybills/models/ewb/tsconfig.lib.json",
+        "assets": ["libs/ewaybills/models/ewb/*.md"]
+      }
+    }
+  }
+}

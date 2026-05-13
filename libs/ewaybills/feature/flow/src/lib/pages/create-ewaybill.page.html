@@ -1,0 +1,423 @@
+<div class="ewb-create">
+  <div class="ewb-create__bg" aria-hidden="true"></div>
+
+  <div class="ewb-create__shell">
+    <header class="ewb-create__hero">
+      <div class="ewb-create__hero-text">
+        <p class="ewb-create__eyebrow">GSTZen · E-way bill</p>
+        <h1 class="ewb-create__title">Create E-Way Bill</h1>
+        <p class="ewb-create__lede">
+          Enter consignment, party, and vehicle details. Data is validated locally, then sent to GSTZen
+          and saved to your account after a successful response.
+        </p>
+      </div>
+      <a routerLink="/ewaybills/list" class="ewb-create__back">
+        <span class="ewb-create__back-icon" aria-hidden="true">←</span>
+        All e-way bills
+      </a>
+    </header>
+
+    <div class="ewb-create__alerts">
+      <lib-ewb-inline-alert [message]="store.errorMessage()" kind="error" />
+      @if (isGstZenGstinAccountError()) {
+        <lib-ewb-inline-alert [message]="gstZenGstinAccountHint" kind="info" />
+      }
+      <lib-ewb-inline-alert [message]="gstLookupError()" kind="error" />
+      @if (store.status() === 'success') {
+        <lib-ewb-inline-alert
+          [message]="
+            'E-way bill generated: ' +
+            (store.lastEwbNo() ?? 'OK') +
+            (store.lastInsertedId() ? ' — saved to your records.' : '')
+          "
+          kind="success"
+        />
+      }
+    </div>
+
+    <form (ngSubmit)="submit()" [formGroup]="form" class="ewb-create__form" novalidate>
+      <lib-ewb-section-card
+        step="1"
+        title="Invoice & parties"
+        hint="Document identifiers, consignor and consignee as required for Part-A JSON."
+      >
+        <div formGroupName="invoice" class="ewb-create__stack">
+          <div class="ewb-subsection">
+            <h4 class="ewb-subsection__title">Document</h4>
+            <div class="ewb-grid ewb-grid--2">
+              <label class="ewb-field">
+                <span class="ewb-field__label">Supply type</span>
+                <input class="ewb-input" formControlName="supplyType" autocomplete="off" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Sub supply type</span>
+                <input class="ewb-input" formControlName="subSupplyType" autocomplete="off" />
+              </label>
+              <label class="ewb-field ewb-field--full">
+                <span class="ewb-field__label">Sub supply description</span>
+                <input class="ewb-input" formControlName="subSupplyDesc" autocomplete="off" placeholder="Optional" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Doc type</span>
+                <input class="ewb-input" formControlName="docType" autocomplete="off" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Doc no <span class="ewb-req">*</span></span>
+                <input class="ewb-input" formControlName="docNo" autocomplete="off" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Doc date <span class="ewb-req">*</span></span>
+                <input class="ewb-input" type="date" formControlName="docDate" autocomplete="off" />
+              </label>
+            </div>
+          </div>
+
+          <div class="ewb-subsection ewb-subsection--band">
+            <h4 class="ewb-subsection__title">Ship from (consignor)</h4>
+            <div class="ewb-grid ewb-grid--2">
+              <label class="ewb-field">
+                <span class="ewb-field__label">GSTIN <span class="ewb-req">*</span></span>
+                <input
+                  class="ewb-input ewb-input--gstin"
+                  formControlName="fromGstin"
+                  maxlength="15"
+                  spellcheck="false"
+                  autocapitalize="characters"
+                  autocomplete="off"
+                />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Trade name <span class="ewb-req">*</span></span>
+                <input class="ewb-input" formControlName="fromTrdName" autocomplete="organization" />
+              </label>
+              <label class="ewb-field ewb-field--full">
+                <span class="ewb-field__label">Address line <span class="ewb-req">*</span></span>
+                <input class="ewb-input" formControlName="fromAddr1" autocomplete="street-address" />
+              </label>
+              <label class="ewb-field ewb-field--full">
+                <span class="ewb-field__label">Address line 2</span>
+                <input class="ewb-input" formControlName="fromAddr2" autocomplete="street-address" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Place <span class="ewb-req">*</span></span>
+                <input class="ewb-input" formControlName="fromPlace" autocomplete="address-level2" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">PIN <span class="ewb-req">*</span></span>
+                <input class="ewb-input ewb-input--pin" formControlName="fromPincode" inputmode="numeric" maxlength="6" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">State <span class="ewb-req">*</span></span>
+                <select class="ewb-input ewb-select" formControlName="fromStateCode">
+                  <option [ngValue]="null">Select state</option>
+                  @for (s of states; track s.GSTStateCode) {
+                    <option [ngValue]="stateCodeNum(s)">{{ s.State }} ({{ s.GSTStateCode }})</option>
+                  }
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="ewb-subsection ewb-subsection--band ewb-subsection--to">
+            <h4 class="ewb-subsection__title">Ship to (consignee)</h4>
+            <div class="ewb-grid ewb-grid--2">
+              <div class="ewb-field ewb-field--gstin-row">
+                <span class="ewb-field__label">GSTIN <span class="ewb-req">*</span></span>
+                <div class="ewb-gstin-row">
+                  <input
+                    class="ewb-input ewb-input--gstin ewb-gstin-row__input"
+                    formControlName="toGstin"
+                    maxlength="15"
+                    spellcheck="false"
+                    autocapitalize="characters"
+                    autocomplete="off"
+                  />
+                  <button
+                    type="button"
+                    class="ewb-btn ewb-btn--go"
+                    [disabled]="gstLoading()"
+                    (click)="checkToPartyGstin()"
+                  >
+                    @if (gstLoading()) {
+                      …
+                    } @else {
+                      Go
+                    }
+                  </button>
+                </div>
+              </div>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Trade name <span class="ewb-req">*</span></span>
+                <input class="ewb-input" formControlName="toTrdName" autocomplete="organization" />
+              </label>
+              <label class="ewb-field ewb-field--full">
+                <span class="ewb-field__label">Address line <span class="ewb-req">*</span></span>
+                <input class="ewb-input" formControlName="toAddr1" autocomplete="street-address" />
+              </label>
+              <label class="ewb-field ewb-field--full">
+                <span class="ewb-field__label">Address line 2</span>
+                <input class="ewb-input" formControlName="toAddr2" autocomplete="street-address" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Place <span class="ewb-req">*</span></span>
+                <input class="ewb-input" formControlName="toPlace" autocomplete="address-level2" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">PIN <span class="ewb-req">*</span></span>
+                <input class="ewb-input ewb-input--pin" formControlName="toPincode" inputmode="numeric" maxlength="6" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">State <span class="ewb-req">*</span></span>
+                <select class="ewb-input ewb-select" formControlName="toStateCode">
+                  <option [ngValue]="null">Select state</option>
+                  @for (s of states; track s.GSTStateCode) {
+                    <option [ngValue]="stateCodeNum(s)">{{ s.State }} ({{ s.GSTStateCode }})</option>
+                  }
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="ewb-subsection">
+            <h4 class="ewb-subsection__title">Movement</h4>
+            <div class="ewb-grid ewb-grid--2">
+              <label class="ewb-field">
+                <span class="ewb-field__label">Transaction type</span>
+                <input class="ewb-input ewb-input--num" type="number" formControlName="transactionType" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Distance (km) <span class="ewb-req">*</span></span>
+                <input class="ewb-input ewb-input--num" type="number" formControlName="transDistance" />
+              </label>
+            </div>
+          </div>
+        </div>
+      </lib-ewb-section-card>
+
+      <lib-ewb-section-card
+        step="2"
+        title="Line items"
+        hint="At least one line. Tax rates are optional when not applicable."
+      >
+        <div class="ewb-create__stack">
+          <div formArrayName="items">
+          @for (g of items.controls; track $index) {
+            <div [formGroupName]="$index" class="ewb-line-card">
+              <div class="ewb-line-card__head">
+                <span class="ewb-line-card__badge">Item {{ $index + 1 }}</span>
+                <div class="ewb-line-card__actions">
+                  <button type="button" class="ewb-btn ewb-btn--ghost" (click)="addItem()">+ Add line</button>
+                  <button
+                    type="button"
+                    class="ewb-btn ewb-btn--danger"
+                    [disabled]="items.length <= 1"
+                    (click)="removeItem($index)"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+              <div class="ewb-grid ewb-grid--3">
+                @if (varietyOptions().length > 0) {
+                  <label class="ewb-field ewb-field--full">
+                    <span class="ewb-field__label">Variety / product <span class="ewb-req">*</span></span>
+                    <select
+                      class="ewb-input ewb-select"
+                      formControlName="productName"
+                      (change)="onVarietySelected($index, $event)"
+                    >
+                      <option value="">Select from catalog</option>
+                      @for (v of varietyOptions(); track v.productName + ':' + $index) {
+                        <option [value]="v.productName">{{ v.productName }}</option>
+                      }
+                    </select>
+                  </label>
+                } @else {
+                  <label class="ewb-field ewb-field--full">
+                    <span class="ewb-field__label">Product <span class="ewb-req">*</span></span>
+                    <input class="ewb-input" formControlName="productName" placeholder="No catalog — enter name" />
+                  </label>
+                }
+                <label class="ewb-field">
+                  <span class="ewb-field__label">HSN <span class="ewb-req">*</span></span>
+                  <input class="ewb-input ewb-input--num" type="number" formControlName="hsnCode" />
+                </label>
+                <label class="ewb-field">
+                  <span class="ewb-field__label">Qty <span class="ewb-req">*</span></span>
+                  <input class="ewb-input ewb-input--num" type="number" formControlName="quantity" />
+                </label>
+                <label class="ewb-field">
+                  <span class="ewb-field__label">Unit</span>
+                  <input class="ewb-input" formControlName="qtyUnit" />
+                </label>
+                <label class="ewb-field">
+                  <span class="ewb-field__label">Taxable amount <span class="ewb-req">*</span></span>
+                  <input class="ewb-input ewb-input--num" type="number" formControlName="taxableAmount" />
+                </label>
+                <label class="ewb-field">
+                  <span class="ewb-field__label">IGST %</span>
+                  <input class="ewb-input ewb-input--num" type="number" formControlName="igstRate" />
+                </label>
+                <label class="ewb-field">
+                  <span class="ewb-field__label">CGST %</span>
+                  <input class="ewb-input ewb-input--num" type="number" formControlName="cgstRate" />
+                </label>
+                <label class="ewb-field">
+                  <span class="ewb-field__label">SGST %</span>
+                  <input class="ewb-input ewb-input--num" type="number" formControlName="sgstRate" />
+                </label>
+                <label class="ewb-field">
+                  <span class="ewb-field__label">Cess %</span>
+                  <input class="ewb-input ewb-input--num" type="number" formControlName="cessRate" />
+                </label>
+                <label class="ewb-field">
+                  <span class="ewb-field__label">Cess non-advol</span>
+                  <input class="ewb-input ewb-input--num" type="number" formControlName="cessNonAdvol" />
+                </label>
+              </div>
+            </div>
+          }
+          </div>
+
+          <div class="ewb-invoice-total" [formGroup]="invoiceGroup">
+            <label class="ewb-field ewb-field--total">
+              <span class="ewb-field__label">Total value <span class="ewb-req">*</span></span>
+              <span class="ewb-invoice-total__hint">Sum of all line taxable amounts (updates automatically)</span>
+              <input
+                class="ewb-input ewb-input--num ewb-input--total-readonly"
+                type="number"
+                formControlName="totalValue"
+                readonly
+                tabindex="-1"
+                aria-readonly="true"
+              />
+            </label>
+          </div>
+
+          <div class="ewb-subsection" [formGroup]="invoiceGroup">
+            <h4 class="ewb-subsection__title">Document tax amounts (optional)</h4>
+            <p class="ewb-invoice-total__hint">
+              Mapped to CGST/SGST/IGST/cess and <code>cessNonAdvolValue</code> on the GSTZen body. Leave blank for 0.
+              <code>totInvValue</code> auto-calculates from taxable total plus these unless you override it.
+            </p>
+            <div class="ewb-grid ewb-grid--3">
+              <label class="ewb-field">
+                <span class="ewb-field__label">CGST amount</span>
+                <input class="ewb-input ewb-input--num" type="number" formControlName="cgstValue" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">SGST amount</span>
+                <input class="ewb-input ewb-input--num" type="number" formControlName="sgstValue" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">IGST amount</span>
+                <input class="ewb-input ewb-input--num" type="number" formControlName="igstValue" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Cess amount</span>
+                <input class="ewb-input ewb-input--num" type="number" formControlName="cessValue" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Cess non-advol value</span>
+                <input class="ewb-input ewb-input--num" type="number" formControlName="cessNonAdvolValue" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Total invoice value override</span>
+                <input class="ewb-input ewb-input--num" type="number" formControlName="totInvValue" placeholder="Auto" />
+              </label>
+            </div>
+          </div>
+        </div>
+      </lib-ewb-section-card>
+
+      <div class="ewb-create__split">
+        <lib-ewb-section-card
+          step="3"
+          title="Transporter"
+          hint="Mode 1 = road. Name and ID may be empty strings when not used (NIC-style)."
+        >
+          <div formGroupName="transporter" class="ewb-create__stack">
+            <div class="ewb-grid ewb-grid--2">
+              <label class="ewb-field">
+                <span class="ewb-field__label">Trans mode</span>
+                <input class="ewb-input" formControlName="transMode" placeholder="1" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Transporter ID</span>
+                <input class="ewb-input" formControlName="transporterId" autocomplete="off" />
+              </label>
+              <label class="ewb-field ewb-field--full">
+                <span class="ewb-field__label">Transporter name</span>
+                <input class="ewb-input" formControlName="transporterName" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Trans doc no</span>
+                <input class="ewb-input" formControlName="transDocNo" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Trans doc date</span>
+                <input class="ewb-input" formControlName="transDocDate" />
+              </label>
+            </div>
+          </div>
+        </lib-ewb-section-card>
+
+        <lib-ewb-section-card
+          step="4"
+          title="Vehicle"
+          hint="Vehicle number as on the RC. Type R = regular."
+        >
+          <div formGroupName="vehicle" class="ewb-create__stack">
+            <div class="ewb-grid ewb-grid--2">
+              <label class="ewb-field">
+                <span class="ewb-field__label">Vehicle no <span class="ewb-req">*</span></span>
+                <input class="ewb-input ewb-input--vehicle" formControlName="vehicleNo" spellcheck="false" />
+              </label>
+              <label class="ewb-field">
+                <span class="ewb-field__label">Vehicle type</span>
+                <input class="ewb-input" formControlName="vehicleType" placeholder="R" />
+              </label>
+            </div>
+          </div>
+        </lib-ewb-section-card>
+      </div>
+
+      <footer class="ewb-create__footer">
+        <div class="ewb-create__footer-inner">
+          <p class="ewb-create__footer-note">
+            By submitting, you confirm the details match your tax records. Invalid data may be rejected by
+            GSTZen or NIC.
+          </p>
+          <div class="ewb-create__footer-actions">
+            <a routerLink="/ewaybills/list" class="ewb-btn ewb-btn--secondary">Cancel</a>
+            <button type="submit" class="ewb-btn ewb-btn--primary" [disabled]="store.status() === 'loading'">
+              @if (store.status() === 'loading') {
+                <span class="ewb-btn__spinner" aria-hidden="true"></span>
+                <span>Generating…</span>
+              } @else {
+                Generate E-Way Bill
+              }
+            </button>
+          </div>
+        </div>
+      </footer>
+    </form>
+
+    @if (lastRequestJson(); as json) {
+      <section class="ewb-create__json-panel" aria-label="GSTZen request body preview">
+        <details class="ewb-create__json-details" open>
+          <summary class="ewb-create__json-summary">GSTZen request body (last submit)</summary>
+          <p class="ewb-create__json-hint">
+            POST JSON only. Headers: <code>Token</code> and optional <code>gstin</code> (topbar) are added by the app.
+          </p>
+          <div class="ewb-create__json-toolbar">
+            <button type="button" class="ewb-btn ewb-btn--secondary" (click)="copyLastRequestJson()">
+              Copy JSON
+            </button>
+          </div>
+          <pre class="ewb-create__json-pre" tabindex="0">{{ json }}</pre>
+        </details>
+      </section>
+    }
+  </div>
+</div>
