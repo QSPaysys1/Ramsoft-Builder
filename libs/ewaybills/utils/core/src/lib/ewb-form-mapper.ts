@@ -12,6 +12,8 @@ import type {
   EwbUpdatePartBSuccess,
   EwbUpdateTransporterParsed,
   EwbUpdateTransporterSuccess,
+  EwbMvGroupPostParsed,
+  EwbMvGroupPostSuccess,
 } from '@ramsoft-builder/ewaybills/models/ewb';
 import { normalizeDocDateForApi } from './ewb-date-format';
 
@@ -410,6 +412,52 @@ export function parseEwbUpdateTransporterResponse(
     message:
       extractGstZenErrorMessage(flat) ||
       'Unexpected response from GSTZen (update transporter).',
+    raw: body,
+  };
+}
+
+/** Parse GSTZen add-multi-vehicles JSON (NIC-style flags + `ewbNo` / status fields). */
+export function parseEwbMvGroupPostResponse(
+  body: Record<string, unknown>,
+): EwbMvGroupPostParsed {
+  // Top-level `status: 0` must win: {@link flattenEwbCancelPayload} can merge a nested object
+  // whose `status` overwrites the envelope and would otherwise look like success.
+  if (isNicStyleCancelFailure(body)) {
+    const flat = flattenEwbCancelPayload(body);
+    return { message: extractGstZenErrorMessage(flat), raw: body };
+  }
+  const flat = flattenEwbCancelPayload(body);
+  const hasErr =
+    isNicStyleCancelFailure(flat) ||
+    flat['Success'] === 'N' ||
+    flat['Success'] === false ||
+    (Array.isArray(flat['ErrorDetails']) &&
+      (flat['ErrorDetails'] as unknown[]).length > 0);
+  if (hasErr) {
+    return { message: extractGstZenErrorMessage(flat), raw: body };
+  }
+  const ewbNo =
+    pickStr(flat, ['ewayBillNo', 'EwbNo', 'ewbNo', 'EwbNum']) ||
+    pickNestedSigned(flat) ||
+    pickStrLoose(flat, ['ewayBillNo', 'EwbNo', 'ewbNo', 'EwbNum']);
+  const apiStatus = flat['status'];
+  const statusText = typeof apiStatus === 'string' ? apiStatus.trim().toLowerCase() : '';
+  const statusOk =
+    apiStatus === true ||
+    statusText === 'success' ||
+    statusText === '1' ||
+    statusText === 'act';
+  if (ewbNo || statusOk || isNicStyleCancelSuccess(flat)) {
+    const success: EwbMvGroupPostSuccess = {
+      ewbNo,
+      raw: body,
+    };
+    return success;
+  }
+  return {
+    message:
+      extractGstZenErrorMessage(flat) ||
+      'Unexpected response from GSTZen (add multi-vehicles).',
     raw: body,
   };
 }

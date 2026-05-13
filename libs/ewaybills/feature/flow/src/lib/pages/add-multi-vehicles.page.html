@@ -1,0 +1,208 @@
+<div class="ewb-create">
+  <div class="ewb-create__bg" aria-hidden="true"></div>
+
+  <div class="ewb-create__shell">
+    <header class="ewb-create__hero">
+      <div class="ewb-create__hero-text">
+        <p class="ewb-create__eyebrow">GSTZen · add multi-vehicles</p>
+        <h1 class="ewb-create__title">Add multi-vehicles</h1>
+        <p class="ewb-create__lede">
+          Select a saved e-way bill, enter group and vehicle details, then POST to GSTZen
+          <code class="ewb-create__lede-code">ewbapi/add-multi-vehicles/</code>.
+          Transport document date uses the calendar control; GSTZen still receives
+          <code class="ewb-create__lede-code">DD/MM/YYYY</code>.
+        </p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-start">
+        <a routerLink="/home" class="ewb-create__back">
+          <span class="ewb-create__back-icon" aria-hidden="true">←</span>
+          Home
+        </a>
+        <a routerLink="/ewaybills/list" class="ewb-create__back">
+          <span class="ewb-create__back-icon" aria-hidden="true">←</span>
+          All e-way bills
+        </a>
+      </div>
+    </header>
+
+    <lib-ewb-inline-alert [message]="store.listError()" kind="error" />
+
+    <section class="ewb-subsection ewb-subsection--band">
+      <h2 class="ewb-subsection__title">E-Way bills</h2>
+      <p class="ewb-get__hint" style="margin-bottom: 0.75rem">
+        Click a row to load the EWB number. Use <strong>Add multi-vehicles</strong> in the actions column to open this page
+        with that bill pre-selected.
+      </p>
+      <lib-ewb-saved-bills-table
+        [rows]="filteredRows()"
+        [selectedId]="selectedEwaybillId()"
+        [loading]="store.listLoading()"
+        [emptyMessage]="listEmptyHint()"
+        [showTransportFilters]="true"
+        [transportFilter]="transportFilter()"
+        [showUpdatePartB]="true"
+        [showExtendEwaybill]="true"
+        [showInitiateMultiVehicle]="true"
+        [showMvGroupPostNav]="true"
+        [showUpdateTransporter]="true"
+        [showCancel]="false"
+        (transportFilterChange)="onTransportFilterChange($event)"
+        (rowSelected)="onRowSelected($event)"
+      />
+    </section>
+
+    <lib-ewb-inline-alert [message]="loadRowError()" kind="error" />
+
+    @if (selectedEwaybillId() && fullRow()) {
+      <section class="ewb-partb-form ewb-subsection ewb-subsection--band">
+        <h2 class="ewb-subsection__title">Add vehicles</h2>
+        <p class="ewb-get__hint" style="margin-bottom: 1rem">
+          Required fields match the GSTZen payload:
+          <code class="ewb-create__lede-code">ewbNo</code>,
+          <code class="ewb-create__lede-code">groupNo</code>,
+          <code class="ewb-create__lede-code">vehicleNo</code>,
+          <code class="ewb-create__lede-code">transDocNo</code>,
+          <code class="ewb-create__lede-code">transDocDate</code>,
+          <code class="ewb-create__lede-code">quantity</code>.
+        </p>
+
+        <lib-ewb-inline-alert
+          [message]="
+            headerPrefs.includeGstinHeader()
+              ? 'GSTIN header is ON: ensure the seller GSTIN on this record is valid for API calls.'
+              : null
+          "
+          kind="info"
+        />
+
+        <form class="ewb-create__form ewb-grid ewb-grid--2" [formGroup]="form" (ngSubmit)="submit()">
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">EWB no. <span class="ewb-req">*</span></span>
+            <input class="ewb-input font-mono" formControlName="ewbNo" inputmode="numeric" autocomplete="off" />
+            @if (form.controls.ewbNo.touched && form.controls.ewbNo.hasError('required')) {
+              <span class="ewb-field__error">EWB number is required.</span>
+            }
+            @if (form.controls.ewbNo.touched && form.controls.ewbNo.hasError('ewbNo12')) {
+              <span class="ewb-field__error">Enter exactly 12 digits.</span>
+            }
+          </label>
+
+          <label class="ewb-field">
+            <span class="ewb-field__label">Group no. <span class="ewb-req">*</span></span>
+            <input class="ewb-input font-mono" formControlName="groupNo" autocomplete="off" maxlength="20" />
+            @if (form.controls.groupNo.touched && form.controls.groupNo.hasError('required')) {
+              <span class="ewb-field__error">Group number is required.</span>
+            }
+            @if (form.controls.groupNo.touched && form.controls.groupNo.hasError('maxlength')) {
+              <span class="ewb-field__error">Too long.</span>
+            }
+          </label>
+
+          <label class="ewb-field">
+            <span class="ewb-field__label">Quantity <span class="ewb-req">*</span></span>
+            <input class="ewb-input font-mono" type="number" formControlName="quantity" min="1" step="1" />
+            @if (form.controls.quantity.touched && form.controls.quantity.hasError('required')) {
+              <span class="ewb-field__error">Quantity is required.</span>
+            }
+            @if (form.controls.quantity.touched && form.controls.quantity.hasError('min')) {
+              <span class="ewb-field__error">Must be at least 1.</span>
+            }
+            @if (form.controls.quantity.touched && form.controls.quantity.hasError('quantity')) {
+              <span class="ewb-field__error">Enter a positive whole number.</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Vehicle no. <span class="ewb-req">*</span></span>
+            <input
+              class="ewb-input font-mono uppercase"
+              formControlName="vehicleNo"
+              maxlength="20"
+              autocomplete="off"
+            />
+            @if (form.controls.vehicleNo.touched && form.controls.vehicleNo.hasError('required')) {
+              <span class="ewb-field__error">Vehicle number is required.</span>
+            }
+            @if (form.controls.vehicleNo.touched && form.controls.vehicleNo.hasError('vehicleFormat')) {
+              <span class="ewb-field__error">Enter a valid vehicle number (4–20 characters).</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Transport doc. no. <span class="ewb-req">*</span></span>
+            <input class="ewb-input" formControlName="transDocNo" maxlength="50" autocomplete="off" />
+            @if (form.controls.transDocNo.touched && form.controls.transDocNo.hasError('required')) {
+              <span class="ewb-field__error">Transport document number is required.</span>
+            }
+          </label>
+
+          <label class="ewb-field ewb-field--full">
+            <span class="ewb-field__label">Transport doc. date <span class="ewb-req">*</span></span>
+            <input class="ewb-input font-mono" type="date" formControlName="transDocDate" />
+            @if (form.controls.transDocDate.touched && form.controls.transDocDate.hasError('required')) {
+              <span class="ewb-field__error">Date is required.</span>
+            }
+            @if (form.controls.transDocDate.touched && form.controls.transDocDate.hasError('transDocDate')) {
+              <span class="ewb-field__error">Pick a valid date.</span>
+            }
+            @if (form.controls.transDocDate.touched && form.controls.transDocDate.hasError('futureDate')) {
+              <span class="ewb-field__error">Date cannot be in the future.</span>
+            }
+            @if (form.controls.transDocDate.touched && form.controls.transDocDate.hasError('tooOld')) {
+              <span class="ewb-field__error">Date is unrealistically old.</span>
+            }
+          </label>
+
+          <div class="ewb-field ewb-field--full" style="grid-column: 1 / -1">
+            <lib-ewb-inline-alert [message]="store.mvGroupPostError()" kind="error" />
+            <lib-ewb-inline-alert
+              [message]="
+                store.mvGroupPostStatus() === 'success'
+                  ? 'GSTZen accepted the request. Audit row saved.'
+                  : null
+              "
+              kind="success"
+            />
+            <div class="ewb-create__footer-actions" style="margin-top: 0.75rem">
+              <button
+                class="ewb-btn ewb-btn--primary"
+                type="submit"
+                [disabled]="store.mvGroupPostStatus() === 'loading'"
+              >
+                @if (store.mvGroupPostStatus() === 'loading') {
+                  <span>Submitting…</span>
+                } @else {
+                  <span>Add multi-vehicles</span>
+                }
+              </button>
+              <button
+                type="button"
+                class="ewb-btn ewb-btn--secondary"
+                [disabled]="store.mvGroupPostStatus() === 'loading'"
+                (click)="retrySubmit()"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      @if (previewJson().length > 0) {
+        <section class="ewb-create__json-panel" aria-label="GSTZen request body preview">
+          <details class="ewb-create__json-details" open>
+            <summary class="ewb-create__json-summary">Preview payload (POST body)</summary>
+            <pre class="ewb-create__json-pre" tabindex="0">{{ previewJson() }}</pre>
+          </details>
+        </section>
+      }
+
+      @if (store.lastMvGroupPostApiResponse(); as apiRes) {
+        <section class="ewb-get__result">
+          <h2 class="ewb-subsection__title">API response</h2>
+          <pre>{{ apiRes | json }}</pre>
+        </section>
+      }
+    }
+  </div>
+</div>

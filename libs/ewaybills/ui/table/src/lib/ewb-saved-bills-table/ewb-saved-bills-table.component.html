@@ -131,6 +131,20 @@
                     </a>
                   }
                 }
+                @if (showMvGroupPostNav()) {
+                  <a
+                    class="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-950 no-underline hover:bg-emerald-100 disabled:pointer-events-none disabled:opacity-50"
+                    [class.pointer-events-none]="!canPostMvGroupForRow(r)"
+                    [attr.aria-disabled]="!canPostMvGroupForRow(r)"
+                    [routerLink]="['/ewaybills/add-multi-vehicles']"
+                    [queryParams]="{ id: r.id }"
+                    (click)="
+                      !canPostMvGroupForRow(r) && $event.preventDefault(); $event.stopPropagation()
+                    "
+                  >
+                    Add multi-vehicles
+                  </a>
+                }
                 @if (showUpdateTransporter()) {
                   <a
                     class="inline-flex items-center rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-900 no-underline hover:bg-violet-100 disabled:pointer-events-none disabled:opacity-50"

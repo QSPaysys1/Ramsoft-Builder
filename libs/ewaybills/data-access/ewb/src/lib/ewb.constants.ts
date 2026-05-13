@@ -33,3 +33,7 @@ export const GSTZEN_EWB_EXTEND_URL_DEFAULT =
  * Override separately only if their API path diverges.
  */
 export const GSTZEN_EWB_MULTI_VEHICLE_URL_DEFAULT = 'https://my.gstzen.in/~gstzen/a/ewbapi/extend/' as const;
+
+/** GSTZen POST `ewbapi/add-multi-vehicles/` (add vehicles to multi-vehicle group). */
+export const GSTZEN_EWB_MV_GROUP_POST_URL_DEFAULT =
+  'https://my.gstzen.in/~gstzen/a/ewbapi/add-multi-vehicles/' as const;

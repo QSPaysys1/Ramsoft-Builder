@@ -35,6 +35,11 @@ export const ewaybillsRoutes: Routes = [
       ),
   },
   {
+    path: 'add-multi-vehicles',
+    loadComponent: () =>
+      import('./pages/add-multi-vehicles.page').then((m) => m.EwbMvGroupPostPageComponent),
+  },
+  {
     path: 'update-transporter',
     loadComponent: () =>
       import('./pages/update-transporter.page').then((m) => m.UpdateTransporterPageComponent),

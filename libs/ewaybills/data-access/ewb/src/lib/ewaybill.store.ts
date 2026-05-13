@@ -6,6 +6,7 @@ import type {
   EwbExtendSuccess,
   EwbGenerateRequest,
   EwbGenerateSuccess,
+  EwbMvGroupPostRequest,
   EwaybillListView,
   EwaybillDbRow,
   EwbUpdatePartBRequest,
@@ -25,7 +26,15 @@ import { GstZenEwbApiService } from './gstzen-ewb-api.service';
 
 function messageFromUnknown(err: unknown, fallback: string): string {
   if (err instanceof EwbGstZenApiError) {
-    return err.message;
+    let m = err.message;
+    const b = err.body;
+    if (b && typeof b === 'object' && !Array.isArray(b)) {
+      const u = (b as Record<string, unknown>)['uuid'];
+      if (typeof u === 'string' && u.trim()) {
+        m = `${m} (GSTZen reference: ${u.trim()})`;
+      }
+    }
+    return m;
   }
   if (err instanceof Error) {
     const m = err.message.trim();
@@ -78,6 +87,12 @@ export interface EwaybillExtendSubmitInput {
   fromGstin?: string;
 }
 
+export interface EwaybillMvGroupPostSubmitInput {
+  ewaybillId: string;
+  body: EwbMvGroupPostRequest;
+  fromGstin?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EwaybillStore {
   private readonly api = inject(GstZenEwbApiService);
@@ -111,6 +126,10 @@ export class EwaybillStore {
   readonly multiVehicleStatus = signal<EwaybillExtendStatus>('idle');
   readonly multiVehicleError = signal<string | null>(null);
   readonly lastMultiVehicleApiResponse = signal<Record<string, unknown> | null>(null);
+
+  readonly mvGroupPostStatus = signal<EwaybillExtendStatus>('idle');
+  readonly mvGroupPostError = signal<string | null>(null);
+  readonly lastMvGroupPostApiResponse = signal<Record<string, unknown> | null>(null);
 
   readonly lastEwbNo = computed(() => this.lastSuccess()?.ewbNo ?? null);
 
@@ -264,6 +283,19 @@ export class EwaybillStore {
     this.multiVehicleStatus.set('idle');
     this.multiVehicleError.set(null);
     this.lastMultiVehicleApiResponse.set(null);
+  }
+
+  dismissMvGroupPostError(): void {
+    if (this.mvGroupPostStatus() === 'error') {
+      this.mvGroupPostStatus.set('idle');
+      this.mvGroupPostError.set(null);
+    }
+  }
+
+  resetMvGroupPostUi(): void {
+    this.mvGroupPostStatus.set('idle');
+    this.mvGroupPostError.set(null);
+    this.lastMvGroupPostApiResponse.set(null);
   }
 
   async cancelEwaybill(input: EwaybillCancelInput): Promise<void> {
@@ -518,6 +550,112 @@ export class EwaybillStore {
       lastResponse: this.lastMultiVehicleApiResponse,
       errorFallback: 'Initiate multi-vehicle movement failed.',
     });
+  }
+
+  async submitMvGroupPost(input: EwaybillMvGroupPostSubmitInput): Promise<void> {
+    if (this.mvGroupPostStatus() === 'loading') {
+      return;
+    }
+    this.mvGroupPostError.set(null);
+    this.lastMvGroupPostApiResponse.set(null);
+    this.mvGroupPostStatus.set('loading');
+    const uid = this.authStore.user()?.id;
+    if (!uid) {
+      this.mvGroupPostStatus.set('error');
+      this.mvGroupPostError.set('Not signed in.');
+      return;
+    }
+    let existing: EwaybillDbRow | null = null;
+    try {
+      existing = await this.repo.getById(uid, input.ewaybillId);
+    } catch {
+      /* ignore */
+    }
+    const veh = (existing?.vehicle_details ?? {}) as Record<string, unknown>;
+    const reqp = (existing?.request_payload ?? {}) as Record<string, unknown>;
+    const tr = (existing?.transporter_details ?? {}) as Record<string, unknown>;
+    const vehicleBefore = String(
+      (typeof veh['vehicleNo'] === 'string' ? veh['vehicleNo'] : '') ||
+        (typeof reqp['vehicleNo'] === 'string' ? reqp['vehicleNo'] : '') ||
+        '',
+    )
+      .toUpperCase()
+      .replace(/\s+/g, '');
+    const vehicleAfter = String(input.body.vehicleNo)
+      .toUpperCase()
+      .replace(/\s+/g, '');
+    const vehicleChanged = !!vehicleAfter && vehicleAfter !== vehicleBefore;
+    const prevCountRaw = existing?.transport_success_count;
+    const prevCount =
+      typeof prevCountRaw === 'number' && Number.isFinite(prevCountRaw)
+        ? prevCountRaw
+        : 0;
+
+    const auditRequest = sanitizeUndefinedDeep({
+      [EWB_TRANSPORT_AUDIT_KIND_KEY]: 'add_multi_vehicles' as const,
+      ...input.body,
+    }) as Record<string, unknown>;
+
+    try {
+      const res = await firstValueFrom(
+        this.api.postMvGroup(input.body, input.fromGstin),
+      );
+      this.lastMvGroupPostApiResponse.set(res.raw as Record<string, unknown>);
+      await this.repo.insertTransportUpdate(uid, {
+        eway_bill_id: input.ewaybillId,
+        request_payload: auditRequest,
+        response: sanitizeUndefinedDeep(res.raw) as Record<string, unknown>,
+        status: 'success',
+        vehicle_no_before: vehicleBefore || null,
+        vehicle_no_after: vehicleAfter || null,
+      });
+      await this.repo.updateById(uid, input.ewaybillId, {
+        transport_last_status: 'success',
+        transport_last_at: new Date().toISOString(),
+        transport_success_count: prevCount + 1,
+        transport_last_vehicle_changed: vehicleChanged,
+        vehicle_details: sanitizeUndefinedDeep({
+          ...veh,
+          vehicleNo: input.body.vehicleNo,
+        }) as Record<string, unknown>,
+        transporter_details: sanitizeUndefinedDeep({
+          ...tr,
+          transDocNo: input.body.transDocNo,
+          transDocDate: input.body.transDocDate,
+          lastMvGroupPostGroupNo: input.body.groupNo,
+          lastMvGroupPostQuantity: input.body.quantity,
+        }) as Record<string, unknown>,
+      });
+      await this.loadList();
+      this.mvGroupPostStatus.set('success');
+    } catch (err) {
+      const errMsg = messageFromUnknown(err, 'Add multi-vehicles failed.');
+      this.mvGroupPostError.set(errMsg);
+      let errBody: Record<string, unknown> = { message: errMsg };
+      if (err instanceof EwbGstZenApiError && err.body && typeof err.body === 'object') {
+        errBody = err.body as Record<string, unknown>;
+      }
+      this.lastMvGroupPostApiResponse.set(errBody);
+      try {
+        await this.repo.insertTransportUpdate(uid, {
+          eway_bill_id: input.ewaybillId,
+          request_payload: auditRequest,
+          response: sanitizeUndefinedDeep(errBody) as Record<string, unknown>,
+          status: 'failed',
+          error_message: errMsg,
+          vehicle_no_before: vehicleBefore || null,
+          vehicle_no_after: vehicleAfter || null,
+        });
+        await this.repo.updateById(uid, input.ewaybillId, {
+          transport_last_status: 'failed',
+          transport_last_at: new Date().toISOString(),
+        });
+        await this.loadList();
+      } catch {
+        /* best-effort audit */
+      }
+      this.mvGroupPostStatus.set('error');
+    }
   }
 
   /**

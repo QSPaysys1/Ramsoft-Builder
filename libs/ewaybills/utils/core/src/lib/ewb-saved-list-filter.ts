@@ -46,6 +46,11 @@ export function canInitiateMultiVehicleForSavedEwaybillRow(row: EwaybillListView
   return canExtendEwaybillForSavedEwaybillRow(row);
 }
 
+/** Same eligibility as initiate movement; naming avoids clashing with Angular signal-input metadata. */
+export function canPostMvGroupForSavedEwaybillRow(row: EwaybillListView): boolean {
+  return canInitiateMultiVehicleForSavedEwaybillRow(row);
+}
+
 /** Same eligibility as Part B: active bill with NIC EWB number. */
 export function canUpdateTransporterForSavedEwaybillRow(row: EwaybillListView): boolean {
   return row.status === 'generated' && !!row.ewbNumber;

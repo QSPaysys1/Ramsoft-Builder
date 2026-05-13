@@ -257,8 +257,44 @@ export const EWB_TRANSPORT_AUDIT_KIND_KEY = '__transportOp' as const;
 export type EwbTransportAuditOp =
   | 'extend'
   | 'multi_vehicle'
+  | 'add_multi_vehicles'
   | 'update_part_b'
   | 'update_transporter';
+
+/**
+ * GSTZen add multi-vehicles POST body (`ewbapi/add-multi-vehicles/`).
+ * `transDocDate` is `DD/MM/YYYY` per NIC/GSTZen samples.
+ */
+export interface EwbMvGroupPostRequest {
+  ewbNo: number;
+  groupNo: string;
+  vehicleNo: string;
+  transDocNo: string;
+  /** DD/MM/YYYY */
+  transDocDate: string;
+  quantity: number;
+}
+
+/** Normalized success after {@link parseEwbMvGroupPostResponse}. */
+export interface EwbMvGroupPostSuccess {
+  ewbNo?: string;
+  raw: Record<string, unknown>;
+}
+
+export interface EwbMvGroupPostErrorShape {
+  message: string;
+  raw: Record<string, unknown>;
+}
+
+export type EwbMvGroupPostParsed =
+  | EwbMvGroupPostSuccess
+  | EwbMvGroupPostErrorShape;
+
+export function isEwbMvGroupPostSuccess(
+  p: EwbMvGroupPostParsed,
+): p is EwbMvGroupPostSuccess {
+  return !('message' in p);
+}
 
 /**
  * NIC uses the same `ewbapi/extend/` body for extension and for initiating multi-vehicle movement

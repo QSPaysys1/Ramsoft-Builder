@@ -4,8 +4,11 @@ import {
   isEwbCancelSuccess,
   isEwbExtendSuccess,
   isEwbGenerateSuccess,
+  isEwbMvGroupPostSuccess,
   isEwbUpdatePartBSuccess,
   isEwbUpdateTransporterSuccess,
+  type EwbMvGroupPostRequest,
+  type EwbMvGroupPostSuccess,
   type EwbCancelReasonCode,
   type EwbCancelRequest,
   type EwbCancelSuccess,
@@ -26,6 +29,7 @@ import {
   parseEwbCancelResponse,
   parseEwbExtendResponse,
   parseEwbGenerateResponse,
+  parseEwbMvGroupPostResponse,
   parseEwbUpdatePartBResponse,
   parseEwbUpdateTransporterResponse,
 } from '@ramsoft-builder/ewaybills/utils/core';
@@ -42,6 +46,7 @@ import {
   resolveEwbUpdateTransporterUrl,
   resolveEwbExtendUrl,
   resolveEwbMultiVehicleUrl,
+  resolveEwbMvGroupPostUrl,
 } from './gstzen-ewb-http.config';
 
 @Injectable({ providedIn: 'root' })
@@ -314,6 +319,62 @@ export class GstZenEwbApiService {
     fromGstin?: string,
   ): Observable<EwbExtendSuccess> {
     return this.postEwbExtendEndpoint(resolveEwbMultiVehicleUrl(this.cfg), body, fromGstin);
+  }
+
+  /**
+   * Add vehicles to a multi-vehicle group via GSTZen `ewbapi/add-multi-vehicles/`.
+   */
+  postMvGroup(
+    body: EwbMvGroupPostRequest,
+    fromGstin?: string,
+  ): Observable<EwbMvGroupPostSuccess> {
+    const token = this.resolveEwbToken();
+    if (!token) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'GSTZen API token is not configured. Set `environment.gstZen.token` (and optional `ewbTestToken` for the EWB test toggle) plus `GSTZEN_EWB_HTTP_CONFIG`.',
+          ),
+      );
+    }
+    const url = resolveEwbMvGroupPostUrl(this.cfg);
+    let headers = new HttpHeaders({
+      Token: token,
+      'Content-Type': 'application/json',
+    });
+    if (
+      this.headerPrefs.includeGstinHeader() &&
+      fromGstin &&
+      gstinValidator(fromGstin)
+    ) {
+      headers = headers.set('gstin', String(fromGstin).trim().toUpperCase());
+    }
+    const ewbNoNorm = Number(String(body.ewbNo).replace(/\s+/g, ''));
+    const payload: EwbMvGroupPostRequest = {
+      ewbNo: ewbNoNorm,
+      groupNo: String(body.groupNo ?? '').trim(),
+      vehicleNo: String(body.vehicleNo ?? '')
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, ''),
+      transDocNo: String(body.transDocNo ?? '').trim(),
+      transDocDate: String(body.transDocDate ?? '').trim(),
+      quantity: Math.trunc(Number(body.quantity)),
+    };
+    return this.http.post<Record<string, unknown>>(url, payload, { headers }).pipe(
+      map((res) => {
+        const parsed = parseEwbMvGroupPostResponse(res);
+        if (!isEwbMvGroupPostSuccess(parsed)) {
+          const msg =
+            typeof parsed.message === 'string' && parsed.message.trim()
+              ? parsed.message.trim()
+              : 'Add multi-vehicles request did not succeed (unrecognized GSTZen response).';
+          throw new EwbGstZenApiError(msg, 200, res);
+        }
+        return parsed;
+      }),
+      catchError((err: unknown) => throwError(() => mapEwbGstZenHttpError(err))),
+    );
   }
 
   private postEwbExtendEndpoint(

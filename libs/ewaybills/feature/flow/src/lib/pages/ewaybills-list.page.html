@@ -21,6 +21,12 @@
         Initiate Multi Vehicle
       </a>
       <a
+        routerLink="/ewaybills/add-multi-vehicles"
+        class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-950"
+      >
+        Add multi-vehicles
+      </a>
+      <a
         routerLink="/ewaybills/update-part-b"
         class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-900"
       >
@@ -54,6 +60,7 @@
     [showExtendEwaybill]="true"
     [showInitiateMultiVehicle]="true"
     [initiateMultiVehicleDialogMode]="true"
+    [showMvGroupPostNav]="true"
     [showUpdateTransporter]="true"
     [showCancel]="true"
     [skipRowSelect]="true"

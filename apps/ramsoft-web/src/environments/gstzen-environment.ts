@@ -52,6 +52,11 @@ export interface GstZenEnvironment {
    * (NIC uses the extend-shaped payload).
    */
   ewbMultiVehicleUrl?: string;
+  /**
+   * POST `ewbapi/add-multi-vehicles/` (add vehicles to multi-vehicle group).
+   * Default: `https://my.gstzen.in/~gstzen/a/ewbapi/add-multi-vehicles/`
+   */
+  ewbMvGroupPostUrl?: string;
   /** API `Token` header (primary / “original” GSTZen token). */
   token: string;
   /** Optional token used only for standalone e-way testing when the app toggle is on. */
