@@ -1,0 +1,317 @@
+<div class="pb-12">
+  <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-[#222f3f] md:text-3xl">File Returns</h1>
+      <p class="mt-1 text-sm text-slate-600">
+        Use Financial Year, Quarter, and Period to build the return period (<span class="font-mono text-xs">MMYYYY</span>) sent to
+        Rettrack with your GSTIN.
+      </p>
+    </div>
+    <a
+      class="text-sm font-medium text-[#1a56a7] underline-offset-4 hover:underline"
+      routerLink="/gstr1/workspace/session"
+      >GSTZen session &amp; tools</a
+    >
+  </div>
+
+  <div class="sticky top-0 z-20 -mx-4 mb-6 border-b border-slate-200/90 bg-slate-100/95 px-4 pb-4 pt-2 backdrop-blur-md md:static md:mx-0 md:rounded-xl md:border md:border-slate-200 md:bg-white md:p-5 md:shadow-md">
+    <div class="mb-3 flex justify-end">
+      <p class="text-[11px] font-medium text-slate-500"><span class="text-red-600">*</span> Indicates mandatory fields</p>
+    </div>
+    <div
+      [formGroup]="form"
+      class="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end"
+    >
+      <div class="flex min-w-[160px] flex-1 flex-col gap-1.5">
+        <label class="text-sm font-semibold text-slate-700" for="rd-fy"
+          >Financial Year <span class="text-red-600">*</span></label
+        >
+        <select
+          id="rd-fy"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+          [value]="selectedFyStart().toString()"
+          (change)="onFyChange($any($event.target).value)"
+        >
+          @for (fy of fyOptions(); track fy.startYear) {
+            <option [value]="fy.startYear">{{ fy.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
+        <label class="text-sm font-semibold text-slate-700" for="rd-q"
+          >Quarter <span class="text-red-600">*</span></label
+        >
+        <select
+          id="rd-q"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+          [value]="selectedQuarter()"
+          (change)="onQuarterChange($any($event.target).value)"
+        >
+          @for (q of quarterOptions; track q.id) {
+            <option [value]="q.id">{{ q.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex min-w-[140px] flex-1 flex-col gap-1.5">
+        <label class="text-sm font-semibold text-slate-700" for="rd-p"
+          >Period <span class="text-red-600">*</span></label
+        >
+        <select
+          id="rd-p"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+          [value]="selectedRetPeriod()"
+          (change)="onPeriodChange($any($event.target).value)"
+        >
+          @for (p of periodOptions(); track p.retPeriod) {
+            <option [value]="p.retPeriod">{{ p.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex min-w-[220px] flex-[2] flex-col gap-1.5">
+        <label class="text-sm font-semibold text-slate-700" for="rd-gstin"
+          >GSTIN <span class="text-red-600">*</span></label
+        >
+        <input
+          id="rd-gstin"
+          type="text"
+          formControlName="gstin"
+          maxlength="15"
+          autocomplete="off"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm uppercase tracking-wide text-slate-900 shadow-sm placeholder:normal-case placeholder:tracking-normal focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+          placeholder="15-character GSTIN"
+        />
+        @if (form.controls.gstin.touched && form.controls.gstin.hasError('required')) {
+          <p class="text-xs font-medium text-red-600">GSTIN is required.</p>
+        } @else if (form.controls.gstin.touched && form.controls.gstin.hasError('gstinPattern')) {
+          <p class="text-xs font-medium text-red-600">Enter a valid 15-character GSTIN.</p>
+        }
+      </div>
+      <div class="flex flex-wrap gap-2 lg:ml-auto">
+        <button
+          type="button"
+          class="inline-flex min-h-[42px] min-w-[120px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-5 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#154a8f] disabled:cursor-not-allowed disabled:opacity-55 lg:flex-none"
+          [disabled]="loading()"
+          (click)="search()"
+        >
+          @if (loading()) {
+            <span>Loading…</span>
+          } @else {
+            <span>Search</span>
+          }
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[42px] min-w-[100px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="loading() || form.invalid"
+          (click)="refresh()"
+          title="Repeat the last search"
+        >
+          Refresh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <p class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 shadow-sm">
+    {{ topBanner }}
+  </p>
+
+  @if (lastSearchLabel().length > 0 && !loading()) {
+    <p class="mb-4 text-xs font-medium uppercase tracking-wide text-slate-500">Last query · {{ lastSearchLabel() }}</p>
+  }
+
+  @if (loading()) {
+    <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      @for (x of [1, 2, 3, 4]; track x) {
+        <div class="h-24 animate-pulse rounded-xl bg-slate-200/80"></div>
+      }
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      @for (x of [1, 2, 3, 4, 5]; track x) {
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div class="h-16 animate-pulse bg-slate-300/90"></div>
+          <div class="space-y-3 p-4">
+            <div class="mx-auto h-4 w-3/4 animate-pulse rounded bg-slate-200"></div>
+            <div class="h-8 animate-pulse rounded bg-slate-100"></div>
+            <div class="flex gap-2">
+              <div class="h-9 flex-1 animate-pulse rounded bg-slate-200"></div>
+              <div class="h-9 flex-1 animate-pulse rounded bg-slate-200"></div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (payloadOk() === true) {
+    <section class="mb-8" aria-label="Summary">
+      <div
+        class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+      >
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Filed returns</p>
+          <p class="mt-1 text-3xl font-bold text-emerald-700">{{ summary().filed }}</p>
+          <p class="mt-1 text-xs text-slate-600">of {{ summary().total }} tracked types</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Pending</p>
+          <p class="mt-1 text-3xl font-bold text-amber-600">{{ summary().pending }}</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Not filed</p>
+          <p class="mt-1 text-3xl font-bold text-slate-600">{{ summary().notFiled }}</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Errors</p>
+          <p class="mt-1 text-3xl font-bold text-red-600">{{ summary().errors }}</p>
+        </div>
+      </div>
+      <div
+        class="mt-4 rounded-xl border px-4 py-3 text-sm font-medium"
+        [ngClass]="summaryStripClass(summary().agg)"
+      >
+        Overall posture:
+        <span class="font-bold">{{ summary().agg | titlecase }}</span>
+        · Return period
+        <span class="font-mono">{{ selectedRetPeriod() }}</span>
+        ({{ retPeriodDisplay(selectedRetPeriod()) }})
+      </div>
+    </section>
+
+    <section class="mb-10" aria-label="Return tiles">
+      <h2 class="mb-4 text-lg font-bold text-[#222f3f]">Return status</h2>
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        @for (c of returnCards(); track c.spec.id) {
+          <article
+            class="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md transition hover:shadow-lg"
+          >
+            <div class="rounded-t-xl bg-[#1c2b54] px-3 py-3 text-center text-white md:px-4 md:py-4">
+              <p class="text-xs font-medium leading-snug text-white/95 md:text-sm">{{ c.spec.headerTitle }}</p>
+              <p class="mt-1 text-sm font-bold tracking-wide md:text-base">{{ c.spec.headerCode }}</p>
+            </div>
+            <div class="flex flex-1 flex-col gap-3 px-4 py-5 text-center">
+              <div class="flex flex-wrap items-center justify-center gap-2">
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide"
+                  [ngClass]="statusPillClass(c.kind)"
+                  >{{ statusLabel(c.kind) }}</span
+                >
+              </div>
+              @if (c.spec.showDueForGstr3b && c.dueDateLine) {
+                <p class="text-sm text-slate-700">
+                  Due date – <span class="font-semibold text-teal-700">{{ c.dueDateLine }}</span>
+                </p>
+              }
+              @if (c.kind === 'filed' || c.arn || c.filingDate) {
+                <div class="space-y-1 text-left text-sm text-slate-700">
+                  @if (c.arn) {
+                    <p>
+                      <span class="font-semibold text-slate-900">ARN:</span>
+                      <span class="ml-1 break-all font-mono text-xs">{{ c.arn }}</span>
+                    </p>
+                  }
+                  @if (c.filingDate && c.filingDate !== '—') {
+                    <p>
+                      <span class="font-semibold text-slate-900">Date of filing:</span>
+                      <span class="ml-1 text-teal-800">{{ c.filingDate }}</span>
+                    </p>
+                  }
+                  @if (c.rtnTypeLabel && c.rtnTypeLabel !== '—') {
+                    <p>
+                      <span class="font-semibold text-slate-900">Return type:</span> {{ c.rtnTypeLabel }}
+                    </p>
+                  }
+                  @if (c.statusCell && c.statusCell !== '—') {
+                    <p>
+                      <span class="font-semibold text-slate-900">Status:</span> {{ c.statusCell }}
+                    </p>
+                  }
+                </div>
+              } @else if (!c.spec.showDueForGstr3b || !c.dueDateLine) {
+                <p class="text-sm text-slate-500">No filing data for this return in the selected period.</p>
+              }
+              <div class="mt-auto flex flex-wrap justify-center gap-2 pt-2">
+                <button
+                  type="button"
+                  class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-3 text-center text-xs font-bold uppercase tracking-wide text-white hover:bg-[#154a8f] sm:flex-none"
+                >
+                  View
+                </button>
+                <button
+                  type="button"
+                  class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg border border-[#1a56a7] bg-white px-3 text-center text-xs font-bold uppercase tracking-wide text-[#1a56a7] hover:bg-slate-50 sm:flex-none"
+                >
+                  Download
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-slate-200 bg-white shadow-sm" aria-label="Detailed rows">
+      <div class="border-b border-slate-100 px-4 py-3 md:px-5">
+        <h3 class="text-base font-bold text-[#222f3f]">E-filed list</h3>
+        <p class="mt-0.5 text-sm text-slate-600">Rows returned by Rettrack for your GSTIN and period.</p>
+      </div>
+      @if (hasTableRows()) {
+        <!-- Desktop table -->
+        <div class="hidden md:block md:overflow-x-auto">
+          <table class="w-full min-w-[720px] border-collapse text-left text-sm">
+            <thead class="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <tr>
+                <th class="px-4 py-3">Return type</th>
+                <th class="px-4 py-3">Period</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3">ARN</th>
+                <th class="px-4 py-3">Date of filing</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @for (row of filedRows(); track $index) {
+                <tr>
+                  <td class="px-4 py-2.5 font-medium">{{ cell(row, 'rtntype', 'rtn_type', 'Rtntype') }}</td>
+                  <td class="px-4 py-2.5 font-mono text-xs">{{ cell(row, 'ret_prd', 'retprd', 'ret_period') }}</td>
+                  <td class="px-4 py-2.5">{{ cell(row, 'status', '_Status') }}</td>
+                  <td class="break-all px-4 py-2.5 font-mono text-xs">{{ cell(row, 'arn', 'ARN') }}</td>
+                  <td class="px-4 py-2.5">{{ cell(row, 'dof', 'dofiling', 'date_of_filing') }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <!-- Mobile cards -->
+        <div class="divide-y divide-slate-100 md:hidden">
+          @for (row of filedRows(); track $index) {
+            <div class="space-y-2 px-4 py-4 text-sm">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="font-semibold text-[#222f3f]">{{ cell(row, 'rtntype', 'rtn_type') }}</span>
+                <span class="font-mono text-xs text-slate-500">{{ cell(row, 'ret_prd', 'retprd') }}</span>
+              </div>
+              <p class="text-slate-700">{{ cell(row, 'status', '_Status') }}</p>
+              <p class="break-all font-mono text-xs text-slate-800">{{ cell(row, 'arn', 'ARN') }}</p>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="px-4 py-10 text-center text-sm text-slate-600">
+          No individual rows were returned for this period. Status above is derived from the payload when rows are absent.
+        </div>
+      }
+    </section>
+  } @else if (payloadOk() === false && httpError() !== null) {
+    <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-5 text-red-950 shadow-sm">
+      <p class="text-sm font-bold">Could not load return tracking</p>
+      <pre class="mt-3 max-h-64 overflow-auto rounded border border-red-100 bg-white p-3 font-mono text-[11px] leading-relaxed text-red-900">{{ httpError() | json }}</pre>
+    </div>
+  } @else {
+    <div
+      class="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center text-slate-600 shadow-sm"
+    >
+      <p class="text-base font-medium text-slate-800">Ready to search</p>
+      <p class="mt-2 max-w-lg text-sm text-slate-600">
+        Choose FY, quarter, return period, enter GSTIN, and press <span class="font-semibold">Search</span> to load Rettrack data.
+        Filters are remembered until you clear browser storage for this site.
+      </p>
+    </div>
+  }
+</div>

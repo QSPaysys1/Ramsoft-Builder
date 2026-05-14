@@ -12,7 +12,7 @@ import { GSTR1_GSTZEN_AUTH_CONFIG } from './gstr1-gstzen-auth.config';
 
 /**
  * GSTZen portal login (`POST` token URL). Persisted JWTs and clipboard helpers live in
- * `Gstr1AuthStore`; tokens are surfaced on `Gstr1WorkspacePageComponent`.
+ * `Gstr1AuthStore`; tokens are surfaced on the workspace session page.
  */
 @Injectable({ providedIn: 'root' })
 export class Gstr1GstzenAuthService {

@@ -13,17 +13,21 @@ import { AuthToastService } from '@ramsoft-builder/auth/ui/login';
 import { Gstr1AuthStore } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
 
 @Component({
-  selector: 'lib-gstr1-workspace-page',
+  selector: 'lib-gstr1-workspace-session-page',
   standalone: true,
-  imports: [RouterLink, DatePipe, Gstr1GstnCheckSessionModalComponent, Gstr1GstnRefreshSessionModalComponent],
-  templateUrl: './gstr1-workspace.page.html',
+  imports: [
+    RouterLink,
+    DatePipe,
+    Gstr1GstnCheckSessionModalComponent,
+    Gstr1GstnRefreshSessionModalComponent,
+  ],
+  templateUrl: './gstr1-workspace-session.page.html',
   host: {
-    class:
-      'block min-h-[60vh] bg-blue-50 px-4 py-8 md:px-8',
+    class: 'block w-full',
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Gstr1WorkspacePageComponent {
+export class Gstr1WorkspaceSessionPageComponent {
   private readonly router = inject(Router);
   private readonly toast = inject(AuthToastService);
   readonly gstr1Auth = inject(Gstr1AuthStore);

@@ -3,6 +3,7 @@ import {
   gstr1AuthGuard,
   gstr1LoginRedirectGuard,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
+import { returnsDashboardRoute } from './returns-dashboard.routes';
 
 export const gstr1Routes: Routes = [
   {
@@ -14,10 +15,21 @@ export const gstr1Routes: Routes = [
   {
     path: 'workspace',
     loadComponent: () =>
-      import('./pages/gstr1-workspace.page').then(
-        (m) => m.Gstr1WorkspacePageComponent,
+      import('./pages/gstr1-workspace-layout.page').then(
+        (m) => m.Gstr1WorkspaceLayoutPageComponent,
       ),
     canActivate: [gstr1AuthGuard],
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'returns-dashboard' },
+      returnsDashboardRoute,
+      {
+        path: 'session',
+        loadComponent: () =>
+          import('./pages/gstr1-workspace-session.page').then(
+            (m) => m.Gstr1WorkspaceSessionPageComponent,
+          ),
+      },
+    ],
   },
   {
     path: 'gstn/generate-otp',
