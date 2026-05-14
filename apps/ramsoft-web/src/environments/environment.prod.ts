@@ -31,6 +31,8 @@ export const environment = {
       'https://my.gstzen.in/~gstzen/a/ewbapi/get-ewb-transporter-view/',
     ewbGetTransporterStateViewUrl:
       'https://my.gstzen.in/~gstzen/a/ewbapi/get-ewb-transporter-state-view/',
+    ewbGetTransporterGstinViewUrl:
+      'https://my.gstzen.in/~gstzen/a/ewbapi/get-ewb-transporter-gstin-view/',
     token: '',
     ewbTestToken: undefined as string | undefined,
   } satisfies GstZenEnvironment,

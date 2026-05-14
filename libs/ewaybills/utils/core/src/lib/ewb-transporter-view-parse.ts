@@ -1,4 +1,5 @@
 import type {
+  EwbTransporterGstinViewResult,
   EwbTransporterStateViewResult,
   EwbTransporterStateViewRow,
   EwbTransporterViewResult,
@@ -221,4 +222,13 @@ export function parseEwbTransporterStateViewResponse(
     raw: base.raw,
     notice: base.notice,
   };
+}
+
+/**
+ * Normalizes GSTZen `get-ewb-transporter-gstin-view` JSON (same envelopes as transporter-view).
+ */
+export function parseEwbTransporterGstinViewResponse(
+  payload: unknown,
+): EwbTransporterGstinViewResult {
+  return parseEwbTransporterViewResponse(payload);
 }

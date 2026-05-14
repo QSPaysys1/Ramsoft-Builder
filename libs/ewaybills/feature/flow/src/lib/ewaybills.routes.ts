@@ -26,6 +26,13 @@ export const ewaybillsRoutes: Routes = [
       ),
   },
   {
+    path: 'transporter-gstin-view',
+    loadComponent: () =>
+      import('./pages/transporter-gstin-view.page').then(
+        (m) => m.TransporterGstinViewPageComponent,
+      ),
+  },
+  {
     path: 'update-part-b',
     loadComponent: () =>
       import('./pages/update-part-b.page').then((m) => m.UpdatePartBPageComponent),

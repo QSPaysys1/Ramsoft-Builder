@@ -202,6 +202,29 @@ export interface EwbTransporterStateViewResult {
   notice?: string;
 }
 
+/**
+ * Query string for GSTZen GET `ewbapi/get-ewb-transporter-gstin-view/` (`date`, `gstin`, `gen_gstin`).
+ *
+ * Example (HTTPS):
+ * `GET .../get-ewb-transporter-gstin-view/?date=2024-01-02&gstin=29AAFCC9980M1ZR&gen_gstin=...`
+ *
+ * @see https://my.gstzen.in/docs/api/ewaybill-api/get-ewb-transporter-gstin-view/
+ */
+export interface EwbTransporterGstinViewQuery {
+  /** ISO calendar date `YYYY-MM-DD` (GSTZen `date` query param). */
+  date: string;
+  /** Transporter GSTIN (`gstin` query param). */
+  gstin: string;
+  /** Generator GSTIN (`gen_gstin` query param). */
+  gen_gstin: string;
+}
+
+/**
+ * Result of {@link parseEwbTransporterGstinViewResponse} / {@link GstZenEwbApiService#getEwbTransporterGstinView}.
+ * Row shape matches {@link EwbTransporterViewResult}; GSTZen uses the same list payload conventions.
+ */
+export type EwbTransporterGstinViewResult = EwbTransporterViewResult;
+
 /** NIC Part-B reason codes for vehicle / transport update (GSTZen samples use string codes). */
 export type EwbPartBReasonCode = '1' | '2' | '3' | '4' | '5';
 

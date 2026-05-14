@@ -32,6 +32,14 @@ export const GSTZEN_EWB_GET_TRANSPORTER_VIEW_URL_DEFAULT =
 export const GSTZEN_EWB_GET_TRANSPORTER_STATE_VIEW_URL_DEFAULT =
   'https://my.gstzen.in/~gstzen/a/ewbapi/get-ewb-transporter-state-view/' as const;
 
+/**
+ * GSTZen GET transporter e-way list by generator + transporter GSTIN (`date`, `gstin`, `gen_gstin`).
+ * Example:
+ * `GET .../get-ewb-transporter-gstin-view/?date=2024-01-02&gstin=29AAFCC9980M1ZR&gen_gstin=...`
+ */
+export const GSTZEN_EWB_GET_TRANSPORTER_GSTIN_VIEW_URL_DEFAULT =
+  'https://my.gstzen.in/~gstzen/a/ewbapi/get-ewb-transporter-gstin-view/' as const;
+
 /** GSTZen standalone extend e-way bill validity (override via environment). */
 export const GSTZEN_EWB_EXTEND_URL_DEFAULT =
   'https://my.gstzen.in/~gstzen/a/ewbapi/extend/' as const;

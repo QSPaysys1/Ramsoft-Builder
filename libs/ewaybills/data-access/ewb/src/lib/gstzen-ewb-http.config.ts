@@ -10,6 +10,7 @@ import {
   GSTZEN_EWB_UPDATE_TRANSPORTER_URL_DEFAULT,
   GSTZEN_EWB_GET_TRANSPORTER_VIEW_URL_DEFAULT,
   GSTZEN_EWB_GET_TRANSPORTER_STATE_VIEW_URL_DEFAULT,
+  GSTZEN_EWB_GET_TRANSPORTER_GSTIN_VIEW_URL_DEFAULT,
   GSTZEN_EWB_EXTEND_URL_DEFAULT,
 } from './ewb.constants';
 
@@ -48,6 +49,11 @@ export interface GstZenEwbHttpConfig {
    * Defaults to {@link GSTZEN_EWB_GET_TRANSPORTER_STATE_VIEW_URL_DEFAULT}.
    */
   getTransporterStateViewUrl?: string;
+  /**
+   * GET URL for transporter e-way list by generator GSTIN (`ewbapi/get-ewb-transporter-gstin-view/`, query `date`, `gstin`, `gen_gstin`).
+   * Defaults to {@link GSTZEN_EWB_GET_TRANSPORTER_GSTIN_VIEW_URL_DEFAULT}.
+   */
+  getTransporterGstinViewUrl?: string;
   /** Primary GSTZen `Token` (e.g. “original” workspace). */
   token: string;
   /** Optional second token for e-way-only testing; used when topbar “EWB test token” is on. */
@@ -111,4 +117,9 @@ export function resolveEwbGetTransporterViewUrl(cfg: GstZenEwbHttpConfig): strin
 export function resolveEwbGetTransporterStateViewUrl(cfg: GstZenEwbHttpConfig): string {
   const u = cfg.getTransporterStateViewUrl?.trim();
   return (u || GSTZEN_EWB_GET_TRANSPORTER_STATE_VIEW_URL_DEFAULT).trim();
+}
+
+export function resolveEwbGetTransporterGstinViewUrl(cfg: GstZenEwbHttpConfig): string {
+  const u = cfg.getTransporterGstinViewUrl?.trim();
+  return (u || GSTZEN_EWB_GET_TRANSPORTER_GSTIN_VIEW_URL_DEFAULT).trim();
 }

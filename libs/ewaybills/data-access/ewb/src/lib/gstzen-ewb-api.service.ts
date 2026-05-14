@@ -20,6 +20,8 @@ import {
   type EwbGenerateRequest,
   type EwbGenerateSuccess,
   type EwbGetRequest,
+  type EwbTransporterGstinViewQuery,
+  type EwbTransporterGstinViewResult,
   type EwbTransporterStateViewQuery,
   type EwbTransporterStateViewResult,
   type EwbTransporterViewQuery,
@@ -43,6 +45,7 @@ import {
   parseEwbTransporterViewResponse,
   ewbTransporterViewQueryDateValid,
   parseEwbTransporterStateViewResponse,
+  parseEwbTransporterGstinViewResponse,
   ewbTransporterStateViewStateCodeValid,
 } from '@ramsoft-builder/ewaybills/utils/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
@@ -62,6 +65,7 @@ import {
   resolveEwbChangeMultiVehiclesUrl,
   resolveEwbGetTransporterViewUrl,
   resolveEwbGetTransporterStateViewUrl,
+  resolveEwbGetTransporterGstinViewUrl,
 } from './gstzen-ewb-http.config';
 
 @Injectable({ providedIn: 'root' })
@@ -259,6 +263,81 @@ export class GstZenEwbApiService {
       .set('gstin', gstin);
     return this.http.get<unknown>(url, { headers, params }).pipe(
       map((res) => parseEwbTransporterStateViewResponse(res)),
+      catchError((err: unknown) => throwError(() => mapEwbGstZenHttpError(err))),
+    );
+  }
+
+  /**
+   * Transporter e-way list for a date, scoped by generator and transporter GSTINs
+   * (GSTZen GET `ewbapi/get-ewb-transporter-gstin-view/`).
+   *
+   * Query params (serialized by Angular `HttpParams`): `date` (`YYYY-MM-DD`), `gstin`, `gen_gstin`.
+   * Both GSTINs are validated, trimmed, and uppercased. Example:
+   *
+   * ```
+   * GET /~gstzen/a/ewbapi/get-ewb-transporter-gstin-view/?date=2024-01-02&gstin=29AAFCC9980M1ZR&gen_gstin={{GEN_GSTIN}}
+   * ```
+   *
+   * When the app sends the optional `gstin` HTTP header (`GstZenEwbHeaderPrefsService`), it is set to
+   * `fromGstin` if provided, otherwise `gen_gstin` (generator), then `gstin`.
+   *
+   * @see https://my.gstzen.in/docs/api/ewaybill-api/get-ewb-transporter-gstin-view/
+   */
+  getEwbTransporterGstinView(
+    query: EwbTransporterGstinViewQuery,
+    fromGstin?: string,
+  ): Observable<EwbTransporterGstinViewResult> {
+    const token = this.resolveEwbToken();
+    if (!token) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'GSTZen API token is not configured. Set `environment.gstZen.token` (and optional `ewbTestToken` for the EWB test toggle) plus `GSTZEN_EWB_HTTP_CONFIG`.',
+          ),
+      );
+    }
+    const date = String(query.date ?? '').trim();
+    const gstin = String(query.gstin ?? '').trim().toUpperCase();
+    const genGstin = String(query.gen_gstin ?? '').trim().toUpperCase();
+    if (!ewbTransporterViewQueryDateValid(date)) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'Invalid date: use YYYY-MM-DD (e.g. 2024-01-02) for the transporter GSTIN view API.',
+          ),
+      );
+    }
+    if (!gstinValidator(gstin)) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'Invalid GSTIN: the `gstin` query param must be a 15-character GSTIN.',
+          ),
+      );
+    }
+    if (!gstinValidator(genGstin)) {
+      return throwError(
+        () =>
+          new EwbGstZenApiError(
+            'Invalid GSTIN: the `gen_gstin` query param must be a 15-character GSTIN.',
+          ),
+      );
+    }
+    const url = resolveEwbGetTransporterGstinViewUrl(this.cfg);
+    let headers = new HttpHeaders({ Token: token });
+    const headerGstinRaw = (fromGstin ?? genGstin ?? gstin).trim().toUpperCase();
+    if (
+      this.headerPrefs.includeGstinHeader() &&
+      gstinValidator(headerGstinRaw)
+    ) {
+      headers = headers.set('gstin', headerGstinRaw);
+    }
+    const params = new HttpParams()
+      .set('date', date)
+      .set('gstin', gstin)
+      .set('gen_gstin', genGstin);
+    return this.http.get<unknown>(url, { headers, params }).pipe(
+      map((res) => parseEwbTransporterGstinViewResponse(res)),
       catchError((err: unknown) => throwError(() => mapEwbGstZenHttpError(err))),
     );
   }

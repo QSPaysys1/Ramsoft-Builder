@@ -35,6 +35,7 @@ export const environment = {
     ewbChangeMultiVehiclesUrl: `${GSTZEN_DEV}/~gstzen/a/ewbapi/change-multi-vehicles/`,
     ewbGetTransporterViewUrl: `${GSTZEN_DEV}/~gstzen/a/ewbapi/get-ewb-transporter-view/`,
     ewbGetTransporterStateViewUrl: `${GSTZEN_DEV}/~gstzen/a/ewbapi/get-ewb-transporter-state-view/`,
+    ewbGetTransporterGstinViewUrl: `${GSTZEN_DEV}/~gstzen/a/ewbapi/get-ewb-transporter-gstin-view/`,
     token: '0c2d0199-b1a5-494d-a2ef-f2b669d83738',
     ewbTestToken: 'de3a3a01-273a-4a81-8b75-13fe37f14dc6',
   } satisfies GstZenEnvironment,
