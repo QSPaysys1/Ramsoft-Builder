@@ -13,14 +13,27 @@
       automatically for requests that match the configured URL prefixes.
     </p>
     @if (hasToken()) {
-      <p class="mt-3 text-sm text-slate-700">
+      <p class="mt-3 text-sm leading-relaxed text-slate-700">
         Open
         <a
           class="font-semibold text-emerald-800 underline underline-offset-2 hover:text-emerald-950"
           routerLink="/gstr1/gstn/generate-otp"
           >GSTN Generate OTP</a
+        >,
+        <a
+          class="font-semibold text-emerald-800 underline underline-offset-2 hover:text-emerald-950"
+          routerLink="/gstr1/gstn/view-track-returns"
+          >View & track returns</a
         >
-        or
+        (Rettrack:
+        <span class="font-mono text-[13px] text-slate-800">ret_period</span>,
+        <span class="font-mono text-[13px] text-slate-800">gstin</span>), or
+        <a
+          class="font-semibold text-emerald-800 underline underline-offset-2 hover:text-emerald-950"
+          routerLink="/gstr1/gstn/return-status"
+          >poll return status by reference id</a
+        >
+        , or use
         <button
           type="button"
           class="cursor-pointer bg-transparent border-0 p-0 align-baseline font-semibold text-emerald-800 underline underline-offset-2 hover:text-emerald-950"

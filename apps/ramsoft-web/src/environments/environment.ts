@@ -49,5 +49,7 @@ export const environment = {
     gstnEstablishSessionUrl: `${GSTZEN_DEV}/api/gstn-establish-session/`,
     gstnCheckSessionUrl: `${GSTZEN_DEV}/api/gstn-check-session/`,
     gstnRefreshSessionUrl: `${GSTZEN_DEV}/api/gstn-refresh-session/`,
+    gstnRetStatusUrl: `${GSTZEN_DEV}/api/retstatus/`,
+    gstnRettrackUrl: `${GSTZEN_DEV}/api/rettrack/`,
   } satisfies Gstr1Environment,
 };

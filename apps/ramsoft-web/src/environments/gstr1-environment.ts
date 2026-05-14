@@ -18,4 +18,8 @@ export interface Gstr1Environment {
   readonly gstnCheckSessionUrl: string;
   /** `POST` GSTN Refresh Session — refresh GST portal session for a GSTIN (Bearer). */
   readonly gstnRefreshSessionUrl: string;
+  /** `POST` Get return status — `gstin`, `ret_period`, `reference_id` (Bearer). */
+  readonly gstnRetStatusUrl: string;
+  /** `POST` Rettrack — view / track returns — `gstin`, `ret_period` (Bearer). */
+  readonly gstnRettrackUrl: string;
 }

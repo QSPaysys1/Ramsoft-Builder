@@ -27,5 +27,21 @@ export const gstr1Routes: Routes = [
       ),
     canActivate: [gstr1AuthGuard],
   },
+  {
+    path: 'gstn/return-status',
+    loadComponent: () =>
+      import('./pages/gstr1-gstn-return-status.page').then(
+        (m) => m.Gstr1GstnReturnStatusPageComponent,
+      ),
+    canActivate: [gstr1AuthGuard],
+  },
+  {
+    path: 'gstn/view-track-returns',
+    loadComponent: () =>
+      import('./pages/gstr1-gstn-view-track-returns.page').then(
+        (m) => m.Gstr1GstnViewTrackReturnsPageComponent,
+      ),
+    canActivate: [gstr1AuthGuard],
+  },
   { path: '', pathMatch: 'full', redirectTo: 'workspace' },
 ];

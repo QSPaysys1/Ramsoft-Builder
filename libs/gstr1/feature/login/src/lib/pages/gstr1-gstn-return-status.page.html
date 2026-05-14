@@ -1,0 +1,187 @@
+<div class="mx-auto w-full max-w-4xl pb-16">
+  <a
+    class="mb-4 inline-flex text-sm font-medium text-slate-600 underline-offset-4 hover:underline"
+    routerLink="/gstr1/workspace"
+  >
+    ← Back to GSTZen workspace
+  </a>
+
+  <header class="rounded-md border border-slate-200 bg-white px-5 py-4 shadow-sm md:px-6 md:py-5">
+    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+      GSTZen · GSTN
+    </p>
+    <h1 class="mt-1 text-2xl font-bold tracking-wide text-[#222f3f] md:text-3xl">
+      All — Get Return Status
+    </h1>
+    <p class="mt-2 max-w-3xl text-sm text-slate-600 md:text-base">
+      Poll return processing using the GST portal reference id returned from an asynchronous save or
+      filing step. Uses your GSTZen access token as <span class="font-semibold">Authorization: Bearer</span>
+      (no manual token paste).
+    </p>
+    <dl
+      class="mt-6 grid gap-4 border-t border-dashed border-slate-200 pt-5 text-sm md:grid-cols-3"
+    >
+      <div class="md:col-span-1">
+        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          Endpoint
+        </dt>
+        <dd class="mt-1 font-mono text-xs font-medium text-emerald-800 break-all">
+          POST {{ gstr1Zen.gstnRetStatusUrl }}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          Authorization
+        </dt>
+        <dd class="mt-1 font-medium text-slate-800">Bearer (GSTZen access token)</dd>
+      </div>
+      <div>
+        <dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          Content‑Type
+        </dt>
+        <dd class="mt-1 font-mono text-xs text-slate-800">application/json</dd>
+      </div>
+    </dl>
+    <div class="mt-5 rounded-lg border border-slate-100 bg-slate-950 p-4">
+      <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+        Request body example (JSON)
+      </p>
+      <pre
+        class="font-mono text-[11px] leading-relaxed text-emerald-100"
+      >{{ requestExamplePayload }}</pre>
+    </div>
+  </header>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+    <section
+      class="rounded-md border border-slate-200 bg-white px-5 py-5 shadow-sm md:px-6 md:py-6"
+      [attr.aria-busy]="loading()"
+    >
+      <h2 class="text-lg font-semibold text-[#222f3f]">Request</h2>
+      <form class="mt-5 space-y-5" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-slate-700" for="ret-return-status-period"
+            >Return period (<span class="font-mono font-normal tracking-wide">MMYYYY</span>)</label
+          >
+          <input
+            id="ret-return-status-period"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            maxlength="6"
+            formControlName="retPeriod"
+            class="rounded-lg border border-slate-200 px-3 py-2.5 font-mono text-sm tracking-wide text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            placeholder="032024"
+          />
+          @if (form.controls.retPeriod.touched && form.controls.retPeriod.hasError('required')) {
+            <p class="text-xs font-medium text-red-600">Return period is required.</p>
+          } @else if (
+            form.controls.retPeriod.touched && form.controls.retPeriod.hasError('pattern')
+          ) {
+            <p class="text-xs font-medium text-red-600">Use GST month/year as six digits (e.g. 032024).</p>
+          }
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-slate-700" for="ret-return-status-gstin">GSTIN</label>
+          <input
+            id="ret-return-status-gstin"
+            type="text"
+            autocomplete="off"
+            maxlength="15"
+            formControlName="gstin"
+            class="rounded-lg border border-slate-200 px-3 py-2.5 font-mono text-sm tracking-wide uppercase text-slate-900 placeholder:normal-case placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            placeholder="29ABCDE1234F1Z5"
+          />
+          @if (form.controls.gstin.touched && form.controls.gstin.hasError('required')) {
+            <p class="text-xs font-medium text-red-600">GSTIN is required.</p>
+          } @else if (
+            form.controls.gstin.touched && form.controls.gstin.hasError('gstinPattern')
+          ) {
+            <p class="text-xs font-medium text-red-600">Enter a valid 15-character GSTIN.</p>
+          }
+          <p class="text-xs text-slate-500">
+            Prefilled from your Ramsoft profile when available.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label
+            class="text-sm font-semibold text-slate-700"
+            for="ret-return-status-ref"
+            >Reference id</label
+          >
+          <input
+            id="ret-return-status-ref"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            formControlName="referenceId"
+            class="rounded-lg border border-slate-200 px-3 py-2.5 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            placeholder="00a09d5b-0fcf-474a-abac-f0eaa34284de"
+          />
+          @if (form.controls.referenceId.touched && form.controls.referenceId.hasError('required')) {
+            <p class="text-xs font-medium text-red-600">Reference id is required.</p>
+          } @else if (
+            form.controls.referenceId.touched && form.controls.referenceId.hasError('pattern')
+          ) {
+            <p class="text-xs font-medium text-red-600">
+              Enter a UUID from the GST portal workflow (hyphenated, 36 characters).
+            </p>
+          }
+        </div>
+
+        <div class="flex flex-wrap gap-3 pt-1">
+          <button
+            type="submit"
+            class="inline-flex min-h-[42px] min-w-[140px] items-center justify-center rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+            [disabled]="loading()"
+            [ngClass]="{ 'animate-pulse': loading() }"
+          >
+            @if (loading()) {
+              <span>Calling API…</span>
+            } @else {
+              <span>Get return status</span>
+            }
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <aside class="space-y-4">
+      <section class="rounded-md border border-slate-200 bg-white px-5 py-4 shadow-sm md:px-6">
+        <h2 class="text-sm font-semibold text-[#222f3f]">Live payload preview</h2>
+        <p class="mt-1 text-xs text-slate-600">
+          Mirrors the JSON that will be sent once fields validate. Bearer token is attached by the app.
+        </p>
+        <pre
+          class="mt-3 max-h-48 overflow-auto rounded border border-slate-200 bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-sky-100"
+        >{{ liveRequestJson() }}</pre>
+      </section>
+
+      <section class="rounded-md border border-slate-200 bg-white px-5 py-4 shadow-sm md:px-6">
+        <h2 class="text-sm font-semibold text-[#222f3f]">Response</h2>
+        @if (!hasResponse()) {
+          <p class="mt-3 text-sm text-slate-500">
+            Submit the form to see the raw JSON response (success or normalized HTTP error).
+          </p>
+        } @else {
+          @if (responseOk()) {
+            <p class="mt-3 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+              Success (2xx)
+            </p>
+          } @else {
+            <p class="mt-3 text-xs font-semibold uppercase tracking-wide text-red-700">
+              Request failed — details below
+            </p>
+          }
+          @if (responsePreviewJson().length > 0) {
+            <pre
+              class="mt-2 max-h-80 overflow-auto rounded border border-slate-200 bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-emerald-100"
+            >{{ responsePreviewJson() }}</pre>
+          }
+        }
+      </section>
+    </aside>
+  </div>
+</div>

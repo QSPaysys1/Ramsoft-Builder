@@ -10,6 +10,8 @@ import type {
   GstnCheckSessionSuccessResponse,
 } from './gstn-check-session.models';
 import type { GstnRefreshSessionRequestBody } from './gstn-refresh-session.models';
+import type { GstnRetStatusRequestBody } from './gstn-ret-status.models';
+import type { GstnRettrackRequestBody } from './gstn-rettrack.models';
 import { GSTR1_GSTZEN_AUTH_CONFIG } from './gstr1-gstzen-auth.config';
 
 /**
@@ -61,6 +63,35 @@ export class Gstr1GstnOtpApiService {
     return this.http.post<unknown>(
       this.config.gstnRefreshSessionUrl,
       { gstin: body.gstin.trim().toUpperCase() },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  }
+
+  /** `POST retstatus/` — Bearer token attached by `gstr1BearerInterceptor`. */
+  getReturnStatus(body: GstnRetStatusRequestBody): Observable<unknown> {
+    return this.http.post<unknown>(
+      this.config.gstnRetStatusUrl,
+      {
+        gstin: body.gstin.trim().toUpperCase(),
+        ret_period: body.ret_period.trim(),
+        reference_id: body.reference_id.trim(),
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  }
+
+  /** `POST rettrack/` — Bearer token attached by `gstr1BearerInterceptor`. */
+  viewAndTrackReturns(body: GstnRettrackRequestBody): Observable<unknown> {
+    return this.http.post<unknown>(
+      this.config.gstnRettrackUrl,
+      {
+        gstin: body.gstin.trim().toUpperCase(),
+        ret_period: body.ret_period.trim(),
+      },
       {
         headers: { 'Content-Type': 'application/json' },
       },

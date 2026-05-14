@@ -11,5 +11,7 @@ export * from './lib/gstr1-login-redirect.guard';
 export * from './lib/gstn-check-session.models';
 export * from './lib/gstn-generate-otp.models';
 export * from './lib/gstn-refresh-session.models';
+export * from './lib/gstn-ret-status.models';
+export * from './lib/gstn-rettrack.models';
 export * from './lib/gstr1-gstn-otp-api.service';
 export * from './lib/gstr1-gstn-session-ensure.service';

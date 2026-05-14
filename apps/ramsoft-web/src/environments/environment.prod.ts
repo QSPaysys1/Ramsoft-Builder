@@ -46,5 +46,7 @@ export const environment = {
     gstnEstablishSessionUrl: 'https://my.gstzen.in/api/gstn-establish-session/',
     gstnCheckSessionUrl: 'https://my.gstzen.in/api/gstn-check-session/',
     gstnRefreshSessionUrl: 'https://my.gstzen.in/api/gstn-refresh-session/',
+    gstnRetStatusUrl: 'https://my.gstzen.in/api/retstatus/',
+    gstnRettrackUrl: 'https://my.gstzen.in/api/rettrack/',
   } satisfies Gstr1Environment,
 };

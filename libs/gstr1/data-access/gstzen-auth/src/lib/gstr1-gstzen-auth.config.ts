@@ -45,6 +45,16 @@ export interface Gstr1GstzenAuthEnvironment {
    * Production: `https://my.gstzen.in/api/gstn-refresh-session/`.
    */
   readonly gstnRefreshSessionUrl: string;
+  /**
+   * All / Get Return Status — `POST` JSON (`gstin`, `ret_period`, `reference_id`).
+   * Production: `https://my.gstzen.in/api/retstatus/`.
+   */
+  readonly gstnRetStatusUrl: string;
+  /**
+   * Rettrack — View / track filed returns — `POST` JSON (`gstin`, `ret_period`).
+   * Production: `https://my.gstzen.in/api/rettrack/`.
+   */
+  readonly gstnRettrackUrl: string;
 }
 
 export const GSTR1_GSTZEN_AUTH_CONFIG = new InjectionToken<Gstr1GstzenAuthEnvironment>(
