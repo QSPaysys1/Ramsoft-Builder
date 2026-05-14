@@ -1,0 +1,146 @@
+<div class="mx-auto w-full max-w-3xl">
+  <div
+    class="rounded-md border-2 border-gray-100 bg-white p-6 shadow-sm md:p-8"
+  >
+    <p class="text-sm font-medium uppercase tracking-wider text-slate-500">
+      GSTR&#8209;1 · GSTZen
+    </p>
+    <h1 class="mt-2 text-2xl font-bold tracking-wide text-[#222f3f]">
+      Workspace
+    </h1>
+    <p class="mt-2 text-base text-slate-600">
+      Your GSTZen JWT is active. Future GSTR&#8209;1 API modules will use this session
+      automatically for requests that match the configured URL prefixes.
+    </p>
+    @if (hasToken()) {
+      <p class="mt-3 text-sm text-slate-700">
+        Open
+        <a
+          class="font-semibold text-emerald-800 underline underline-offset-2 hover:text-emerald-950"
+          routerLink="/gstr1/gstn/generate-otp"
+          >GSTN Generate OTP</a
+        >
+        or
+        <button
+          type="button"
+          class="cursor-pointer bg-transparent border-0 p-0 align-baseline font-semibold text-emerald-800 underline underline-offset-2 hover:text-emerald-950"
+          (click)="openCheckSessionModal()"
+        >
+          GSTIN check session
+        </button>
+        or
+        <button
+          type="button"
+          class="cursor-pointer bg-transparent border-0 p-0 align-baseline font-semibold text-emerald-800 underline underline-offset-2 hover:text-emerald-950"
+          (click)="openRefreshSessionModal()"
+        >
+          refresh session if needed
+        </button>
+        to call GST portal APIs with your Bearer session.
+      </p>
+    }
+
+    @if (!hasToken()) {
+      <p class="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        No active GSTZen session. Use
+        <a class="font-semibold underline" routerLink="/gstr1/login">Sign in</a>
+        to connect.
+      </p>
+    } @else {
+      <dl class="mt-6 grid gap-3 text-sm md:grid-cols-2">
+        <div class="rounded-lg border border-gray-100 bg-slate-50 px-4 py-3">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Signed in as
+          </dt>
+          <dd class="mt-1 font-medium text-slate-900">{{ username() }}</dd>
+        </div>
+        <div class="rounded-lg border border-gray-100 bg-slate-50 px-4 py-3">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Access token expiry (UTC)
+          </dt>
+          <dd class="mt-1 font-medium text-slate-900">
+            @if (expiresAtMs(); as exp) {
+              {{ exp | date : 'medium' : 'UTC' }}
+            } @else {
+              —
+            }
+          </dd>
+        </div>
+      </dl>
+
+      <div class="mt-6 space-y-4">
+        <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950">
+          These values are <strong class="font-semibold">secrets</strong>. Do not share or log them.
+          Use the access token as the GSTZen API <strong class="font-semibold">Bearer</strong> value.
+        </div>
+
+        <div class="rounded-lg border border-gray-200 bg-slate-50 p-4">
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h2 class="text-sm font-semibold text-[#222f3f]">Access token</h2>
+              <p class="mt-0.5 text-xs text-slate-600">Bearer JWT · sent automatically on proxied GSTZen requests</p>
+            </div>
+            <button
+              type="button"
+              class="shrink-0 cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-[#222f3f] shadow-sm hover:bg-slate-100"
+              (click)="copyAccessToken()"
+            >
+              Copy to clipboard
+            </button>
+          </div>
+          @if (accessTokenText().length > 0) {
+              <pre
+                class="mt-3 max-h-36 overflow-auto break-all rounded border border-slate-200 bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-emerald-100"
+              >{{ accessTokenText() }}</pre>
+            }
+        </div>
+
+        <div class="rounded-lg border border-gray-200 bg-slate-50 p-4">
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h2 class="text-sm font-semibold text-[#222f3f]">Refresh token</h2>
+              <p class="mt-0.5 text-xs text-slate-600">Longer-lived JWT · refresh flow may be added later</p>
+            </div>
+            <button
+              type="button"
+              class="shrink-0 cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-[#222f3f] shadow-sm hover:bg-slate-100"
+              (click)="copyRefreshToken()"
+            >
+              Copy to clipboard
+            </button>
+          </div>
+          @if (refreshTokenText().length > 0) {
+              <pre
+                class="mt-3 max-h-36 overflow-auto break-all rounded border border-slate-200 bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-sky-100"
+              >{{ refreshTokenText() }}</pre>
+            }
+        </div>
+      </div>
+    }
+
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+      <a
+        class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-center text-sm font-semibold text-[#222f3f] no-underline shadow-sm hover:bg-slate-50"
+        routerLink="/home"
+      >
+        Back to dashboard
+      </a>
+      @if (hasToken()) {
+        <button
+          type="button"
+          class="inline-flex cursor-pointer items-center justify-center rounded-xl border border-red-200 bg-red-50 px-5 py-2.5 text-sm font-semibold text-red-800 hover:bg-red-100"
+          (click)="logout()"
+        >
+          Disconnect GSTZen
+        </button>
+      }
+    </div>
+  </div>
+</div>
+
+@if (checkSessionModalOpen()) {
+  <lib-gstr1-gstn-check-session-modal (closed)="closeCheckSessionModal()" />
+}
+@if (refreshSessionModalOpen()) {
+  <lib-gstr1-gstn-refresh-session-modal (closed)="closeRefreshSessionModal()" />
+}

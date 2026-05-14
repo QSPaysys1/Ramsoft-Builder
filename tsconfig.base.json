@@ -71,6 +71,15 @@
       "@ramsoft-builder/ewaybills/utils/core": [
         "libs/ewaybills/utils/core/src/index.ts"
       ],
+      "@ramsoft-builder/gstr1/data-access/gstzen-auth": [
+        "libs/gstr1/data-access/gstzen-auth/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr1/feature/login": [
+        "libs/gstr1/feature/login/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr1/models/jwt": [
+        "libs/gstr1/models/jwt/src/index.ts"
+      ],
       "@ramsoft-builder/shared/data-access/supabase": [
         "libs/shared/data-access/supabase/src/index.ts"
       ]

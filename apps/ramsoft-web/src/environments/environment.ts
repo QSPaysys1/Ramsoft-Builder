@@ -1,4 +1,5 @@
 import type { GstZenEnvironment } from './gstzen-environment';
+import type { Gstr1Environment } from './gstr1-environment';
 
 /**
  * Local dev: browser calls same-origin `/gstzen-proxy/...`; `nx serve` forwards to
@@ -39,4 +40,14 @@ export const environment = {
     token: '0c2d0199-b1a5-494d-a2ef-f2b669d83738',
     ewbTestToken: 'de3a3a01-273a-4a81-8b75-13fe37f14dc6',
   } satisfies GstZenEnvironment,
+  gstr1: {
+    loginTokenUrl: `${GSTZEN_DEV}/accounts/api/login/token/`,
+    bearerUrlPrefixes: [GSTZEN_DEV],
+    unauthorizedUrlPrefixes: [GSTZEN_DEV],
+    accessTokenFallbackTtlMs: 86_400_000,
+    gstnGenerateOtpUrl: `${GSTZEN_DEV}/api/gstn-generate-otp/`,
+    gstnEstablishSessionUrl: `${GSTZEN_DEV}/api/gstn-establish-session/`,
+    gstnCheckSessionUrl: `${GSTZEN_DEV}/api/gstn-check-session/`,
+    gstnRefreshSessionUrl: `${GSTZEN_DEV}/api/gstn-refresh-session/`,
+  } satisfies Gstr1Environment,
 };

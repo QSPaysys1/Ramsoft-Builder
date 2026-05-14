@@ -1,0 +1,14 @@
+{
+  "name": "gstr1-data-access-gstzen-auth",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1/data-access/gstzen-auth/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:data-access", "domain:gstr1"],
+  "implicitDependencies": ["gstr1-models-jwt"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

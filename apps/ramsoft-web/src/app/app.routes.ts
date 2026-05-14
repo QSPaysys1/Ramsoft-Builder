@@ -34,9 +34,9 @@ export const appRoutes: Routes = [
           ),
       },
       {
-        path: 'ewaybills',
+        path: 'gstr1',
         loadChildren: () =>
-          import('@ramsoft-builder/ewaybills/feature/flow').then((m) => m.ewaybillsRoutes),
+          import('@ramsoft-builder/gstr1/feature/login').then((m) => m.gstr1Routes),
       },
       {
         path: 'versions/issues',

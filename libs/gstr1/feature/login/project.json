@@ -1,0 +1,19 @@
+{
+  "name": "gstr1-feature-login",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1/feature/login/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:feature", "domain:gstr1"],
+  "implicitDependencies": [
+    "gstr1-data-access-gstzen-auth",
+    "auth-ui-login",
+    "auth-data-access-auth",
+    "e-invoices-data-access-einvoice"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
@@ -14,12 +14,30 @@ import { provideSupabaseClient } from '@ramsoft-builder/shared/data-access/supab
 import { GSTZEN_EWB_HTTP_CONFIG } from '@ramsoft-builder/ewaybills/data-access/ewb';
 import { GSTZEN_EINVOICE_CONFIG } from '@ramsoft-builder/e-invoices/data-access/einvoice';
 import { EINVOICE_GSTZEN_HTTP_CONFIG } from '@ramsoft-builder/einvoice/data-access/api';
+import {
+  gstr1BearerInterceptor,
+  gstr1UnauthorizedInterceptor,
+  provideGstr1GstzenAuthConfig,
+} from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     ...provideSupabaseClient(environment.supabase),
-    provideHttpClient(withFetch()),
+    provideHttpClient(
+      withFetch(),
+      withInterceptors([gstr1BearerInterceptor, gstr1UnauthorizedInterceptor]),
+    ),
+    provideGstr1GstzenAuthConfig({
+      loginTokenUrl: environment.gstr1.loginTokenUrl,
+      bearerUrlPrefixes: environment.gstr1.bearerUrlPrefixes,
+      unauthorizedUrlPrefixes: environment.gstr1.unauthorizedUrlPrefixes,
+      accessTokenFallbackTtlMs: environment.gstr1.accessTokenFallbackTtlMs,
+      gstnGenerateOtpUrl: environment.gstr1.gstnGenerateOtpUrl,
+      gstnEstablishSessionUrl: environment.gstr1.gstnEstablishSessionUrl,
+      gstnCheckSessionUrl: environment.gstr1.gstnCheckSessionUrl,
+      gstnRefreshSessionUrl: environment.gstr1.gstnRefreshSessionUrl,
+    }),
     {
       provide: GSTZEN_EINVOICE_CONFIG,
       useValue: {

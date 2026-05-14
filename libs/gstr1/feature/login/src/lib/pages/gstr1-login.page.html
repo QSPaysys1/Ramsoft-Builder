@@ -1,0 +1,76 @@
+<lib-auth-page-layout [heroImageSrc]="heroImageSrc" heroImageAlt="Ramsoft">
+  <a
+    class="mb-4 inline-block text-sm font-medium text-slate-600 underline-offset-4 hover:underline"
+    routerLink="/home"
+  >
+    ← Back to dashboard
+  </a>
+  <h1
+    class="mb-2 text-center text-2xl font-medium tracking-wide text-black md:text-3xl"
+  >
+    GSTZen — GSTR&#8209;1 access
+  </h1>
+  <p class="mb-6 text-center text-sm text-gray-600">
+    Sign in with your
+    <strong class="font-medium text-gray-800">GSTZen portal</strong> user name and password.
+    The session token is stored in this browser and sent as a Bearer token for GSTZen API
+    calls (valid for up to 24 hours).
+  </p>
+
+  <form
+    class="flex flex-col gap-6"
+    [formGroup]="loginForm"
+    (ngSubmit)="onSubmit()"
+  >
+    <lib-auth-server-error [message]="gstr1Auth.errorMessage()" />
+
+    <div
+      class="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-left"
+    >
+      <p
+        class="text-xs font-semibold uppercase tracking-wide text-slate-500"
+      >
+        From your Ramsoft profile
+      </p>
+      <div class="mt-2">
+        <label
+          class="block text-xs font-medium text-slate-600"
+          for="gstr1-login-prefill-gstin"
+          >GSTIN</label
+        >
+        @if (profileGstinDisplay()) {
+          <input
+            id="gstr1-login-prefill-gstin"
+            type="text"
+            readonly
+            tabindex="-1"
+            [value]="profileGstinDisplay()"
+            class="mt-1 w-full cursor-default rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-sm tracking-wide text-slate-900"
+          />
+        } @else {
+          <p
+            id="gstr1-login-prefill-gstin"
+            class="mt-1 text-sm italic text-slate-500"
+          >
+            No GSTIN on file — update your profile if needed.
+          </p>
+        }
+      </div>
+    </div>
+
+    <lib-auth-user-name-field
+      [control]="loginForm.controls.userName"
+      label="User name"
+      placeholder="GSTZen login / email"
+    />
+    <p class="-mt-2 text-xs text-center text-slate-500 md:text-left">
+      @if (appUserEmail()) {
+        Prefilled with your Ramsoft sign-in email; change if your GSTZen user name is different.
+      } @else {
+        Use your GSTZen portal user name when it differs from Ramsoft login.
+      }
+    </p>
+    <lib-auth-password-field [control]="loginForm.controls.password" />
+    <lib-auth-submit-button [loading]="loading()" label="Sign in to GSTZen" />
+  </form>
+</lib-auth-page-layout>

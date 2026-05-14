@@ -1,4 +1,5 @@
 import type { GstZenEnvironment } from './gstzen-environment';
+import type { Gstr1Environment } from './gstr1-environment';
 
 export const environment = {
   production: true,
@@ -36,4 +37,14 @@ export const environment = {
     token: '',
     ewbTestToken: undefined as string | undefined,
   } satisfies GstZenEnvironment,
+  gstr1: {
+    loginTokenUrl: 'https://my.gstzen.in/accounts/api/login/token/',
+    bearerUrlPrefixes: ['https://my.gstzen.in'],
+    unauthorizedUrlPrefixes: ['https://my.gstzen.in'],
+    accessTokenFallbackTtlMs: 86_400_000,
+    gstnGenerateOtpUrl: 'https://my.gstzen.in/api/gstn-generate-otp/',
+    gstnEstablishSessionUrl: 'https://my.gstzen.in/api/gstn-establish-session/',
+    gstnCheckSessionUrl: 'https://my.gstzen.in/api/gstn-check-session/',
+    gstnRefreshSessionUrl: 'https://my.gstzen.in/api/gstn-refresh-session/',
+  } satisfies Gstr1Environment,
 };

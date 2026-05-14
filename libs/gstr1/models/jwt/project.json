@@ -1,0 +1,18 @@
+{
+  "name": "gstr1-models-jwt",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1/models/jwt/src",
+  "projectType": "library",
+  "tags": ["type:models", "domain:gstr1"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr1/models/jwt",
+        "main": "libs/gstr1/models/jwt/src/index.ts",
+        "tsConfig": "libs/gstr1/models/jwt/tsconfig.lib.json"
+      }
+    }
+  }
+}
