@@ -1,12 +1,18 @@
 <div class="gstr1-download pb-12">
-  <nav class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
-    <div class="flex flex-wrap items-center gap-2">
-      <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Dashboard</a>
-      <span aria-hidden="true">›</span>
-      <span class="text-slate-700">Returns</span>
-      <span aria-hidden="true">›</span>
-      <span class="font-semibold text-slate-900">GSTR-1/IFF</span>
-    </div>
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <span class="font-semibold text-slate-900" aria-current="page">GSTR-1/IFF</span>
+      </li>
+    </ol>
     <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">
       English
     </span>
@@ -28,8 +34,9 @@
           GSTR-1 - Details of outward supplies of goods or services
         </h1>
         <p class="mt-1 max-w-3xl text-sm text-white/95">
-          Workspace view · section <span class="font-mono text-xs">{{ apiName() }}</span> · Download via GSTZen POST
+          Workspace view · RETSUM tile counts via GSTZen POST
           <span class="font-mono text-xs">/api/gstr1/download/</span>
+          (<span class="font-mono text-xs">api_name=retsum</span>)
         </p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
@@ -51,7 +58,7 @@
         <button
           type="button"
           class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/50 bg-white/15 text-white hover:bg-white/25 disabled:opacity-50"
-          [disabled]="loading()"
+          [disabled]="loading() || retsumLoading()"
           (click)="refresh()"
           title="Refresh download"
           aria-label="Refresh"
@@ -107,7 +114,7 @@
 
     <div class="border-t border-slate-100 pt-4">
       <div class="grid gap-4 lg:grid-cols-12 lg:items-end">
-        <div class="flex flex-col gap-1.5 lg:col-span-3">
+        <div class="flex flex-col gap-1.5 lg:col-span-4">
           <label class="text-sm font-semibold text-slate-700" for="gd-gstin">GSTIN <span class="text-red-600">*</span></label>
           <input
             id="gd-gstin"
@@ -130,27 +137,14 @@
             (input)="updateRetPeriod($any($event.target).value)"
           />
         </div>
-        <div class="flex flex-col gap-1.5 lg:col-span-4">
-          <label class="text-sm font-semibold text-slate-700" for="gd-api">Section (API name)</label>
-          <select
-            id="gd-api"
-            class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
-            [value]="apiName()"
-            (change)="updateApiName($any($event.target).value)"
-          >
-            @for (opt of apiNameOptions; track opt) {
-              <option [value]="opt">{{ opt }}</option>
-            }
-          </select>
-        </div>
-        <div class="flex flex-wrap gap-2 lg:col-span-3 lg:justify-end">
+        <div class="flex flex-wrap gap-2 lg:col-span-6 lg:justify-end">
           <button
             type="button"
             class="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-5 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#154a8f] disabled:cursor-not-allowed disabled:opacity-55 lg:flex-none lg:min-w-[140px]"
-            [disabled]="loading() || fileNilGstr1()"
-            (click)="fetchFromApi()"
+            [disabled]="loading() || retsumLoading() || fileNilGstr1()"
+            (click)="fetchRetsumSummary()"
           >
-            @if (loading()) {
+            @if (retsumLoading()) {
               <span>Loading…</span>
             } @else {
               <span>View</span>
@@ -176,16 +170,29 @@
       </div>
       @if (!paramsValid()) {
         <p class="mt-3 text-xs font-medium text-amber-800">
-          Enter a valid GSTIN (15 chars) and return period (<span class="font-mono">MMYYYY</span>) before calling View.
+          Enter a valid GSTIN (15 chars) and return period (<span class="font-mono">MMYYYY</span>) before calling View to load RETSUM.
         </p>
       }
       @if (fileNilGstr1()) {
         <p class="mt-2 text-xs font-medium text-slate-600">
-          Uncheck <span class="font-semibold">File Nil GSTR-1</span> below to download section data.
+          Uncheck <span class="font-semibold">File Nil GSTR-1</span> below to load RETSUM and section downloads.
         </p>
       }
     </div>
   </section>
+
+  @if (!retsumLoading() && !loading() && viewState() !== 'error' && logicalErrorText()) {
+    <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-amber-950 shadow-sm">
+      <p class="text-sm font-bold">Return summary (RETSUM)</p>
+      <p class="mt-1 text-sm">{{ logicalErrorText() }}</p>
+    </div>
+  }
+  @if (!retsumLoading() && !loading() && viewState() !== 'error' && httpError() !== null) {
+    <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-5 text-red-950 shadow-sm">
+      <p class="text-sm font-bold">RETSUM request failed</p>
+      <pre class="mt-3 max-h-64 overflow-auto rounded border border-red-100 bg-white p-3 font-mono text-[11px] leading-relaxed text-red-900">{{ httpError() | json }}</pre>
+    </div>
+  }
 
   <div class="mt-0 border border-t-0 border-slate-200 bg-slate-100/90 px-4 py-2.5 md:px-6">
     <label class="inline-flex cursor-pointer select-none items-center gap-2 text-sm font-medium text-slate-800">
@@ -211,7 +218,7 @@
     </button>
     @if (addRecordOpen()) {
       <div class="border-t border-slate-200 bg-slate-50/80 p-4 md:p-5">
-        @if (loading()) {
+        @if (retsumLoading()) {
           <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             @for (x of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]; track x) {
               <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -223,37 +230,12 @@
               </div>
             }
           </div>
-        } @else if (viewState() === 'idle') {
-          <p class="text-center text-sm text-slate-600">
-            Enter GSTIN &amp; return period above, choose a section, then press <span class="font-semibold">View</span>. Click a tile to jump to that
-            portal section download.
-          </p>
-          <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            @for (title of summaryTitles; track title; let i = $index) {
-              <button
-                type="button"
-                class="cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-white text-left shadow-md outline-none ring-slate-300 transition hover:shadow-lg focus-visible:ring-2"
-                (click)="onSectionCardClick(i)"
-                [disabled]="sectionCardPrimaryApis[i] === null"
-                [attr.title]="
-                  sectionCardPrimaryApis[i]
-                    ? 'Load ' + sectionCardPrimaryApis[i] + ' data'
-                    : 'No GSTZen bucket for this tile'
-                "
-              >
-                <div class="bg-[#2c4172] px-2 py-2 text-center text-[10px] font-semibold leading-snug text-white md:text-[11px]">{{ title }}</div>
-                <div class="flex flex-col items-center justify-center gap-2 px-2 py-6">
-                  <span
-                    class="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-lg text-emerald-700"
-                    aria-hidden="true"
-                    >✓</span
-                  >
-                  <p class="text-2xl font-bold text-emerald-700">0</p>
-                </div>
-              </button>
-            }
-          </div>
         } @else {
+          @if (retsumTileCounts() === null) {
+            <p class="mb-4 text-center text-sm text-slate-600">
+              Enter GSTIN &amp; return period, then press <span class="font-semibold">View</span> to load RETSUM counts. Tap a tile to download that section's records below.
+            </p>
+          }
           <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             @for (title of summaryTitles; track title; let i = $index) {
               <button
@@ -262,7 +244,7 @@
                 [class.ring-2]="summaryTileActive(i) && (viewState() === 'success' || viewState() === 'empty')"
                 [class.ring-blue-800]="summaryTileActive(i) && (viewState() === 'success' || viewState() === 'empty')"
                 (click)="onSectionCardClick(i)"
-                [disabled]="sectionCardPrimaryApis[i] === null || loading()"
+                [disabled]="sectionCardPrimaryApis[i] === null || loading() || retsumLoading()"
                 [attr.title]="
                   sectionCardPrimaryApis[i]
                     ? 'Load ' + sectionCardPrimaryApis[i] + ' data'
@@ -282,11 +264,10 @@
             }
           </div>
           @if (viewState() === 'error') {
-            <p class="mt-4 text-center text-[11px] text-amber-800">Counts may be stale after an error · fix GSTIN / period and use View.</p>
+            <p class="mt-4 text-center text-[11px] text-amber-800">Tile counts may be stale after an error · fix GSTIN / period and press View.</p>
           } @else {
             <p class="mt-4 text-center text-[11px] text-slate-500">
-              Counts reflect the last successful download for each section. Tiles call the same GSTZen endpoint with matching
-              <span class="font-mono">api_name</span>; section 13 has no keyed download yet.
+              Counts mirror the GST portal workspace: RETSUM <span class="font-mono">sec_sum.ttl_rec</span> per section. Tile 13 (documents) has no keyed download yet.
             </p>
           }
         }
@@ -313,7 +294,7 @@
     <div class="mt-6 rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-slate-600 shadow-sm">
       <p class="text-base font-semibold text-slate-900">Prepare return data</p>
       <p class="mt-2 max-w-lg text-sm text-slate-600 mx-auto">
-        Use the form above or open from Returns dashboard · Press <span class="font-semibold">View</span> or tap a portal section tile.
+        Press <span class="font-semibold">View</span> to load RETSUM counts · Tap a tile to pull that section's invoices into the workspace below.
       </p>
     </div>
   } @else if (!loading()) {

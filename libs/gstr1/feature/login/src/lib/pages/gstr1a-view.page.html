@@ -1,12 +1,18 @@
 <div class="gstr1a-view pb-12">
-  <nav class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
-    <div class="flex flex-wrap items-center gap-2">
-      <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Dashboard</a>
-      <span aria-hidden="true">›</span>
-      <span class="text-slate-700">Returns</span>
-      <span aria-hidden="true">›</span>
-      <span class="font-semibold text-slate-900">GSTR-1A</span>
-    </div>
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <span class="font-semibold text-slate-900" aria-current="page">GSTR-1A</span>
+      </li>
+    </ol>
     <div class="flex items-center gap-2 text-slate-500">
       <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm"> English </span>
     </div>

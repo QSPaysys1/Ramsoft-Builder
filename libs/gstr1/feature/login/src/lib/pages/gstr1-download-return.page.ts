@@ -16,14 +16,15 @@ import { AuthStore } from '@ramsoft-builder/auth/data-access/auth';
 import { UserProfileRepository } from '@ramsoft-builder/e-invoices/data-access/einvoice';
 import {
   Gstr1GstnOtpApiService,
-  GSTR1_DOWNLOAD_API_NAMES,
   RETURN_PERIOD_REGEX,
   aggregateGstr1DownloadRows,
   coerceGstr1DownloadApiName,
   extractGstr1DownloadMessageArray,
+  extractGstr1RetsumSecSum,
   filterGstr1DownloadHierarchy,
   flattenGstr1DownloadHierarchy,
   isGstr1DownloadSuccessEnvelope,
+  mapGstr1RetsumSecSumToPortalTileCounts,
   parseGstr1DownloadHierarchy,
   type Gstr1DownloadAggregateStats,
   type Gstr1DownloadApiName,
@@ -193,7 +194,6 @@ export class Gstr1DownloadReturnPageComponent {
   private readonly authStore = inject(AuthStore);
   private readonly userProfile = inject(UserProfileRepository);
 
-  readonly apiNameOptions = GSTR1_DOWNLOAD_API_NAMES;
   readonly summaryTitles = GSTR1_SUMMARY_SECTION_TITLES;
   /** Exposed for template bindings (portal tile → primary `api_name`). */
   readonly sectionCardPrimaryApis = GSTR1_SECTION_CARD_PRIMARY_API;
@@ -216,6 +216,9 @@ export class Gstr1DownloadReturnPageComponent {
 
   readonly viewState = signal<ViewState>('idle');
   readonly loading = signal(false);
+  /** RETSUM (portal tile counts) fetch — separate from section detail `loading`. */
+  readonly retsumLoading = signal(false);
+  readonly retsumTileCounts = signal<number[] | null>(null);
   readonly httpError = signal<unknown>(null);
   readonly rawResponse = signal<unknown>(null);
   readonly logicalErrorText = signal<string | null>(null);
@@ -235,18 +238,11 @@ export class Gstr1DownloadReturnPageComponent {
   readonly taxPeriodLabel = computed(() => monthNameFromMmYyyy(this.retPeriod().trim()));
 
   readonly summaryCounts = computed(() => {
-    const out = this.summaryTitles.map(() => 0);
-    const agg = this.aggregate();
-    const st = this.viewState();
-    if ((st === 'success' || st === 'empty') && agg) {
-      const indices = GSTR1_SUMMARY_TILES_FOR_API[this.apiName()];
-      if (indices?.length) {
-        for (const i of indices) {
-          out[i] = agg.invoiceCount;
-        }
-      }
+    const cached = this.retsumTileCounts();
+    if (cached && cached.length === this.summaryTitles.length) {
+      return cached;
     }
-    return out;
+    return this.summaryTitles.map(() => 0);
   });
 
   /** True when every filtered CTIN and every invoice under it shows its line-detail table. */
@@ -325,7 +321,7 @@ export class Gstr1DownloadReturnPageComponent {
         const g = this.gstin().trim().toUpperCase();
         const r = this.retPeriod().trim();
         if (RETURN_PERIOD_REGEX.test(r) && g.length === 15) {
-          void this.fetchFromApi();
+          void this.bootstrapFetch();
         }
       };
       runAutoFetch();
@@ -335,7 +331,7 @@ export class Gstr1DownloadReturnPageComponent {
   private syncQueryIntoSignals(q: { get: (k: string) => string | null }): void {
     const g = (q.get('gstin') ?? '').trim().toUpperCase();
     const r = (q.get('ret_period') ?? '').trim();
-    const a = coerceGstr1DownloadApiName(q.get('api_name'));
+    const apiParam = q.get('api_name');
     const filing = (q.get('filing_status') ?? '').trim();
     const due = (q.get('due_date') ?? '').trim();
     if (g) {
@@ -344,7 +340,9 @@ export class Gstr1DownloadReturnPageComponent {
     if (r) {
       this.retPeriod.set(r);
     }
-    this.apiName.set(a);
+    if (apiParam !== null && apiParam.trim() !== '') {
+      this.apiName.set(coerceGstr1DownloadApiName(apiParam));
+    }
     if (filing) {
       this.filingStatusLabel.set(filing);
     }
@@ -359,10 +357,6 @@ export class Gstr1DownloadReturnPageComponent {
 
   updateRetPeriod(value: string): void {
     this.retPeriod.set(value.trim());
-  }
-
-  updateApiName(value: string): void {
-    this.apiName.set(coerceGstr1DownloadApiName(value));
   }
 
   toggleAddRecordSection(): void {
@@ -385,7 +379,7 @@ export class Gstr1DownloadReturnPageComponent {
       return;
     }
     this.apiName.set(primary);
-    void this.fetchFromApi();
+    void this.fetchSectionDetail();
   }
 
   openEInvoiceAdvisory(): void {
@@ -408,7 +402,79 @@ export class Gstr1DownloadReturnPageComponent {
     return g.length === 15 && RETURN_PERIOD_REGEX.test(r);
   }
 
-  async fetchFromApi(): Promise<void> {
+  /** First paint: RETSUM tile counts, then the section implied by `api_name` (default B2B). */
+  async bootstrapFetch(): Promise<void> {
+    const retsumOk = await this.fetchRetsumSummary();
+    if (!retsumOk || this.apiName() === 'retsum') {
+      return;
+    }
+    await this.fetchSectionDetail();
+  }
+
+  /** GSTZen `retsum` → portal tile counts (`sec_sum`). Returns whether RETSUM succeeded. */
+  async fetchRetsumSummary(): Promise<boolean> {
+    if (this.retsumLoading()) {
+      return false;
+    }
+    if (!this.paramsValid()) {
+      this.logicalErrorText.set('Enter a valid 15-character GSTIN and return period (MMYYYY).');
+      this.httpError.set(null);
+      return false;
+    }
+    if (this.fileNilGstr1()) {
+      this.logicalErrorText.set('Nil GSTR-1 is selected; clear the checkbox to load return summary.');
+      this.httpError.set(null);
+      return false;
+    }
+
+    this.retsumLoading.set(true);
+    this.httpError.set(null);
+    this.logicalErrorText.set(null);
+
+    try {
+      this.syncUrlFromForm();
+
+      const raw = await firstValueFrom(
+        this.api.downloadGstr1Return({
+          gstin: this.gstin().trim().toUpperCase(),
+          ret_period: this.retPeriod().trim(),
+          api_name: 'retsum',
+        }),
+      );
+
+      if (!isGstr1DownloadSuccessEnvelope(raw)) {
+        const st =
+          raw && typeof raw === 'object' && 'status' in (raw as object)
+            ? String((raw as Record<string, unknown>)['status'])
+            : '?';
+        let msg = `RETSUM did not return success (status = ${st}).`;
+        if (
+          raw &&
+          typeof raw === 'object' &&
+          'message' in (raw as object) &&
+          typeof (raw as { message?: unknown }).message === 'string'
+        ) {
+          msg = (raw as { message: string }).message;
+        }
+        this.logicalErrorText.set(msg);
+        return false;
+      }
+
+      const secSum = extractGstr1RetsumSecSum(raw);
+      this.retsumTileCounts.set(mapGstr1RetsumSecSumToPortalTileCounts(secSum));
+      this.rawResponse.set(raw);
+      return true;
+    } catch (err: unknown) {
+      this.httpError.set(normalizeErrorEnvelope(err));
+      this.logicalErrorText.set('RETSUM request failed.');
+      return false;
+    } finally {
+      this.retsumLoading.set(false);
+    }
+  }
+
+  /** Download one GSTZen section (`api_name`) for invoice grid / JSON. */
+  async fetchSectionDetail(): Promise<void> {
     if (this.loading()) {
       return;
     }
@@ -420,6 +486,12 @@ export class Gstr1DownloadReturnPageComponent {
     }
     if (this.fileNilGstr1()) {
       this.logicalErrorText.set('Nil GSTR-1 is selected; clear the checkbox to download section data.');
+      this.httpError.set(null);
+      this.viewState.set('error');
+      return;
+    }
+    if (this.apiName() === 'retsum') {
+      this.logicalErrorText.set('Pick a section tile below to load invoice-level data (RETSUM is summary only).');
       this.httpError.set(null);
       this.viewState.set('error');
       return;
@@ -505,7 +577,16 @@ export class Gstr1DownloadReturnPageComponent {
   }
 
   refresh(): void {
-    void this.fetchFromApi();
+    void (async () => {
+      const retsumOk = await this.fetchRetsumSummary();
+      if (!retsumOk) {
+        return;
+      }
+      const st = this.viewState();
+      if (this.apiName() !== 'retsum' && (st === 'success' || st === 'empty')) {
+        await this.fetchSectionDetail();
+      }
+    })();
   }
 
   invoiceExpandId(ctin: string, invoiceKey: string): string {
@@ -613,7 +694,9 @@ export class Gstr1DownloadReturnPageComponent {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `gstr1-${this.apiName()}-${this.gstin()}-${this.retPeriod()}.json`;
+    const slug =
+      extractGstr1RetsumSecSum(raw).length > 0 ? 'retsum' : this.apiName();
+    a.download = `gstr1-${slug}-${this.gstin()}-${this.retPeriod()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }

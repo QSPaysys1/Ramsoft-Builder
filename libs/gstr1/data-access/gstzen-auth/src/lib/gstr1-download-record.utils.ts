@@ -50,6 +50,93 @@ export function extractGstr1DownloadMessageArray(
   return [];
 }
 
+/**
+ * Pulls `sec_sum[]` from a GSTR-1 RETSUM download envelope.
+ * Supports `message.data.sec_sum`, nested `message.retsum.sec_sum`, or a single-object `message.retsum` bucket.
+ */
+export function extractGstr1RetsumSecSum(raw: unknown): unknown[] {
+  if (!raw || typeof raw !== 'object') {
+    return [];
+  }
+  const root = raw as Record<string, unknown>;
+  const msg = root['message'];
+  if (!msg || typeof msg !== 'object') {
+    return [];
+  }
+  const m = msg as Record<string, unknown>;
+
+  const data = m['data'];
+  if (data && typeof data === 'object') {
+    const sec = (data as Record<string, unknown>)['sec_sum'];
+    if (Array.isArray(sec)) {
+      return sec;
+    }
+  }
+
+  const retsumRoot = m['retsum'];
+  if (retsumRoot && typeof retsumRoot === 'object') {
+    const rs = retsumRoot as Record<string, unknown>;
+    if (Array.isArray(rs['sec_sum'])) {
+      return rs['sec_sum'];
+    }
+  }
+
+  const bucket = extractGstr1DownloadMessageArray(raw, 'retsum');
+  if (bucket.length > 0 && bucket[0] && typeof bucket[0] === 'object') {
+    const inner = bucket[0] as Record<string, unknown>;
+    if (Array.isArray(inner['sec_sum'])) {
+      return inner['sec_sum'];
+    }
+  }
+
+  return [];
+}
+
+function ttlRecFromSecSumRow(row: Record<string, unknown>): number {
+  const v = row['ttl_rec'];
+  if (typeof v === 'number' && Number.isFinite(v)) {
+    return Math.max(0, Math.trunc(v));
+  }
+  if (typeof v === 'string' && v.trim() !== '') {
+    const n = Number.parseInt(v, 10);
+    return Number.isFinite(n) ? Math.max(0, n) : 0;
+  }
+  return 0;
+}
+
+/** Maps GSTZen RETSUM `sec_sum` rows to the 13 GSTR-1 workspace portal tiles (B2B… SUPECOM). */
+export function mapGstr1RetsumSecSumToPortalTileCounts(secSum: readonly unknown[]): number[] {
+  const byName = new Map<string, number>();
+  for (const item of secSum) {
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+    const o = item as Record<string, unknown>;
+    const nmRaw = o['sec_nm'];
+    const nm = typeof nmRaw === 'string' ? nmRaw.trim().toUpperCase() : '';
+    if (!nm) {
+      continue;
+    }
+    byName.set(nm, ttlRecFromSecSumRow(o));
+  }
+
+  const out = Array.from({ length: 13 }, () => 0);
+  out[0] = byName.get('B2B') ?? 0;
+  out[1] = byName.get('B2CL') ?? 0;
+  out[2] = byName.get('EXP') ?? 0;
+  out[3] = byName.get('B2CS') ?? 0;
+  out[4] = byName.get('NIL') ?? 0;
+  out[5] = byName.get('CDNR') ?? 0;
+  out[6] = byName.get('CDNUR') ?? 0;
+  out[7] = byName.get('AT') ?? 0;
+  out[8] = byName.get('TXPD') ?? byName.get('TXP') ?? 0;
+  out[9] = byName.get('HSN') ?? 0;
+  out[10] = byName.get('DOC_ISSUE') ?? byName.get('DOC_ISSUED') ?? 0;
+  out[11] = byName.get('ECOM') ?? 0;
+  out[12] = byName.get('SUPECOM') ?? 0;
+  return out;
+}
+
 function gstDownloadStatusIndicatesSuccess(raw: unknown): boolean {
   if (!raw || typeof raw !== 'object') {
     return false;
