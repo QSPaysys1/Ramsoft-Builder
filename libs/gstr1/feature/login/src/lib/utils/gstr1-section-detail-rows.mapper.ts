@@ -134,7 +134,7 @@ function mapHsnRecord(raw: Record<string, unknown>, idx: number): Gstr1SectionDe
     reverseCharge: '',
     irn: '',
     hsnCode: pickStr(raw, ['hsn_sc', 'hsn_cd']),
-    description: pickStr(raw, ['desc', 'description']),
+    description: pickStr(raw, ['desc', 'description']) || pickStr(raw, ['user_desc']),
     uqc: pickStr(raw, ['uqc', 'UQC']),
     quantity: qty,
     items: [

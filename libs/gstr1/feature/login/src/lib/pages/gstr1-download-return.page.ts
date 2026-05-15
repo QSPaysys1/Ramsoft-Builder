@@ -293,6 +293,24 @@ export class Gstr1DownloadReturnPageComponent {
       );
       return;
     }
+    if (primary === 'hsnsum') {
+      void this.router.navigate(
+        [
+          '/gstr1/workspace/gstr1-download/section',
+          primary,
+          this.gstin().trim().toUpperCase(),
+          this.retPeriod().trim(),
+          'add-hsn',
+        ],
+        {
+          queryParams: {
+            filing_status: this.filingStatusLabel().trim() || undefined,
+            due_date: this.dueDateLabel().trim() || undefined,
+          },
+        },
+      );
+      return;
+    }
     this.apiName.set(primary);
     void this.router.navigate(
       [

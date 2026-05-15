@@ -94,6 +94,13 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/add-hsn',
+            loadComponent: () =>
+              import('./pages/gstr1-hsn-summary-add.page').then(
+                (m) => m.Gstr1HsnSummaryAddPageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(

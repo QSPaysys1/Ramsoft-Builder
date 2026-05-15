@@ -143,10 +143,20 @@ export class Gstr1ReturnSectionDetailsPageComponent {
   /** 11B — `txpd[]` adjustment of advances (state-wise POS block). */
   readonly isTxpRetsaveWorkspace = computed(() => this.apiName() === 'txp');
 
+  /** 12 — HSN outward summary (`hsn.hsn_b2b[]` / `hsn.hsn_b2c[]`). */
+  readonly isHsnRetsaveWorkspace = computed(() => this.apiName() === 'hsnsum');
+
   /** Primary action label on the section toolbar (11A/11B use NIC wording). */
-  readonly addRecordPrimaryLabel = computed(() =>
-    this.apiName() === 'at' || this.apiName() === 'txp' ? 'Add statewise details' : 'Add Record',
-  );
+  readonly addRecordPrimaryLabel = computed(() => {
+    const a = this.apiName();
+    if (a === 'at' || a === 'txp') {
+      return 'Add statewise details';
+    }
+    if (a === 'hsnsum') {
+      return 'Add / Edit details';
+    }
+    return 'Add Record';
+  });
 
   readonly viewState = signal<ViewState>('idle');
   readonly loading = signal(false);
@@ -542,6 +552,24 @@ export class Gstr1ReturnSectionDetailsPageComponent {
           this.gstin().trim().toUpperCase(),
           this.retPeriod().trim(),
           'add-txpd-statewise',
+        ],
+        {
+          queryParams: {
+            filing_status: this.filingStatusLabel().trim() || undefined,
+            due_date: this.dueDateLabel().trim() || undefined,
+          },
+        },
+      );
+      return;
+    }
+    if (this.isHsnRetsaveWorkspace()) {
+      void this.router.navigate(
+        [
+          '/gstr1/workspace/gstr1-download/section',
+          this.apiName(),
+          this.gstin().trim().toUpperCase(),
+          this.retPeriod().trim(),
+          'add-hsn',
         ],
         {
           queryParams: {

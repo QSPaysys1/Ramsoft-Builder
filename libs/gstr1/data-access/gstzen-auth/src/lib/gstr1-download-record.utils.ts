@@ -45,6 +45,25 @@ export function extractGstr1DownloadMessageArray(
     return bucket;
   }
   if (bucket && typeof bucket === 'object') {
+    /** HSN summary uses `{ hsn_b2b: [], hsn_b2c: [] }` (or legacy `{ data: [] }`). */
+    if (apiName === 'hsnsum') {
+      const o = bucket as Record<string, unknown>;
+      const merged: unknown[] = [];
+      for (const k of ['hsn_b2b', 'hsn_b2c'] as const) {
+        const part = o[k];
+        if (Array.isArray(part)) {
+          merged.push(...part);
+        }
+      }
+      if (merged.length > 0) {
+        return merged;
+      }
+      const legacy = o['data'];
+      if (Array.isArray(legacy)) {
+        return [...legacy];
+      }
+      return [];
+    }
     return [bucket];
   }
   return [];
