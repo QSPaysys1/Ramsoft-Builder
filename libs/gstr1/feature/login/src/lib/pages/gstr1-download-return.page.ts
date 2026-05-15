@@ -263,9 +263,34 @@ export class Gstr1DownloadReturnPageComponent {
     return indices?.includes(index) ?? this.summaryTileActive(index);
   }
 
+  /**
+   * NIL (8A–8D) tile: portal-style grid + retsave JSON while return is not filed; after filing, open downloaded section workspace.
+   */
+  nilTileUsesRetsaveGrid(): boolean {
+    return this.filingStatusLabel().trim().toLowerCase() !== 'filed';
+  }
+
   navigateToSection(index: number): void {
     const primary = GSTR1_SECTION_CARD_PRIMARY_API[index];
     if (!primary || !this.paramsValid() || this.fileNilGstr1() || this.retsumLoading()) {
+      return;
+    }
+    if (primary === 'nil' && this.nilTileUsesRetsaveGrid()) {
+      void this.router.navigate(
+        [
+          '/gstr1/workspace/gstr1-download/section',
+          primary,
+          this.gstin().trim().toUpperCase(),
+          this.retPeriod().trim(),
+          'add-nil',
+        ],
+        {
+          queryParams: {
+            filing_status: this.filingStatusLabel().trim() || undefined,
+            due_date: this.dueDateLabel().trim() || undefined,
+          },
+        },
+      );
       return;
     }
     this.apiName.set(primary);
