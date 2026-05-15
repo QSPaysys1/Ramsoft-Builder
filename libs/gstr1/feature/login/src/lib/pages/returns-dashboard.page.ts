@@ -32,6 +32,7 @@ import {
   isGstr2aFamily,
   isGstr2bFamily,
   isGstr3bFamily,
+  normalizeRtnType,
   pickRepresentativeRow,
   rowArn,
   rowFilingDateLabel,
@@ -275,6 +276,33 @@ export class ReturnsDashboardPageComponent {
         statusCell: cellFromRow(rep ?? {}, 'status', '_Status', 'Status'),
         dueDateLine: due && spec.showDueForGstr3b ? due : undefined,
       };
+    });
+  });
+
+  /** GSTR-1 and GSTR-1A — primary filing surfaces after Search. */
+  readonly primaryReturnCards = computed((): ReturnCardVm[] => {
+    const cards = this.returnCards();
+    const g1 = cards.find((c) => c.spec.id === 'gstr1');
+    const g1a = cards.find((c) => c.spec.id === 'gstr1a');
+    const out: ReturnCardVm[] = [];
+    if (g1) {
+      out.push(g1);
+    }
+    if (g1a) {
+      out.push(g1a);
+    }
+    return out;
+  });
+
+  readonly otherReturnCards = computed(() =>
+    this.returnCards().filter((c) => c.spec.id !== 'gstr1' && c.spec.id !== 'gstr1a'),
+  );
+
+  readonly eFiledPrimaryRows = computed(() => {
+    const rows = this.filedRows();
+    return rows.filter((row) => {
+      const t = normalizeRtnType(row);
+      return isGstr1IffFamilyExclusive(t) || isGstr1aFamily(t);
     });
   });
 

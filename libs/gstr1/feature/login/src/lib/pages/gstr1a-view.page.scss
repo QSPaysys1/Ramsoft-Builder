@@ -1,0 +1,16 @@
+:host {
+  --gst-teal-header: #4db6ac;
+  --gst-navy: #2c4172;
+}
+
+.gstr1a-view {
+  background: linear-gradient(180deg, #eef1f5 0%, #f8fafc 32%, #f8fafc 100%);
+  margin-inline: -1rem;
+  padding-inline: 1rem;
+
+  @media (min-width: 768px) {
+    margin-inline: 0;
+    padding-inline: 0;
+    background: transparent;
+  }
+}

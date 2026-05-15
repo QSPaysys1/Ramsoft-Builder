@@ -1,7 +1,9 @@
 import {
   GSTR1_DOWNLOAD_API_NAMES,
+  GSTR1A_DOWNLOAD_API_NAMES,
   type Gstr1DownloadAggregateStats,
   type Gstr1DownloadApiName,
+  type Gstr1aDownloadApiName,
   type Gstr1DownloadCtinGroup,
   type Gstr1DownloadFlatRow,
   type Gstr1DownloadInvoiceGroup,
@@ -15,13 +17,20 @@ export function coerceGstr1DownloadApiName(value: string | null | undefined): Gs
     : 'b2b';
 }
 
+export function coerceGstr1aDownloadApiName(value: string | null | undefined): Gstr1aDownloadApiName {
+  const v = (value ?? 'b2b').trim().toLowerCase();
+  return (GSTR1A_DOWNLOAD_API_NAMES as readonly string[]).includes(v)
+    ? (v as Gstr1aDownloadApiName)
+    : 'b2b';
+}
+
 /**
  * Reads `response.message[apiName]` and returns an array (empty if missing).
  * If the bucket is a non-array object, it is wrapped as a single-element array.
  */
 export function extractGstr1DownloadMessageArray(
   raw: unknown,
-  apiName: Gstr1DownloadApiName,
+  apiName: Gstr1DownloadApiName | Gstr1aDownloadApiName,
 ): unknown[] {
   if (!raw || typeof raw !== 'object') {
     return [];

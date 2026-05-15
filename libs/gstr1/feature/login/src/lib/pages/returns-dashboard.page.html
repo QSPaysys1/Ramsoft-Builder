@@ -176,10 +176,169 @@
       </div>
     </section>
 
-    <section class="mb-10" aria-label="Return tiles">
-      <h2 class="mb-4 text-lg font-bold text-[#222f3f]">Return status</h2>
+    <section class="mb-10" aria-label="GSTR-1 and GSTR-1A returns">
+      <h2 class="mb-2 text-lg font-bold text-[#222f3f]">GSTR-1 &amp; GSTR-1A</h2>
+      <p class="mb-4 text-sm text-slate-600">
+        Filing posture uses the same Rettrack (<span class="font-semibold">View / track returns</span>) payload as the dashboard summary. Open detailed views when available.
+      </p>
+      <div class="grid gap-4 lg:grid-cols-2">
+        @for (c of primaryReturnCards(); track c.spec.id) {
+          <article
+            class="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md transition hover:shadow-lg"
+          >
+            <div class="rounded-t-xl bg-[#1c2b54] px-3 py-3 text-center text-white md:px-4 md:py-4">
+              <p class="text-xs font-medium leading-snug text-white/95 md:text-sm">{{ c.spec.headerTitle }}</p>
+              <p class="mt-1 text-sm font-bold tracking-wide md:text-base">{{ c.spec.headerCode }}</p>
+            </div>
+            <div class="flex flex-1 flex-col gap-3 px-4 py-5 text-center">
+              <div class="flex flex-wrap items-center justify-center gap-2">
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide"
+                  [ngClass]="statusPillClass(c.kind)"
+                  >{{ statusLabel(c.kind) }}</span
+                >
+              </div>
+              @if (c.kind === 'filed' || c.arn || c.filingDate) {
+                <div class="space-y-1 text-left text-sm text-slate-700">
+                  @if (c.arn) {
+                    <p>
+                      <span class="font-semibold text-slate-900">ARN:</span>
+                      <span class="ml-1 break-all font-mono text-xs">{{ c.arn }}</span>
+                    </p>
+                  }
+                  @if (c.filingDate && c.filingDate !== '—') {
+                    <p>
+                      <span class="font-semibold text-slate-900">Date of filing:</span>
+                      <span class="ml-1 text-teal-800">{{ c.filingDate }}</span>
+                    </p>
+                  }
+                  @if (c.rtnTypeLabel && c.rtnTypeLabel !== '—') {
+                    <p>
+                      <span class="font-semibold text-slate-900">Return type:</span> {{ c.rtnTypeLabel }}
+                    </p>
+                  }
+                  @if (c.statusCell && c.statusCell !== '—') {
+                    <p>
+                      <span class="font-semibold text-slate-900">Status:</span> {{ c.statusCell }}
+                    </p>
+                  }
+                </div>
+              } @else {
+                <p class="text-sm text-slate-500">No filing row matched this return family for the selected GSTIN and period.</p>
+              }
+              <div class="mt-auto flex flex-wrap justify-center gap-2 pt-2">
+                @if (c.spec.id === 'gstr1') {
+                  @if (form.valid) {
+                    <a
+                      class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-3 text-center text-xs font-bold uppercase tracking-wide text-white hover:bg-[#154a8f] sm:flex-none"
+                      routerLink="/gstr1/workspace/gstr1-download"
+                      [queryParams]="{
+                        gstin: gstinSnap().trim().toUpperCase(),
+                        ret_period: selectedRetPeriod(),
+                        api_name: 'b2b',
+                      }"
+                    >
+                      View
+                    </a>
+                  } @else {
+                    <button
+                      type="button"
+                      disabled
+                      class="inline-flex min-h-[38px] min-w-[100px] flex-1 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-3 text-center text-xs font-bold uppercase tracking-wide text-white opacity-70 sm:flex-none"
+                      title="Enter a valid 15-character GSTIN to enable View."
+                    >
+                      View
+                    </button>
+                  }
+                } @else if (c.spec.id === 'gstr1a') {
+                  @if (form.valid) {
+                    <a
+                      class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-3 text-center text-xs font-bold uppercase tracking-wide text-white hover:bg-[#154a8f] sm:flex-none"
+                      routerLink="/gstr1/workspace/gstr1a-view"
+                      [queryParams]="{
+                        gstin: gstinSnap().trim().toUpperCase(),
+                        ret_period: selectedRetPeriod(),
+                        api_name: 'exp',
+                        filing_status: statusLabel(c.kind),
+                      }"
+                    >
+                      Prepare online
+                    </a>
+                  } @else {
+                    <button
+                      type="button"
+                      disabled
+                      class="inline-flex min-h-[38px] min-w-[100px] flex-1 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-3 text-center text-xs font-bold uppercase tracking-wide text-white opacity-70 sm:flex-none"
+                      title="Enter a valid 15-character GSTIN to open Prepare online."
+                    >
+                      Prepare online
+                    </button>
+                  }
+                }
+                <button
+                  type="button"
+                  class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg border border-[#1a56a7] bg-white px-3 text-center text-xs font-bold uppercase tracking-wide text-[#1a56a7] hover:bg-slate-50 sm:flex-none"
+                  disabled
+                  title="Coming soon"
+                >
+                  Download
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+
+      @if (eFiledPrimaryRows().length > 0) {
+        <div class="mt-8 rounded-xl border border-slate-200 bg-white shadow-sm" aria-label="GSTR-1 and GSTR-1A e-filed rows">
+          <div class="border-b border-slate-100 px-4 py-3 md:px-5">
+            <h3 class="text-base font-bold text-[#222f3f]">E-filed rows · GSTR-1 / GSTR-1A</h3>
+            <p class="mt-0.5 text-sm text-slate-600">Filtered from Rettrack for this GSTIN and period.</p>
+          </div>
+          <div class="hidden md:block md:overflow-x-auto">
+            <table class="w-full min-w-[640px] border-collapse text-left text-sm">
+              <thead class="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th class="px-4 py-3">Return type</th>
+                  <th class="px-4 py-3">Period</th>
+                  <th class="px-4 py-3">Status</th>
+                  <th class="px-4 py-3">ARN</th>
+                  <th class="px-4 py-3">Date of filing</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                @for (row of eFiledPrimaryRows(); track $index) {
+                  <tr>
+                    <td class="px-4 py-2.5 font-medium">{{ cell(row, 'rtntype', 'rtn_type', 'Rtntype') }}</td>
+                    <td class="px-4 py-2.5 font-mono text-xs">{{ cell(row, 'ret_prd', 'retprd', 'ret_period') }}</td>
+                    <td class="px-4 py-2.5">{{ cell(row, 'status', '_Status') }}</td>
+                    <td class="break-all px-4 py-2.5 font-mono text-xs">{{ cell(row, 'arn', 'ARN') }}</td>
+                    <td class="px-4 py-2.5">{{ cell(row, 'dof', 'dofiling', 'date_of_filing') }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="divide-y divide-slate-100 md:hidden">
+            @for (row of eFiledPrimaryRows(); track $index) {
+              <div class="space-y-2 px-4 py-4 text-sm">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="font-semibold text-[#222f3f]">{{ cell(row, 'rtntype', 'rtn_type') }}</span>
+                  <span class="font-mono text-xs text-slate-500">{{ cell(row, 'ret_prd', 'retprd') }}</span>
+                </div>
+                <p class="text-slate-700">{{ cell(row, 'status', '_Status') }}</p>
+                <p class="break-all font-mono text-xs text-slate-800">{{ cell(row, 'arn', 'ARN') }}</p>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </section>
+
+    <section class="mb-10" aria-label="Other return tiles">
+      <h2 class="mb-4 text-lg font-bold text-[#222f3f]">Other returns</h2>
       <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        @for (c of returnCards(); track c.spec.id) {
+        @for (c of otherReturnCards(); track c.spec.id) {
           <article
             class="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md transition hover:shadow-lg"
           >
@@ -229,31 +388,19 @@
                 <p class="text-sm text-slate-500">No filing data for this return in the selected period.</p>
               }
               <div class="mt-auto flex flex-wrap justify-center gap-2 pt-2">
-                @if (c.spec.id === 'gstr1' && payloadOk() === true && form.valid) {
-                  <a
-                    class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-3 text-center text-xs font-bold uppercase tracking-wide text-white hover:bg-[#154a8f] sm:flex-none"
-                    routerLink="/gstr1/workspace/gstr1-download"
-                    [queryParams]="{
-                      gstin: gstinSnap().trim().toUpperCase(),
-                      ret_period: selectedRetPeriod(),
-                      api_name: 'b2b',
-                    }"
-                  >
-                    View
-                  </a>
-                } @else {
-                  <button
-                    type="button"
-                    disabled
-                    class="inline-flex min-h-[38px] min-w-[100px] flex-1 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-3 text-center text-xs font-bold uppercase tracking-wide text-white opacity-70 sm:flex-none"
-                    title="Detailed download is available for GSTR-1 after a successful search."
-                  >
-                    View
-                  </button>
-                }
+                <button
+                  type="button"
+                  disabled
+                  class="inline-flex min-h-[38px] min-w-[100px] flex-1 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-3 text-center text-xs font-bold uppercase tracking-wide text-white opacity-70 sm:flex-none"
+                  title="Detailed download is available from GSTR-1 / GSTR-1A tiles when applicable."
+                >
+                  View
+                </button>
                 <button
                   type="button"
                   class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg border border-[#1a56a7] bg-white px-3 text-center text-xs font-bold uppercase tracking-wide text-[#1a56a7] hover:bg-slate-50 sm:flex-none"
+                  disabled
+                  title="Coming soon"
                 >
                   Download
                 </button>

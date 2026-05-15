@@ -49,5 +49,6 @@ export const environment = {
     gstnRetStatusUrl: 'https://my.gstzen.in/api/retstatus/',
     gstnRettrackUrl: 'https://my.gstzen.in/api/rettrack/',
     gstr1DownloadUrl: 'https://my.gstzen.in/api/gstr1/download/',
+    gstr1aDownloadUrl: 'https://my.gstzen.in/api/gstr1a/download/',
   } satisfies Gstr1Environment,
 };
