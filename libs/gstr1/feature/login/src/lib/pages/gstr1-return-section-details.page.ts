@@ -131,6 +131,12 @@ export class Gstr1ReturnSectionDetailsPageComponent {
     return a === 'cdnr' || a === 'cdnr-einv';
   });
 
+  /** 9B CDNUR — `cdnur[]` retsave bucket (credit/debit notes — unregistered). */
+  readonly isCdnurRetsaveWorkspace = computed(() => {
+    const a = this.apiName();
+    return a === 'cdnur' || a === 'cdnur-einv';
+  });
+
   readonly viewState = signal<ViewState>('idle');
   readonly loading = signal(false);
   readonly httpError = signal<unknown>(null);
@@ -471,6 +477,24 @@ export class Gstr1ReturnSectionDetailsPageComponent {
           this.gstin().trim().toUpperCase(),
           this.retPeriod().trim(),
           'add-cdnr',
+        ],
+        {
+          queryParams: {
+            filing_status: this.filingStatusLabel().trim() || undefined,
+            due_date: this.dueDateLabel().trim() || undefined,
+          },
+        },
+      );
+      return;
+    }
+    if (this.isCdnurRetsaveWorkspace()) {
+      void this.router.navigate(
+        [
+          '/gstr1/workspace/gstr1-download/section',
+          this.apiName(),
+          this.gstin().trim().toUpperCase(),
+          this.retPeriod().trim(),
+          'add-cdnur',
         ],
         {
           queryParams: {

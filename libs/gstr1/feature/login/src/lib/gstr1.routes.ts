@@ -73,6 +73,13 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/add-cdnur',
+            loadComponent: () =>
+              import('./pages/gstr1-cdnur-add-record.page').then(
+                (m) => m.Gstr1CdnurAddRecordPageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(
