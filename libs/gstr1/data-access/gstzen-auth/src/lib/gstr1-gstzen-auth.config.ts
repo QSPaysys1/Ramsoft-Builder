@@ -55,6 +55,11 @@ export interface Gstr1GstzenAuthEnvironment {
    * Production: `https://my.gstzen.in/api/rettrack/`.
    */
   readonly gstnRettrackUrl: string;
+  /**
+   * GSTR-1 section download — `POST` JSON (`gstin`, `ret_period`, `api_name`).
+   * Production: `https://my.gstzen.in/api/gstr1/download/`.
+   */
+  readonly gstr1DownloadUrl: string;
 }
 
 export const GSTR1_GSTZEN_AUTH_CONFIG = new InjectionToken<Gstr1GstzenAuthEnvironment>(

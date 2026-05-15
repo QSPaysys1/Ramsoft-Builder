@@ -39,6 +39,7 @@ export const appConfig: ApplicationConfig = {
       gstnRefreshSessionUrl: environment.gstr1.gstnRefreshSessionUrl,
       gstnRetStatusUrl: environment.gstr1.gstnRetStatusUrl,
       gstnRettrackUrl: environment.gstr1.gstnRettrackUrl,
+      gstr1DownloadUrl: environment.gstr1.gstr1DownloadUrl,
     }),
     {
       provide: GSTZEN_EINVOICE_CONFIG,

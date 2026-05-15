@@ -51,5 +51,6 @@ export const environment = {
     gstnRefreshSessionUrl: `${GSTZEN_DEV}/api/gstn-refresh-session/`,
     gstnRetStatusUrl: `${GSTZEN_DEV}/api/retstatus/`,
     gstnRettrackUrl: `${GSTZEN_DEV}/api/rettrack/`,
+    gstr1DownloadUrl: `${GSTZEN_DEV}/api/gstr1/download/`,
   } satisfies Gstr1Environment,
 };

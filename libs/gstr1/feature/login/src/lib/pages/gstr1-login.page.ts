@@ -9,7 +9,11 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AuthStore,
@@ -26,7 +30,8 @@ import {
 } from '@ramsoft-builder/auth/ui/login';
 import { UserProfileRepository } from '@ramsoft-builder/e-invoices/data-access/einvoice';
 import { Gstr1AuthStore } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
-import { catchError, of, switchMap } from 'rxjs';
+import { catchError, debounceTime, of, switchMap } from 'rxjs';
+import { indianGstinValidator } from '../validators/indian-gstin.validator';
 
 function pickProfileString(
   obj: Record<string, unknown> | undefined,
@@ -43,6 +48,14 @@ function pickProfileString(
   }
   return '';
 }
+
+/** Last-used GSTZen user name and password per GSTIN (this browser tab only; set after a successful sign-in). */
+const LOGIN_DRAFT_STORAGE_KEY = 'ramsoft.gstr1.login.draftsByGstin';
+
+type LoginDraftByGstin = Record<
+  string,
+  { readonly userName: string; readonly password: string }
+>;
 
 @Component({
   selector: 'lib-gstr1-login-page',
@@ -80,6 +93,7 @@ export class Gstr1LoginPageComponent {
   readonly heroImageSrc = 'assets/img/ramsoftmillersmelody.png';
 
   readonly loginForm = this.fb.nonNullable.group({
+    gstin: ['', [Validators.required, indianGstinValidator]],
     userName: ['', [Validators.required]],
     password: [
       '',
@@ -122,6 +136,40 @@ export class Gstr1LoginPageComponent {
           'Gstin',
         ]);
         this.profileGstinRaw.set(gstin);
+        const gstinCtrl = this.loginForm.controls.gstin;
+        if (gstin && !gstinCtrl.getRawValue()?.trim()) {
+          const g = gstin.toUpperCase();
+          gstinCtrl.patchValue(g, { emitEvent: false });
+          this.applyCredentialsForGstin(g);
+        }
+      });
+
+    const gstinCtrl = this.loginForm.controls.gstin;
+    gstinCtrl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((v) => {
+        const raw = (v ?? '').trim();
+        const u = raw.toUpperCase();
+        if (raw !== u) {
+          gstinCtrl.patchValue(u, { emitEvent: false });
+        }
+      });
+
+    gstinCtrl.valueChanges
+      .pipe(debounceTime(400), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        const g = (gstinCtrl.value ?? '').trim().toUpperCase();
+        if (!g) {
+          this.loginForm.patchValue(
+            { userName: '', password: '' },
+            { emitEvent: false },
+          );
+          return;
+        }
+        if (!gstinCtrl.valid) {
+          return;
+        }
+        this.applyCredentialsForGstin(g);
       });
 
     this.loginForm.valueChanges
@@ -129,9 +177,92 @@ export class Gstr1LoginPageComponent {
       .subscribe(() => this.gstr1Auth.clearError());
   }
 
+  private readLoginDrafts(): LoginDraftByGstin {
+    if (!isPlatformBrowser(this.platformId) || !globalThis.sessionStorage) {
+      return {};
+    }
+    try {
+      const raw = globalThis.sessionStorage.getItem(LOGIN_DRAFT_STORAGE_KEY);
+      if (!raw) {
+        return {};
+      }
+      const parsed = JSON.parse(raw) as unknown;
+      if (!parsed || typeof parsed !== 'object') {
+        return {};
+      }
+      return parsed as LoginDraftByGstin;
+    } catch {
+      return {};
+    }
+  }
+
+  private persistLoginDraft(
+    gstinUpper: string,
+    userName: string,
+    password: string,
+  ): void {
+    if (!isPlatformBrowser(this.platformId) || !globalThis.sessionStorage) {
+      return;
+    }
+    const g = gstinUpper.trim().toUpperCase();
+    if (g.length !== 15) {
+      return;
+    }
+    const next = {
+      ...this.readLoginDrafts(),
+      [g]: { userName, password },
+    };
+    globalThis.sessionStorage.setItem(
+      LOGIN_DRAFT_STORAGE_KEY,
+      JSON.stringify(next),
+    );
+  }
+
+  private applyCredentialsForGstin(normalizedGstin: string): void {
+    const g = normalizedGstin.trim().toUpperCase();
+    if (g.length !== 15) {
+      return;
+    }
+    const draft = this.readLoginDrafts()[g];
+    if (draft) {
+      this.loginForm.patchValue(
+        { userName: draft.userName, password: draft.password },
+        { emitEvent: false },
+      );
+      return;
+    }
+    const profileG = this.profileGstinRaw().trim().toUpperCase();
+    if (g === profileG) {
+      const email = this.authStore.user()?.email?.trim() ?? '';
+      this.loginForm.patchValue(
+        { userName: email, password: '' },
+        { emitEvent: false },
+      );
+      return;
+    }
+    if (profileG) {
+      this.loginForm.patchValue(
+        { userName: '', password: '' },
+        { emitEvent: false },
+      );
+      return;
+    }
+    const email = this.authStore.user()?.email?.trim() ?? '';
+    const currentUser = this.loginForm.controls.userName.getRawValue()?.trim();
+    if (email && !currentUser) {
+      this.loginForm.patchValue({ userName: email }, { emitEvent: false });
+    }
+  }
+
   private prefillUserNameFromAppUser(user: AppUser | null): void {
     const email = user?.email?.trim();
     if (!email) {
+      return;
+    }
+    const gstinVal =
+      this.loginForm.controls.gstin.getRawValue()?.trim().toUpperCase() ?? '';
+    const profileG = this.profileGstinRaw().trim().toUpperCase();
+    if (gstinVal && profileG && gstinVal !== profileG) {
       return;
     }
     const current = this.loginForm.controls.userName.getRawValue()?.trim();
@@ -148,18 +279,19 @@ export class Gstr1LoginPageComponent {
       this.loginForm.markAllAsTouched();
       this.toast.show(
         'error',
-        'Please enter your GSTZen user name and password.',
+        'Please enter a valid GSTIN, GSTZen user name, and password.',
         6000,
       );
       return;
     }
 
     this.submitLocked = true;
-    const { userName, password } = this.loginForm.getRawValue();
+    const { gstin, userName, password } = this.loginForm.getRawValue();
     this.toast.clear();
     const signingInId = this.toast.show('info', 'Signing in to GSTZen…', 0);
     try {
       await this.gstr1Auth.login(userName, password);
+      this.persistLoginDraft(gstin, userName, password);
       this.toast.dismiss(signingInId);
       this.toast.show(
         'success',

@@ -22,4 +22,6 @@ export interface Gstr1Environment {
   readonly gstnRetStatusUrl: string;
   /** `POST` Rettrack — view / track returns — `gstin`, `ret_period` (Bearer). */
   readonly gstnRettrackUrl: string;
+  /** `POST` GSTR-1 download JSON — `gstin`, `ret_period`, `api_name` (Bearer). */
+  readonly gstr1DownloadUrl: string;
 }

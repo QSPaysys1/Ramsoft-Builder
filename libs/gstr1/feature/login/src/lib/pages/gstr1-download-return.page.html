@@ -1,0 +1,343 @@
+<div class="pb-12">
+  <nav class="mb-4 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600 md:text-sm">
+    <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Dashboard</a>
+    <span aria-hidden="true">/</span>
+    <span class="text-slate-900">Returns</span>
+    <span aria-hidden="true">/</span>
+    <span class="font-semibold text-slate-900">GSTR-1 download</span>
+  </nav>
+
+  <header class="mb-4 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+    <div class="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-5">
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">
+          GSTR-1 — Return download &amp; analytics
+        </h1>
+        <p class="mt-1 max-w-3xl text-sm text-white/95">
+          Fetch portal JSON by section (<span class="font-mono text-xs">{{ apiName() }}</span>), grouped by CTIN with invoice line detail.
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          class="inline-flex min-h-[38px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-xs font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347] disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="loading() || rawResponse() === null"
+          (click)="copyJson()"
+        >
+          Copy JSON
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[38px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-xs font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347] disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="loading() || rawResponse() === null"
+          (click)="downloadJson()"
+        >
+          Download JSON
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[38px] items-center justify-center rounded-lg border border-white/40 bg-white/10 px-3 text-xs font-bold uppercase tracking-wide text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="loading()"
+          (click)="refresh()"
+          title="Repeat POST download"
+        >
+          Refresh API
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="mb-6 rounded-b-xl border border-t-0 border-slate-200 bg-white px-4 py-4 shadow-md md:px-6 md:py-5">
+    <div class="mb-3 flex justify-end">
+      <p class="text-[11px] font-medium text-slate-500">
+        <span class="text-red-600">*</span> Indicates mandatory fields
+      </p>
+    </div>
+    <div class="grid gap-4 lg:grid-cols-12 lg:items-end">
+      <div class="flex flex-col gap-1.5 lg:col-span-3">
+        <label class="text-sm font-semibold text-slate-700" for="gd-gstin">GSTIN <span class="text-red-600">*</span></label>
+        <input
+          id="gd-gstin"
+          maxlength="15"
+          autocomplete="off"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm uppercase tracking-wide text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+          [value]="gstin()"
+          (input)="updateGstin($any($event.target).value)"
+        />
+      </div>
+      <div class="flex flex-col gap-1.5 lg:col-span-2">
+        <label class="text-sm font-semibold text-slate-700" for="gd-period">Return period <span class="text-red-600">*</span></label>
+        <input
+          id="gd-period"
+          maxlength="6"
+          autocomplete="off"
+          placeholder="MMYYYY"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+          [value]="retPeriod()"
+          (input)="updateRetPeriod($any($event.target).value)"
+        />
+      </div>
+      <div class="flex flex-col gap-1.5 lg:col-span-4">
+        <label class="text-sm font-semibold text-slate-700" for="gd-api">API name</label>
+        <select
+          id="gd-api"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+          [value]="apiName()"
+          (change)="updateApiName($any($event.target).value)"
+        >
+          @for (opt of apiNameOptions; track opt) {
+            <option [value]="opt">{{ opt }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex flex-wrap gap-2 lg:col-span-3 lg:justify-end">
+        <button
+          type="button"
+          class="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-5 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#154a8f] disabled:cursor-not-allowed disabled:opacity-55 lg:flex-none lg:min-w-[140px]"
+          [disabled]="loading()"
+          (click)="fetchFromApi()"
+        >
+          @if (loading()) {
+            <span>Loading…</span>
+          } @else {
+            <span>View</span>
+          }
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45 lg:flex-none lg:min-w-[160px]"
+          [disabled]="filteredHierarchy().length === 0"
+          [attr.aria-pressed]="accordionFullyExpanded()"
+          [title]="
+            accordionFullyExpanded()
+              ? 'Hide all invoice line tables and CTIN panels'
+              : 'Show all CTIN panels and every invoice line table'
+          "
+          (click)="toggleExpandCollapseAll()"
+        >
+          {{ accordionFullyExpanded() ? 'Collapse all' : 'Expand all' }}
+        </button>
+      </div>
+    </div>
+    @if (!paramsValid()) {
+      <p class="mt-3 text-xs font-medium text-amber-800">
+        Enter a valid GSTIN (15 chars) and return period (<span class="font-mono">MMYYYY</span>) before calling View.
+      </p>
+    }
+  </section>
+
+  @if (loading()) {
+    <div class="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      @for (x of [1, 2, 3, 4]; track x) {
+        <div class="h-24 animate-pulse rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div class="h-8 animate-pulse rounded-t-xl bg-slate-300/70"></div>
+          <div class="p-4">
+            <div class="h-6 w-24 animate-pulse rounded bg-slate-200"></div>
+          </div>
+        </div>
+      }
+    </div>
+    <div class="space-y-3">
+      @for (x of [1, 2, 3]; track x) {
+        <div class="h-14 animate-pulse rounded-xl bg-slate-200/90"></div>
+      }
+    </div>
+  } @else if (viewState() === 'error') {
+    <div class="space-y-4">
+      @if (logicalErrorText()) {
+        <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-amber-950 shadow-sm">
+          <p class="text-sm font-bold">Download response</p>
+          <p class="mt-1 text-sm">{{ logicalErrorText() }}</p>
+        </div>
+      }
+      @if (httpError() !== null) {
+        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-5 text-red-950 shadow-sm">
+          <p class="text-sm font-bold">Request failed</p>
+          <pre class="mt-3 max-h-64 overflow-auto rounded border border-red-100 bg-white p-3 font-mono text-[11px] leading-relaxed text-red-900">{{ httpError() | json }}</pre>
+        </div>
+      }
+    </div>
+  } @else if (viewState() === 'idle') {
+    <div class="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center text-slate-600 shadow-sm">
+      <p class="text-base font-semibold text-slate-900">Configure GSTIN &amp; period</p>
+      <p class="mt-2 max-w-lg text-sm text-slate-600">
+        Set filters above (or open from Returns dashboard). Press <span class="font-semibold">View</span> to POST to GSTZen download.
+      </p>
+    </div>
+  } @else {
+    @if (aggregate(); as agg) {
+      <section class="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Summary metrics">
+        <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+          <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Total records</div>
+          <div class="px-4 py-4">
+            <p class="text-3xl font-bold text-emerald-700">{{ agg.totalLineItems }}</p>
+            <p class="mt-1 text-xs text-slate-600">
+              Parsed line items · <span class="font-semibold text-slate-800">message[{{ apiName() }}]</span> raw count
+              <span class="font-mono font-bold text-teal-800">{{ agg.sourceBucketLength }}</span>
+            </p>
+          </div>
+        </article>
+        <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+          <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">API name</div>
+          <div class="px-4 py-4">
+            <p class="font-mono text-lg font-bold text-slate-900">{{ apiName() }}</p>
+            <p class="mt-1 text-xs text-slate-600">Dynamic bucket · message[api]</p>
+          </div>
+        </article>
+        <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+          <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Return period</div>
+          <div class="px-4 py-4">
+            <p class="font-mono text-lg font-bold text-slate-900">{{ retPeriod() }}</p>
+            <p class="mt-1 text-xs text-slate-600">GSTIN {{ gstin() }}</p>
+          </div>
+        </article>
+        <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+          <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Last synced</div>
+          <div class="px-4 py-4">
+            <p class="text-sm font-semibold text-teal-800">{{ formatSynced(lastSyncedAt()) }}</p>
+            <div class="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+              <p><span class="font-semibold text-slate-800">Invoices:</span> {{ agg.invoiceCount }}</p>
+              <p><span class="font-semibold text-slate-800">CTINs:</span> {{ agg.ctinCount }}</p>
+              <p><span class="font-semibold text-slate-800">Σ txval:</span> ₹{{ formatMoney(agg.taxableTotal) }}</p>
+              <p><span class="font-semibold text-slate-800">Tax Σ:</span> ₹{{ formatMoney(agg.taxGrandTotal) }}</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+        <label class="text-xs font-bold uppercase tracking-wide text-slate-500" for="gd-filter">Search / filter</label>
+        <input
+          id="gd-filter"
+          type="search"
+          autocomplete="off"
+          placeholder="CTIN, invoice no., IRN, POS…"
+          class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-inner focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+          [value]="filterQuery()"
+          (input)="filterQuery.set($any($event.target).value)"
+        />
+      </section>
+
+      @if (viewState() === 'empty') {
+        <div class="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+          <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-3xl text-slate-400" aria-hidden="true">
+            ∅
+          </div>
+          <p class="text-lg font-semibold text-slate-900">No records found</p>
+          <p class="mt-2 max-w-md text-sm text-slate-600">
+            The API returned success with an empty array for <span class="font-mono">{{ apiName() }}</span>.
+          </p>
+        </div>
+      } @else {
+        <section aria-label="Grouped records">
+          <div class="mb-3 flex items-center justify-between">
+            <h2 class="text-base font-bold text-[#222f3f]">Records by CTIN</h2>
+            <p class="text-xs font-medium text-slate-500">{{ filteredHierarchy().length }} CTIN groups · filtered</p>
+          </div>
+          <div class="space-y-3">
+            @for (g of filteredHierarchy(); track g.ctin) {
+              <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-between gap-3 bg-[#1c2b54] px-4 py-3 text-left text-white transition hover:bg-[#162447]"
+                  (click)="toggleCtin(g.ctin)"
+                  [attr.aria-expanded]="expandedCtins().has(g.ctin)"
+                >
+                  <div>
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-white/85">Customer GSTIN</p>
+                    <p class="font-mono text-sm font-bold md:text-base">{{ g.ctin }}</p>
+                  </div>
+                  <div class="flex items-center gap-3 text-[11px] font-bold uppercase tracking-wide">
+                    <span class="rounded-full bg-white/15 px-2 py-1">{{ g.invoices.length }} invoices</span>
+                    <span class="rounded-full bg-teal-400/25 px-2 py-1 text-teal-50">
+                      {{ expandedCtins().has(g.ctin) ? '▼' : '▶' }}
+                    </span>
+                  </div>
+                </button>
+                @if (expandedCtins().has(g.ctin)) {
+                  <div class="divide-y divide-slate-100">
+                    @for (inv of g.invoices; track inv.invoiceKey) {
+                      <div class="bg-slate-50/60">
+                        <button
+                          type="button"
+                          class="flex w-full flex-col gap-2 px-4 py-3 text-left md:flex-row md:items-center md:justify-between"
+                          (click)="toggleInvoice(g.ctin, inv.invoiceKey)"
+                          [attr.aria-expanded]="expandedInvoices().has(invoiceExpandId(g.ctin, inv.invoiceKey))"
+                        >
+                          <div class="min-w-0 flex-1">
+                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Invoice</p>
+                            <p class="truncate font-mono text-sm font-semibold text-slate-900">{{ inv.invoiceNo }}</p>
+                            <p class="text-xs text-slate-600">{{ inv.invoiceDate }}</p>
+                          </div>
+                          @if (invoiceTotals(inv); as t) {
+                            <div class="hidden gap-4 text-xs md:grid md:grid-cols-6 lg:grid-cols-9">
+                              <div><span class="text-slate-500">Val</span><br /><span class="font-semibold">₹{{ formatMoney(inv.invoiceValue ?? 0) }}</span></div>
+                              <div><span class="text-slate-500">POS</span><br /><span class="font-semibold">{{ inv.pos || '—' }}</span></div>
+                              <div><span class="text-slate-500">RC</span><br /><span class="font-semibold">{{ inv.reverseCharge || '—' }}</span></div>
+                              <div class="col-span-2 min-w-0"><span class="text-slate-500">IRN</span><br /><span class="break-all font-mono text-[11px]">{{ inv.irn || '—' }}</span></div>
+                              <div><span class="text-slate-500">Σ txval</span><br /><span class="font-semibold text-teal-800">₹{{ formatMoney(t.tx) }}</span></div>
+                              <div><span class="text-slate-500">IGST</span><br /><span class="font-semibold">₹{{ formatMoney(t.igst) }}</span></div>
+                              <div><span class="text-slate-500">CGST</span><br /><span class="font-semibold">₹{{ formatMoney(t.cgst) }}</span></div>
+                              <div><span class="text-slate-500">SGST</span><br /><span class="font-semibold">₹{{ formatMoney(t.sgst) }}</span></div>
+                              <div><span class="text-slate-500">CESS</span><br /><span class="font-semibold">₹{{ formatMoney(t.cess) }}</span></div>
+                            </div>
+                          }
+                          <span class="text-xs font-bold text-[#1a56a7] md:hidden">
+                            {{ expandedInvoices().has(invoiceExpandId(g.ctin, inv.invoiceKey)) ? 'Hide lines' : 'Show lines' }}
+                          </span>
+                        </button>
+                        @if (expandedInvoices().has(invoiceExpandId(g.ctin, inv.invoiceKey))) {
+                          <div class="overflow-x-auto border-t border-slate-200 bg-white px-2 pb-3 pt-2 md:px-4">
+                            <table class="w-full min-w-[880px] border-collapse text-left text-xs md:text-sm">
+                              <thead class="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                                <tr>
+                                  <th class="px-2 py-2">CTIN</th>
+                                  <th class="px-2 py-2">Invoice No</th>
+                                  <th class="px-2 py-2">Invoice Date</th>
+                                  <th class="px-2 py-2 text-right">Invoice Value</th>
+                                  <th class="px-2 py-2">POS</th>
+                                  <th class="px-2 py-2">Reverse Charge</th>
+                                  <th class="px-2 py-2">IRN</th>
+                                  <th class="px-2 py-2 text-right">Taxable (txval)</th>
+                                  <th class="px-2 py-2 text-right">IGST</th>
+                                  <th class="px-2 py-2 text-right">CGST</th>
+                                  <th class="px-2 py-2 text-right">SGST</th>
+                                  <th class="px-2 py-2 text-right">CESS</th>
+                                </tr>
+                              </thead>
+                              <tbody class="divide-y divide-slate-100">
+                                @for (line of inv.items; track $index) {
+                                  <tr>
+                                    <td class="px-2 py-2 font-mono text-[11px]">{{ g.ctin }}</td>
+                                    <td class="px-2 py-2 font-mono text-[11px]">{{ inv.invoiceNo }}</td>
+                                    <td class="px-2 py-2">{{ inv.invoiceDate }}</td>
+                                    <td class="px-2 py-2 text-right font-semibold">₹{{ formatMoney(inv.invoiceValue ?? 0) }}</td>
+                                    <td class="px-2 py-2">{{ inv.pos || '—' }}</td>
+                                    <td class="px-2 py-2">{{ inv.reverseCharge || '—' }}</td>
+                                    <td class="max-w-[140px] break-all px-2 py-2 font-mono text-[11px]">{{ inv.irn || '—' }}</td>
+                                    <td class="px-2 py-2 text-right text-teal-800">₹{{ formatMoney(line.taxableValue) }}</td>
+                                    <td class="px-2 py-2 text-right">₹{{ formatMoney(line.igst) }}</td>
+                                    <td class="px-2 py-2 text-right">₹{{ formatMoney(line.cgst) }}</td>
+                                    <td class="px-2 py-2 text-right">₹{{ formatMoney(line.sgst) }}</td>
+                                    <td class="px-2 py-2 text-right">₹{{ formatMoney(line.cess) }}</td>
+                                  </tr>
+                                }
+                              </tbody>
+                            </table>
+                            <p class="mt-2 px-2 text-[11px] text-slate-500 md:px-0">
+                              Line-level taxable and tax columns · {{ inv.items.length }} row(s).
+                            </p>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        </section>
+      }
+    }
+  }
+</div>

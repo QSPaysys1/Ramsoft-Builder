@@ -30,7 +30,12 @@
       <p
         class="text-xs font-semibold uppercase tracking-wide text-slate-500"
       >
-        From your Ramsoft profile
+        GSTIN for this sign-in
+      </p>
+      <p class="mt-1 text-xs text-slate-600">
+        Defaults from your Ramsoft profile when available. Edit to use another
+        registration — saved user name and password for that GSTIN (this tab)
+        refill after a successful sign-in.
       </p>
       <div class="mt-2">
         <label
@@ -38,21 +43,35 @@
           for="gstr1-login-prefill-gstin"
           >GSTIN</label
         >
-        @if (profileGstinDisplay()) {
-          <input
-            id="gstr1-login-prefill-gstin"
-            type="text"
-            readonly
-            tabindex="-1"
-            [value]="profileGstinDisplay()"
-            class="mt-1 w-full cursor-default rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-sm tracking-wide text-slate-900"
-          />
-        } @else {
-          <p
-            id="gstr1-login-prefill-gstin"
-            class="mt-1 text-sm italic text-slate-500"
-          >
-            No GSTIN on file — update your profile if needed.
+        <input
+          id="gstr1-login-prefill-gstin"
+          type="text"
+          formControlName="gstin"
+          maxlength="15"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          class="mt-1 w-full rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-sm tracking-wide text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+          [class.border-red-400]="
+            loginForm.controls.gstin.invalid &&
+            loginForm.controls.gstin.touched
+          "
+        />
+        @if (
+          loginForm.controls.gstin.touched &&
+          loginForm.controls.gstin.hasError('required')
+        ) {
+          <p class="mt-1 text-xs text-red-600">GSTIN is required.</p>
+        }
+        @if (
+          loginForm.controls.gstin.touched &&
+          loginForm.controls.gstin.hasError('gstinPattern')
+        ) {
+          <p class="mt-1 text-xs text-red-600">Enter a valid 15-character GSTIN.</p>
+        }
+        @if (!profileGstinDisplay() && loginForm.controls.gstin.pristine) {
+          <p class="mt-1 text-xs text-slate-500">
+            No GSTIN on your profile — enter the registration you use with GSTZen.
           </p>
         }
       </div>

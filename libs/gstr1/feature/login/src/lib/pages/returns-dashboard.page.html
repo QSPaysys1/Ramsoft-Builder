@@ -229,12 +229,28 @@
                 <p class="text-sm text-slate-500">No filing data for this return in the selected period.</p>
               }
               <div class="mt-auto flex flex-wrap justify-center gap-2 pt-2">
-                <button
-                  type="button"
-                  class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-3 text-center text-xs font-bold uppercase tracking-wide text-white hover:bg-[#154a8f] sm:flex-none"
-                >
-                  View
-                </button>
+                @if (c.spec.id === 'gstr1' && payloadOk() === true && form.valid) {
+                  <a
+                    class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-3 text-center text-xs font-bold uppercase tracking-wide text-white hover:bg-[#154a8f] sm:flex-none"
+                    routerLink="/gstr1/workspace/gstr1-download"
+                    [queryParams]="{
+                      gstin: gstinSnap().trim().toUpperCase(),
+                      ret_period: selectedRetPeriod(),
+                      api_name: 'b2b',
+                    }"
+                  >
+                    View
+                  </a>
+                } @else {
+                  <button
+                    type="button"
+                    disabled
+                    class="inline-flex min-h-[38px] min-w-[100px] flex-1 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-3 text-center text-xs font-bold uppercase tracking-wide text-white opacity-70 sm:flex-none"
+                    title="Detailed download is available for GSTR-1 after a successful search."
+                  >
+                    View
+                  </button>
+                }
                 <button
                   type="button"
                   class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg border border-[#1a56a7] bg-white px-3 text-center text-xs font-bold uppercase tracking-wide text-[#1a56a7] hover:bg-slate-50 sm:flex-none"

@@ -23,6 +23,13 @@ export const gstr1Routes: Routes = [
       { path: '', pathMatch: 'full', redirectTo: 'returns-dashboard' },
       returnsDashboardRoute,
       {
+        path: 'gstr1-download',
+        loadComponent: () =>
+          import('./pages/gstr1-download-return.page').then(
+            (m) => m.Gstr1DownloadReturnPageComponent,
+          ),
+      },
+      {
         path: 'session',
         loadComponent: () =>
           import('./pages/gstr1-workspace-session.page').then(
