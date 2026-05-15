@@ -16,7 +16,7 @@ import {
   Validators,
   type ValidatorFn,
 } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   Gstr1GstnOtpApiService,
   RETURN_PERIOD_REGEX,
@@ -96,6 +96,7 @@ export class Gstr1ReturnSectionDetailsPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly api = inject(Gstr1GstnOtpApiService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
 
   readonly apiName = signal<Gstr1DownloadApiName>('b2b');
@@ -106,6 +107,11 @@ export class Gstr1ReturnSectionDetailsPageComponent {
 
   readonly portalTitle = computed(() => portalSectionTitleForApi(this.apiName()));
   readonly uiKind = computed(() => uiKindForDownloadApi(this.apiName()));
+  /** B2B / e-invoice B2B tiles open full-page retsave form. */
+  readonly isB2bRetsaveWorkspace = computed(() => {
+    const a = this.apiName();
+    return a === 'b2b' || a === 'b2b-einv';
+  });
 
   readonly viewState = signal<ViewState>('idle');
   readonly loading = signal(false);
@@ -364,6 +370,28 @@ export class Gstr1ReturnSectionDetailsPageComponent {
       return;
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  openAddRecord(): void {
+    if (this.isB2bRetsaveWorkspace()) {
+      void this.router.navigate(
+        [
+          '/gstr1/workspace/gstr1-download/section',
+          this.apiName(),
+          this.gstin().trim().toUpperCase(),
+          this.retPeriod().trim(),
+          'add-b2b',
+        ],
+        {
+          queryParams: {
+            filing_status: this.filingStatusLabel().trim() || undefined,
+            due_date: this.dueDateLabel().trim() || undefined,
+          },
+        },
+      );
+      return;
+    }
+    this.openAddModal();
   }
 
   openAddModal(): void {

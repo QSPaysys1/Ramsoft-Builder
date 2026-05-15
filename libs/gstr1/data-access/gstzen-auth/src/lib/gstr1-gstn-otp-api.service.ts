@@ -128,4 +128,13 @@ export class Gstr1GstnOtpApiService {
       },
     );
   }
+
+  /**
+   * `POST api/gstr1/retsave/` — persist GSTR-1 data (e.g. `b2b` buckets). Bearer token applied by interceptor.
+   */
+  retsaveGstr1Return(body: Record<string, unknown>): Observable<unknown> {
+    return this.http.post<unknown>(this.config.gstr1RetsaveUrl, body, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }

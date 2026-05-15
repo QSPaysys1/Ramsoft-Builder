@@ -26,4 +26,6 @@ export interface Gstr1Environment {
   readonly gstr1DownloadUrl: string;
   /** `POST` GSTR-1A download JSON — `gstin`, `ret_period`, `api_name` (Bearer). */
   readonly gstr1aDownloadUrl: string;
+  /** `POST` GSTR-1 retsave — full return JSON payload (Bearer). */
+  readonly gstr1RetsaveUrl: string;
 }
