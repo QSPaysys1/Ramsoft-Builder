@@ -17,91 +17,19 @@ import { UserProfileRepository } from '@ramsoft-builder/e-invoices/data-access/e
 import {
   Gstr1GstnOtpApiService,
   RETURN_PERIOD_REGEX,
-  aggregateGstr1DownloadRows,
   coerceGstr1DownloadApiName,
-  extractGstr1DownloadMessageArray,
   extractGstr1RetsumSecSum,
-  filterGstr1DownloadHierarchy,
-  flattenGstr1DownloadHierarchy,
   isGstr1DownloadSuccessEnvelope,
   mapGstr1RetsumSecSumToPortalTileCounts,
-  parseGstr1DownloadHierarchy,
-  type Gstr1DownloadAggregateStats,
   type Gstr1DownloadApiName,
-  type Gstr1DownloadCtinGroup,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
 import { filter } from 'rxjs/operators';
 import { catchError, firstValueFrom, of, switchMap } from 'rxjs';
-
-type ViewState = 'idle' | 'loading' | 'success' | 'empty' | 'error';
-
-/** Portal section titles — same order as GST return workspace. */
-export const GSTR1_SUMMARY_SECTION_TITLES: readonly string[] = [
-  '4A, 4B, 6B, 6C - B2B, SEZ, DE Invoices',
-  '5 - B2C (Large) Invoices',
-  '6A - Exports Invoices',
-  '7 - B2C (Others)',
-  '8A, 8B, 8C, 8D - Nil Rated Supplies',
-  '9B - Credit / Debit Notes (Registered)',
-  '9B - Credit / Debit Notes (Unregistered)',
-  '11A(1), 11A(2) - Tax Liability (Advances Received)',
-  '11B(1), 11B(2) - Adjustment of Advances',
-  '12 - HSN-wise summary of outward supplies',
-  '13 - Documents Issued',
-  '14 - Supplies made through ECO',
-  '15 - Supplies U/s 9(5)',
-];
-
-/**
- * Maps GSTZen `api_name` to summary tile indexes in {@link GSTR1_SUMMARY_SECTION_TITLES}.
- */
-const GSTR1_SUMMARY_TILES_FOR_API: Readonly<
-  Partial<Record<Gstr1DownloadApiName, readonly number[]>>
-> = {
-  b2b: [0],
-  'b2b-einv': [0],
-  b2ba: [0],
-  b2cl: [1],
-  b2cla: [1],
-  exp: [2],
-  'exp-einv': [2],
-  expa: [2],
-  b2cs: [3],
-  b2csa: [3],
-  nil: [4],
-  cdnr: [5],
-  'cdnr-einv': [5],
-  cdnra: [5],
-  cdnur: [6],
-  'cdnur-einv': [6],
-  cdnura: [6],
-  at: [7],
-  ata: [7],
-  txp: [8],
-  txpa: [8],
-  hsnsum: [9],
-  ecom: [11],
-  ecoma: [11],
-  supeco: [12],
-  supecoa: [12],
-};
-
-/** Prefer this `api_name` when the user picks a dashboard tile index. Index 10 has no GSTZen bucket in current list. */
-const GSTR1_SECTION_CARD_PRIMARY_API: ReadonlyArray<Gstr1DownloadApiName | null> = [
-  'b2b',
-  'b2cl',
-  'exp',
-  'b2cs',
-  'nil',
-  'cdnr',
-  'cdnur',
-  'at',
-  'txp',
-  'hsnsum',
-  null,
-  'ecom',
-  'supeco',
-];
+import {
+  GSTR1_SECTION_CARD_PRIMARY_API,
+  GSTR1_SUMMARY_SECTION_TITLES,
+  GSTR1_SUMMARY_TILES_FOR_API,
+} from '../constants/gstr1-download-workspace.constants';
 
 function indianFyLabelFromMmYyyy(retPeriod: string): string {
   if (!RETURN_PERIOD_REGEX.test(retPeriod)) {
@@ -212,27 +140,11 @@ export class Gstr1DownloadReturnPageComponent {
   readonly fileNilGstr1 = signal(false);
   readonly addRecordOpen = signal(true);
 
-  readonly filterQuery = signal('');
-
-  readonly viewState = signal<ViewState>('idle');
-  readonly loading = signal(false);
-  /** RETSUM (portal tile counts) fetch — separate from section detail `loading`. */
   readonly retsumLoading = signal(false);
   readonly retsumTileCounts = signal<number[] | null>(null);
   readonly httpError = signal<unknown>(null);
   readonly rawResponse = signal<unknown>(null);
   readonly logicalErrorText = signal<string | null>(null);
-  readonly lastSyncedAt = signal<Date | null>(null);
-
-  readonly hierarchy = signal<readonly Gstr1DownloadCtinGroup[]>([]);
-  readonly aggregate = signal<Gstr1DownloadAggregateStats | null>(null);
-
-  readonly expandedCtins = signal(new Set<string>());
-  readonly expandedInvoices = signal(new Set<string>());
-
-  readonly filteredHierarchy = computed(() =>
-    filterGstr1DownloadHierarchy([...this.hierarchy()], this.filterQuery()),
-  );
 
   readonly fyLabel = computed(() => indianFyLabelFromMmYyyy(this.retPeriod().trim()));
   readonly taxPeriodLabel = computed(() => monthNameFromMmYyyy(this.retPeriod().trim()));
@@ -243,33 +155,6 @@ export class Gstr1DownloadReturnPageComponent {
       return cached;
     }
     return this.summaryTitles.map(() => 0);
-  });
-
-  /** True when every filtered CTIN and every invoice under it shows its line-detail table. */
-  readonly accordionFullyExpanded = computed(() => {
-    const groups = this.filteredHierarchy();
-    if (groups.length === 0) {
-      return false;
-    }
-    const ctins = this.expandedCtins();
-    const invoices = this.expandedInvoices();
-    for (const g of groups) {
-      if (!ctins.has(g.ctin)) {
-        return false;
-      }
-      for (const inv of g.invoices) {
-        const id = `${g.ctin}||${inv.invoiceKey}`;
-        if (!invoices.has(id)) {
-          return false;
-        }
-      }
-    }
-    return true;
-  });
-
-  readonly moneyFmt = new Intl.NumberFormat('en-IN', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
   });
 
   constructor() {
@@ -368,18 +253,36 @@ export class Gstr1DownloadReturnPageComponent {
   }
 
   summaryTileActive(index: number): boolean {
-    const indices = GSTR1_SUMMARY_TILES_FOR_API[this.apiName()];
-    return indices?.includes(index) ?? false;
+    const primary = GSTR1_SECTION_CARD_PRIMARY_API[index];
+    return !!primary && primary === this.apiName();
   }
 
-  /** Choose section from portal grid: sets API and loads data. */
-  onSectionCardClick(index: number): void {
+  /** Highlight tiles using amendment buckets too (matches RETSUM mapping). */
+  summaryTileActiveExtended(index: number): boolean {
+    const indices = GSTR1_SUMMARY_TILES_FOR_API[this.apiName()];
+    return indices?.includes(index) ?? this.summaryTileActive(index);
+  }
+
+  navigateToSection(index: number): void {
     const primary = GSTR1_SECTION_CARD_PRIMARY_API[index];
-    if (!primary || this.loading()) {
+    if (!primary || !this.paramsValid() || this.fileNilGstr1() || this.retsumLoading()) {
       return;
     }
     this.apiName.set(primary);
-    void this.fetchSectionDetail();
+    void this.router.navigate(
+      [
+        '/gstr1/workspace/gstr1-download/section',
+        primary,
+        this.gstin().trim().toUpperCase(),
+        this.retPeriod().trim(),
+      ],
+      {
+        queryParams: {
+          filing_status: this.filingStatusLabel().trim() || undefined,
+          due_date: this.dueDateLabel().trim() || undefined,
+        },
+      },
+    );
   }
 
   openEInvoiceAdvisory(): void {
@@ -402,13 +305,9 @@ export class Gstr1DownloadReturnPageComponent {
     return g.length === 15 && RETURN_PERIOD_REGEX.test(r);
   }
 
-  /** First paint: RETSUM tile counts, then the section implied by `api_name` (default B2B). */
+  /** First paint: RETSUM tile counts only — detailed sections open on their own route. */
   async bootstrapFetch(): Promise<void> {
-    const retsumOk = await this.fetchRetsumSummary();
-    if (!retsumOk || this.apiName() === 'retsum') {
-      return;
-    }
-    await this.fetchSectionDetail();
+    await this.fetchRetsumSummary();
   }
 
   /** GSTZen `retsum` → portal tile counts (`sec_sum`). Returns whether RETSUM succeeded. */
@@ -473,202 +372,8 @@ export class Gstr1DownloadReturnPageComponent {
     }
   }
 
-  /** Download one GSTZen section (`api_name`) for invoice grid / JSON. */
-  async fetchSectionDetail(): Promise<void> {
-    if (this.loading()) {
-      return;
-    }
-    if (!this.paramsValid()) {
-      this.logicalErrorText.set('Enter a valid 15-character GSTIN and return period (MMYYYY).');
-      this.httpError.set(null);
-      this.viewState.set('error');
-      return;
-    }
-    if (this.fileNilGstr1()) {
-      this.logicalErrorText.set('Nil GSTR-1 is selected; clear the checkbox to download section data.');
-      this.httpError.set(null);
-      this.viewState.set('error');
-      return;
-    }
-    if (this.apiName() === 'retsum') {
-      this.logicalErrorText.set('Pick a section tile below to load invoice-level data (RETSUM is summary only).');
-      this.httpError.set(null);
-      this.viewState.set('error');
-      return;
-    }
-
-    this.loading.set(true);
-    this.viewState.set('loading');
-    this.httpError.set(null);
-    this.logicalErrorText.set(null);
-    this.hierarchy.set([]);
-    this.aggregate.set(null);
-
-    try {
-      this.syncUrlFromForm();
-
-      const raw = await firstValueFrom(
-        this.api.downloadGstr1Return({
-          gstin: this.gstin().trim().toUpperCase(),
-          ret_period: this.retPeriod().trim(),
-          api_name: this.apiName(),
-        }),
-      );
-
-      this.rawResponse.set(raw);
-
-      if (!isGstr1DownloadSuccessEnvelope(raw)) {
-        const st =
-          raw && typeof raw === 'object' && 'status' in (raw as object)
-            ? String((raw as Record<string, unknown>)['status'])
-            : '?';
-        let msg = `Download did not return success (status = ${st}).`;
-        if (
-          raw &&
-          typeof raw === 'object' &&
-          'message' in (raw as object) &&
-          typeof (raw as { message?: unknown }).message === 'string'
-        ) {
-          msg = (raw as { message: string }).message;
-        }
-        this.logicalErrorText.set(msg);
-        this.viewState.set('error');
-        return;
-      }
-
-      const bucket = extractGstr1DownloadMessageArray(raw, this.apiName());
-      if (bucket.length === 0) {
-        this.hierarchy.set([]);
-        this.aggregate.set({
-          sourceBucketLength: 0,
-          totalLineItems: 0,
-          invoiceCount: 0,
-          ctinCount: 0,
-          taxableTotal: 0,
-          igstTotal: 0,
-          cgstTotal: 0,
-          sgstTotal: 0,
-          cessTotal: 0,
-          taxGrandTotal: 0,
-        });
-        this.viewState.set('empty');
-        this.lastSyncedAt.set(new Date());
-        this.collapseAll();
-        return;
-      }
-
-      const tree = parseGstr1DownloadHierarchy(bucket);
-      const flat = flattenGstr1DownloadHierarchy(tree);
-      const agg = aggregateGstr1DownloadRows(flat, bucket.length);
-
-      this.hierarchy.set(tree);
-      this.aggregate.set(agg);
-      this.viewState.set('success');
-      this.lastSyncedAt.set(new Date());
-      /** Open CTIN panels so invoices are visible; line tables stay closed until Expand all or row tap. */
-      this.expandedCtins.set(new Set(tree.map((g) => g.ctin)));
-      this.expandedInvoices.set(new Set());
-    } catch (err: unknown) {
-      this.httpError.set(normalizeErrorEnvelope(err));
-      this.viewState.set('error');
-    } finally {
-      this.loading.set(false);
-    }
-  }
-
   refresh(): void {
-    void (async () => {
-      const retsumOk = await this.fetchRetsumSummary();
-      if (!retsumOk) {
-        return;
-      }
-      const st = this.viewState();
-      if (this.apiName() !== 'retsum' && (st === 'success' || st === 'empty')) {
-        await this.fetchSectionDetail();
-      }
-    })();
-  }
-
-  invoiceExpandId(ctin: string, invoiceKey: string): string {
-    return `${ctin}||${invoiceKey}`;
-  }
-
-  toggleCtin(ctin: string): void {
-    const next = new Set(this.expandedCtins());
-    if (next.has(ctin)) {
-      next.delete(ctin);
-    } else {
-      next.add(ctin);
-    }
-    this.expandedCtins.set(next);
-  }
-
-  toggleInvoice(ctin: string, invoiceKey: string): void {
-    const id = this.invoiceExpandId(ctin, invoiceKey);
-    const next = new Set(this.expandedInvoices());
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    this.expandedInvoices.set(next);
-  }
-
-  expandAll(): void {
-    const groups = this.filteredHierarchy();
-    const ctins = new Set(groups.map((g) => g.ctin));
-    const inv = new Set<string>();
-    for (const g of groups) {
-      for (const i of g.invoices) {
-        inv.add(this.invoiceExpandId(g.ctin, i.invoiceKey));
-      }
-    }
-    this.expandedCtins.set(ctins);
-    this.expandedInvoices.set(inv);
-  }
-
-  collapseAll(): void {
-    this.expandedCtins.set(new Set());
-    this.expandedInvoices.set(new Set());
-  }
-
-  /** One control: collapse when fully expanded, otherwise expand every CTIN and invoice panel. */
-  toggleExpandCollapseAll(): void {
-    if (this.accordionFullyExpanded()) {
-      this.collapseAll();
-    } else {
-      this.expandAll();
-    }
-  }
-
-  formatMoney(n: number): string {
-    return this.moneyFmt.format(n);
-  }
-
-  formatSynced(d: Date | null): string {
-    if (!d) {
-      return '—';
-    }
-    return d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
-  }
-
-  invoiceTotals(inv: Gstr1DownloadCtinGroup['invoices'][number]): {
-    tx: number;
-    igst: number;
-    cgst: number;
-    sgst: number;
-    cess: number;
-  } {
-    return inv.items.reduce(
-      (acc, it) => ({
-        tx: acc.tx + it.taxableValue,
-        igst: acc.igst + it.igst,
-        cgst: acc.cgst + it.cgst,
-        sgst: acc.sgst + it.sgst,
-        cess: acc.cess + it.cess,
-      }),
-      { tx: 0, igst: 0, cgst: 0, sgst: 0, cess: 0 },
-    );
+    void this.fetchRetsumSummary();
   }
 
   async copyJson(): Promise<void> {

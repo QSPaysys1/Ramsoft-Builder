@@ -24,10 +24,22 @@ export const gstr1Routes: Routes = [
       returnsDashboardRoute,
       {
         path: 'gstr1-download',
-        loadComponent: () =>
-          import('./pages/gstr1-download-return.page').then(
-            (m) => m.Gstr1DownloadReturnPageComponent,
-          ),
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/gstr1-download-return.page').then(
+                (m) => m.Gstr1DownloadReturnPageComponent,
+              ),
+          },
+          {
+            path: 'section/:apiName/:gstin/:retPeriod',
+            loadComponent: () =>
+              import('./pages/gstr1-return-section-details.page').then(
+                (m) => m.Gstr1ReturnSectionDetailsPageComponent,
+              ),
+          },
+        ],
       },
       {
         path: 'gstr1a-view',

@@ -6,7 +6,7 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client,
   },
   {
-    path: 'ewaybills/**',
+    path: 'gstr1/workspace/gstr1-download/section/**',
     renderMode: RenderMode.Client,
   },
   {

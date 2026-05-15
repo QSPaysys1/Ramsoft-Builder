@@ -1,0 +1,467 @@
+<!-- Desktop -->
+<div class="hidden md:block">
+  <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+    <table class="w-full min-w-[960px] border-collapse text-left text-xs text-slate-900">
+      <thead
+        class="sticky top-0 z-20 border-b border-slate-200 bg-slate-100 text-[11px] font-bold uppercase tracking-wide text-slate-700"
+      >
+        @switch (uiKind()) {
+          @case ('hsn') {
+            <tr>
+              <th class="whitespace-nowrap px-3 py-3">HSN</th>
+              <th class="min-w-[8rem] px-3 py-3">Description</th>
+              <th class="px-3 py-3 text-right">Qty</th>
+              <th class="px-3 py-3">UQC</th>
+              <th class="px-3 py-3 text-right">Taxable (₹)</th>
+              <th class="px-3 py-3 text-right">IGST</th>
+              <th class="px-3 py-3 text-right">CGST</th>
+              <th class="px-3 py-3 text-right">SGST</th>
+              <th class="px-3 py-3 text-right">Cess</th>
+              <th class="px-3 py-3">Source</th>
+              <th class="px-3 py-3">Status</th>
+              <th class="px-3 py-3 text-center">Items</th>
+            </tr>
+          }
+          @case ('exp') {
+            <tr>
+              <th class="whitespace-nowrap px-3 py-3">Invoice no.</th>
+              <th class="px-3 py-3">Invoice date</th>
+              <th class="min-w-[10rem] px-3 py-3">GST payment</th>
+              <th class="px-3 py-3 text-right">Invoice value (₹)</th>
+              <th class="px-3 py-3 text-right">Taxable (₹)</th>
+              <th class="px-3 py-3 text-right">IGST</th>
+              <th class="px-3 py-3 text-right">Cess</th>
+              <th class="px-3 py-3">Shipping bill</th>
+              <th class="px-3 py-3">Port</th>
+              <th class="px-3 py-3">Export type</th>
+              <th class="px-3 py-3">Source</th>
+              <th class="px-3 py-3">Status</th>
+              <th class="px-3 py-3 text-center">Items</th>
+            </tr>
+          }
+          @case ('cdnr') {
+            <tr>
+              <th class="px-3 py-3">GSTIN</th>
+              <th class="px-3 py-3">Note no.</th>
+              <th class="px-3 py-3">Note date</th>
+              <th class="px-3 py-3">Type</th>
+              <th class="px-3 py-3 text-right">Taxable (₹)</th>
+              <th class="px-3 py-3 text-right">IGST</th>
+              <th class="px-3 py-3 text-right">CGST</th>
+              <th class="px-3 py-3 text-right">SGST</th>
+              <th class="px-3 py-3 text-right">Cess</th>
+              <th class="px-3 py-3">Source</th>
+              <th class="px-3 py-3">Status</th>
+              <th class="px-3 py-3 text-center">Items</th>
+            </tr>
+          }
+          @case ('cdnur') {
+            <tr>
+              <th class="px-3 py-3">Note no.</th>
+              <th class="px-3 py-3">Note date</th>
+              <th class="px-3 py-3">Type</th>
+              <th class="px-3 py-3 text-right">Invoice value</th>
+              <th class="px-3 py-3 text-right">Taxable (₹)</th>
+              <th class="px-3 py-3 text-right">IGST</th>
+              <th class="px-3 py-3 text-right">CGST</th>
+              <th class="px-3 py-3 text-right">SGST</th>
+              <th class="px-3 py-3 text-right">Cess</th>
+              <th class="px-3 py-3">Source</th>
+              <th class="px-3 py-3">Status</th>
+              <th class="px-3 py-3 text-center">Items</th>
+            </tr>
+          }
+          @case ('b2cl') {
+            <tr>
+              <th class="px-3 py-3">Place of supply</th>
+              <th class="px-3 py-3">Invoice no.</th>
+              <th class="px-3 py-3">Invoice date</th>
+              <th class="px-3 py-3 text-right">Invoice value (₹)</th>
+              <th class="px-3 py-3 text-right">Rate %</th>
+              <th class="px-3 py-3 text-right">Taxable (₹)</th>
+              <th class="px-3 py-3 text-right">IGST</th>
+              <th class="px-3 py-3 text-right">CGST</th>
+              <th class="px-3 py-3 text-right">SGST</th>
+              <th class="px-3 py-3 text-right">Cess</th>
+              <th class="px-3 py-3">Source</th>
+              <th class="px-3 py-3">Status</th>
+              <th class="px-3 py-3 text-center">Items</th>
+            </tr>
+          }
+          @case ('b2cs') {
+            <tr>
+              <th class="px-3 py-3">Place of supply</th>
+              <th class="px-3 py-3">Invoice no.</th>
+              <th class="px-3 py-3">Invoice date</th>
+              <th class="px-3 py-3 text-right">Invoice value (₹)</th>
+              <th class="px-3 py-3 text-right">Rate %</th>
+              <th class="px-3 py-3 text-right">Taxable (₹)</th>
+              <th class="px-3 py-3 text-right">IGST</th>
+              <th class="px-3 py-3 text-right">CGST</th>
+              <th class="px-3 py-3 text-right">SGST</th>
+              <th class="px-3 py-3 text-right">Cess</th>
+              <th class="px-3 py-3">Source</th>
+              <th class="px-3 py-3">Status</th>
+              <th class="px-3 py-3 text-center">Items</th>
+            </tr>
+          }
+          @default {
+            <tr>
+              <th class="px-3 py-3">GSTIN</th>
+              <th class="px-3 py-3">Invoice no.</th>
+              <th class="px-3 py-3">Invoice date</th>
+              <th class="px-3 py-3">POS</th>
+              <th class="px-3 py-3 text-right">Invoice value</th>
+              <th class="px-3 py-3 text-right">Taxable (₹)</th>
+              <th class="px-3 py-3 text-right">IGST</th>
+              <th class="px-3 py-3 text-right">CGST</th>
+              <th class="px-3 py-3 text-right">SGST</th>
+              <th class="px-3 py-3 text-right">Cess</th>
+              <th class="max-w-[140px] px-3 py-3">IRN</th>
+              <th class="px-3 py-3">Source</th>
+              <th class="px-3 py-3">Status</th>
+              <th class="px-3 py-3 text-center">Items</th>
+            </tr>
+          }
+        }
+      </thead>
+      <tbody class="divide-y divide-slate-100 bg-white">
+        @for (row of rows(); track row.rowId) {
+          <tr class="transition-colors duration-150 hover:bg-slate-50/80">
+            @switch (uiKind()) {
+              @case ('hsn') {
+                <td class="whitespace-nowrap px-3 py-2 font-mono text-[11px] font-semibold text-[#1a56a7]">
+                  {{ row.hsnCode || row.invoiceNo }}
+                </td>
+                <td class="px-3 py-2 text-[11px] text-slate-700">{{ row.description || '—' }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">{{ row.quantity ?? '—' }}</td>
+                <td class="px-3 py-2 font-mono text-[11px]">{{ row.uqc || '—' }}</td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums text-teal-900">
+                  ₹{{ formatMoney()(row.taxableTotal) }}
+                </td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.igst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cgst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.sgst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cess) }}</td>
+                <td class="px-3 py-2 text-[11px] capitalize">{{ row.source }}</td>
+                <td class="px-3 py-2">
+                  <span
+                    class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset"
+                    [class]="badgeClass(row.source)"
+                  >
+                    {{ row.statusLabel || row.source }}
+                  </span>
+                </td>
+              }
+              @case ('exp') {
+                <td class="px-3 py-2 font-mono text-[11px] font-semibold text-[#1a56a7]">
+                  {{ row.invoiceNo }}
+                </td>
+                <td class="px-3 py-2">{{ row.invoiceDate }}</td>
+                <td class="px-3 py-2 text-[11px]">{{ row.gstPayment || '—' }}</td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums">
+                  ₹{{ formatMoney()(row.invoiceValue ?? row.taxableTotal) }}
+                </td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums text-teal-900">
+                  ₹{{ formatMoney()(row.taxableTotal) }}
+                </td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.igst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cess) }}</td>
+                <td class="px-3 py-2 font-mono text-[11px]">{{ row.shippingBillNo || '—' }}</td>
+                <td class="px-3 py-2 font-mono text-[11px]">{{ row.portCode || '—' }}</td>
+                <td class="px-3 py-2 text-[11px]">{{ row.exportType || '—' }}</td>
+                <td class="px-3 py-2 text-[11px] capitalize">{{ row.source }}</td>
+                <td class="px-3 py-2">
+                  <span
+                    class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset"
+                    [class]="badgeClass(row.source)"
+                  >
+                    {{ row.statusLabel || row.source }}
+                  </span>
+                </td>
+              }
+              @case ('cdnr') {
+                <td class="px-3 py-2 font-mono text-[11px]">{{ row.ctin }}</td>
+                <td class="px-3 py-2 font-mono text-[11px] font-semibold text-[#1a56a7]">
+                  {{ row.noteNumber || row.invoiceNo }}
+                </td>
+                <td class="px-3 py-2">{{ row.noteDate || row.invoiceDate }}</td>
+                <td class="px-3 py-2 font-mono text-[11px]">{{ row.noteType || '—' }}</td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums text-teal-900">
+                  ₹{{ formatMoney()(row.taxableTotal) }}
+                </td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.igst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cgst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.sgst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cess) }}</td>
+                <td class="px-3 py-2 text-[11px] capitalize">{{ row.source }}</td>
+                <td class="px-3 py-2">
+                  <span
+                    class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset"
+                    [class]="badgeClass(row.source)"
+                  >
+                    {{ row.statusLabel || row.source }}
+                  </span>
+                </td>
+              }
+              @case ('cdnur') {
+                <td class="px-3 py-2 font-mono text-[11px] font-semibold text-[#1a56a7]">
+                  {{ row.noteNumber || row.invoiceNo }}
+                </td>
+                <td class="px-3 py-2">{{ row.noteDate || row.invoiceDate }}</td>
+                <td class="px-3 py-2 font-mono text-[11px]">{{ row.noteType || '—' }}</td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums">
+                  ₹{{ formatMoney()(row.invoiceValue ?? 0) }}
+                </td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums text-teal-900">
+                  ₹{{ formatMoney()(row.taxableTotal) }}
+                </td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.igst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cgst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.sgst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cess) }}</td>
+                <td class="px-3 py-2 text-[11px] capitalize">{{ row.source }}</td>
+                <td class="px-3 py-2">
+                  <span
+                    class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset"
+                    [class]="badgeClass(row.source)"
+                  >
+                    {{ row.statusLabel || row.source }}
+                  </span>
+                </td>
+              }
+              @case ('b2cl') {
+                <td class="px-3 py-2 font-mono text-[11px] font-semibold">{{ row.pos || '—' }}</td>
+                <td class="px-3 py-2 font-mono text-[11px] font-semibold text-[#1a56a7]">
+                  {{ row.invoiceNo }}
+                </td>
+                <td class="px-3 py-2">{{ row.invoiceDate }}</td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums">
+                  ₹{{ formatMoney()(row.invoiceValue ?? 0) }}
+                </td>
+                <td class="px-3 py-2 text-right tabular-nums">{{ row.rate ?? '—' }}</td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums text-teal-900">
+                  ₹{{ formatMoney()(row.taxableTotal) }}
+                </td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.igst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cgst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.sgst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cess) }}</td>
+                <td class="px-3 py-2 text-[11px] capitalize">{{ row.source }}</td>
+                <td class="px-3 py-2">
+                  <span
+                    class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset"
+                    [class]="badgeClass(row.source)"
+                  >
+                    {{ row.statusLabel || row.source }}
+                  </span>
+                </td>
+              }
+              @case ('b2cs') {
+                <td class="px-3 py-2 font-mono text-[11px] font-semibold">{{ row.pos || '—' }}</td>
+                <td class="px-3 py-2 font-mono text-[11px] font-semibold text-[#1a56a7]">
+                  {{ row.invoiceNo }}
+                </td>
+                <td class="px-3 py-2">{{ row.invoiceDate }}</td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums">
+                  ₹{{ formatMoney()(row.invoiceValue ?? 0) }}
+                </td>
+                <td class="px-3 py-2 text-right tabular-nums">{{ row.rate ?? '—' }}</td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums text-teal-900">
+                  ₹{{ formatMoney()(row.taxableTotal) }}
+                </td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.igst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cgst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.sgst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cess) }}</td>
+                <td class="px-3 py-2 text-[11px] capitalize">{{ row.source }}</td>
+                <td class="px-3 py-2">
+                  <span
+                    class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset"
+                    [class]="badgeClass(row.source)"
+                  >
+                    {{ row.statusLabel || row.source }}
+                  </span>
+                </td>
+              }
+              @default {
+                <td class="px-3 py-2 font-mono text-[11px]">{{ row.ctin }}</td>
+                <td class="px-3 py-2 font-mono text-[11px] font-semibold text-[#1a56a7]">
+                  {{ row.invoiceNo }}
+                </td>
+                <td class="px-3 py-2">{{ row.invoiceDate }}</td>
+                <td class="px-3 py-2 font-mono text-[11px]">{{ row.pos || '—' }}</td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums">
+                  ₹{{ formatMoney()(row.invoiceValue ?? 0) }}
+                </td>
+                <td class="px-3 py-2 text-right font-semibold tabular-nums text-teal-900">
+                  ₹{{ formatMoney()(row.taxableTotal) }}
+                </td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.igst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cgst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.sgst) }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">₹{{ formatMoney()(row.cess) }}</td>
+                <td class="max-w-[140px] break-all px-3 py-2 font-mono text-[10px] text-slate-600">
+                  {{ row.irn || '—' }}
+                </td>
+                <td class="px-3 py-2 text-[11px] capitalize">{{ row.source }}</td>
+                <td class="px-3 py-2">
+                  <span
+                    class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset"
+                    [class]="badgeClass(row.source)"
+                  >
+                    {{ row.statusLabel || row.source }}
+                  </span>
+                </td>
+              }
+            }
+            <td class="px-3 py-2 text-center">
+              @if (row.items.length) {
+                <button
+                  type="button"
+                  class="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-md border border-slate-300 bg-white text-sm font-bold text-[#1a56a7] shadow-sm transition hover:bg-slate-50"
+                  [attr.aria-expanded]="expandedIds().has(row.rowId)"
+                  (click)="onToggle(row.rowId)"
+                >
+                  {{ expandedIds().has(row.rowId) ? '−' : '+' }}
+                </button>
+              } @else {
+                —
+              }
+            </td>
+          </tr>
+          @if (expandedIds().has(row.rowId) && row.items.length) {
+            <tr class="bg-slate-50/90 transition-colors duration-150">
+              <td [attr.colspan]="detailColspan()" class="px-3 pb-4 pt-1">
+                <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                  <table class="w-full min-w-[640px] border-collapse text-left text-[11px]">
+                    <thead class="bg-slate-100 font-semibold uppercase tracking-wide text-slate-600">
+                      <tr>
+                        <th class="px-2 py-2">Line</th>
+                        <th class="px-2 py-2 text-right">Taxable</th>
+                        <th class="px-2 py-2 text-right">IGST</th>
+                        <th class="px-2 py-2 text-right">CGST</th>
+                        <th class="px-2 py-2 text-right">SGST</th>
+                        <th class="px-2 py-2 text-right">Cess</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                      @for (ln of row.items; track $index) {
+                        <tr>
+                          <td class="px-2 py-2">{{ ln.lineLabel }}</td>
+                          <td class="px-2 py-2 text-right tabular-nums">₹{{ formatMoney()(ln.taxableValue) }}</td>
+                          <td class="px-2 py-2 text-right tabular-nums">₹{{ formatMoney()(ln.igst) }}</td>
+                          <td class="px-2 py-2 text-right tabular-nums">₹{{ formatMoney()(ln.cgst) }}</td>
+                          <td class="px-2 py-2 text-right tabular-nums">₹{{ formatMoney()(ln.sgst) }}</td>
+                          <td class="px-2 py-2 text-right tabular-nums">₹{{ formatMoney()(ln.cess) }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Mobile cards -->
+<div class="space-y-3 md:hidden">
+  @for (row of rows(); track row.rowId) {
+    <article
+      class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md"
+    >
+      <button
+        type="button"
+        class="flex w-full flex-col gap-2 px-4 py-3 text-left"
+        (click)="row.items.length ? onToggle(row.rowId) : null"
+      >
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+              @switch (uiKind()) {
+                @case ('hsn') {
+                  HSN
+                }
+                @case ('cdnr') {
+                  @if (row.noteNumber) {
+                    Note
+                  } @else {
+                    Invoice
+                  }
+                }
+                @case ('cdnur') {
+                  Note / doc
+                }
+                @default {
+                  Invoice
+                }
+              }
+            </p>
+            <p class="truncate font-mono text-sm font-semibold text-[#1a56a7]">
+              @switch (uiKind()) {
+                @case ('hsn') {
+                  {{ row.hsnCode || row.invoiceNo }}
+                }
+                @case ('cdnr') {
+                  {{ row.noteNumber || row.invoiceNo }}
+                }
+                @case ('cdnur') {
+                  {{ row.noteNumber || row.invoiceNo }}
+                }
+                @default {
+                  {{ row.invoiceNo }}
+                }
+              }
+            </p>
+          </div>
+          <span
+            class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset"
+            [class]="badgeClass(row.source)"
+          >
+            {{ row.statusLabel || row.source }}
+          </span>
+        </div>
+        @if (uiKind() === 'b2b' || uiKind() === 'ecom' || uiKind() === 'generic' || uiKind() === 'nil' || uiKind() === 'at' || uiKind() === 'txp') {
+          <p class="font-mono text-[11px] text-slate-600">GSTIN · {{ row.ctin }}</p>
+        }
+        @if (uiKind() === 'b2cl' || uiKind() === 'b2cs') {
+          <p class="text-[11px] text-slate-600">POS · <span class="font-mono font-semibold">{{ row.pos || '—' }}</span></p>
+        }
+        @if (uiKind() === 'exp') {
+          <p class="text-[11px] text-slate-600">{{ row.gstPayment || 'GST payment —' }}</p>
+        }
+        <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-700">
+          <div>
+            <span class="text-slate-500">Taxable</span><br />
+            <span class="font-semibold tabular-nums text-teal-900">₹{{ formatMoney()(row.taxableTotal) }}</span>
+          </div>
+          <div class="text-right">
+            <span class="text-slate-500">Tax Σ</span><br />
+            <span class="font-semibold tabular-nums">
+              ₹{{ formatMoney()(row.igst + row.cgst + row.sgst + row.cess) }}
+            </span>
+          </div>
+        </div>
+        @if (row.items.length) {
+          <p class="text-[11px] font-bold text-[#1a56a7]">
+            {{ expandedIds().has(row.rowId) ? 'Tap to collapse items' : 'Tap to expand items' }}
+          </p>
+        }
+      </button>
+      @if (expandedIds().has(row.rowId) && row.items.length) {
+        <div class="border-t border-slate-100 bg-slate-50 px-3 py-3">
+          @for (ln of row.items; track $index) {
+            <div class="flex justify-between gap-2 border-b border-slate-100 py-2 text-[11px] last:border-0">
+              <span class="text-slate-600">{{ ln.lineLabel }}</span>
+              <span class="font-semibold tabular-nums text-slate-900">₹{{ formatMoney()(ln.taxableValue) }}</span>
+            </div>
+          }
+        </div>
+      }
+    </article>
+  }
+</div>

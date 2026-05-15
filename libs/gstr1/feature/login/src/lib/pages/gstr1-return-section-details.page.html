@@ -1,0 +1,513 @@
+<div class="gstr1-section-details pb-16">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a
+          [routerLink]="['/gstr1/workspace/gstr1-download']"
+          [queryParams]="backQueryParams()"
+          class="text-[#1a56a7] hover:underline"
+          >GSTR-1/IFF</a
+        >
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <span class="font-semibold text-slate-900" aria-current="page">{{ portalTitle() }}</span>
+      </li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">
+      English
+    </span>
+  </nav>
+
+  <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+    <div class="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-5">
+      <div class="min-w-0">
+        <p class="text-[11px] font-semibold uppercase tracking-wide text-white/90">Return workspace</p>
+        <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">{{ portalTitle() }}</h1>
+        <p class="mt-1 max-w-3xl text-xs text-white/95 md:text-sm">
+          <span class="font-mono">{{ gstin() }}</span>
+          · Period <span class="font-mono">{{ retPeriod() }}</span>
+          · Bucket <span class="font-mono">{{ apiName() }}</span>
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="inline-flex min-h-[38px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-xs font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347]"
+          title="GST help"
+          (click)="openGstHelp()"
+        >
+          HELP ?
+        </button>
+        <button
+          type="button"
+          class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/50 bg-white/15 text-white transition hover:bg-white/25 disabled:opacity-50"
+          [disabled]="loading()"
+          (click)="fetchSection()"
+          title="Refresh section"
+          aria-label="Refresh section"
+        >
+          ↻
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="border border-t-0 border-slate-200 bg-white px-4 py-4 shadow-md md:px-6 md:py-5">
+    <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
+      <div class="flex flex-wrap gap-2 lg:justify-end lg:ml-auto">
+        <button
+          type="button"
+          class="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-slate-300 bg-slate-100 px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm transition hover:bg-slate-200"
+          (click)="toggleEwbPanel()"
+        >
+          Import EWB Data
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[40px] items-center justify-center rounded-lg bg-[#1a56a7] px-5 text-xs font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#154a8f]"
+          (click)="openAddModal()"
+        >
+          Add Record
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-45"
+          [disabled]="filteredRows().length === 0"
+          (click)="exportCsv()"
+        >
+          Export CSV
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-45"
+          [disabled]="rawResponse() === null"
+          (click)="downloadJson()"
+        >
+          Download JSON
+        </button>
+      </div>
+    </div>
+
+    @if (showEwbPanel()) {
+      <div class="mb-6 rounded-xl border border-slate-200 bg-slate-50/90 p-4 shadow-inner transition-all duration-200 md:p-5">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-sm font-bold uppercase tracking-wide text-[#1c2b54]">Import e-way bill JSON</h2>
+          <label class="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-[#1a56a7]">
+            <span class="rounded border border-slate-300 bg-white px-3 py-2 shadow-sm">Choose file</span>
+            <input type="file" accept="application/json,.json" class="sr-only" (change)="onEwbFile($event)" />
+          </label>
+        </div>
+        <textarea
+          class="mb-3 min-h-[140px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 font-mono text-[11px] text-slate-900 shadow-inner focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+          placeholder='Paste JSON array of e-way bills (or NIC-style generate payload)...'
+          [value]="ewbImportJson()"
+          (input)="ewbImportJson.set($any($event.target).value)"
+        ></textarea>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="inline-flex min-h-[40px] items-center justify-center rounded-lg bg-[#1c2b54] px-5 text-xs font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347] disabled:opacity-50"
+            [disabled]="ewbImportLoading()"
+            (click)="parseEwbImport()"
+          >
+            @if (ewbImportLoading()) {
+              Mapping…
+            } @else {
+              Map to {{ apiName() }}
+            }
+          </button>
+          @if (ewbImportError()) {
+            <p class="flex-1 text-sm font-medium text-red-700">{{ ewbImportError() }}</p>
+          }
+        </div>
+        @if (ewbRows().length) {
+          <p class="mt-3 text-xs font-medium text-slate-600">
+            {{ ewbRows().length }} imported row(s) staged · merged into the grid below.
+          </p>
+        }
+      </div>
+    }
+
+    <section class="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Summary cards">
+      <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md transition hover:shadow-lg">
+        <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Processed records</div>
+        <div class="px-4 py-4">
+          <p class="text-3xl font-bold text-emerald-700">{{ totals().count }}</p>
+          <p class="mt-1 text-xs text-slate-600">Filtered rows · API + drafts + imports</p>
+        </div>
+      </article>
+      <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md transition hover:shadow-lg">
+        <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Taxable total</div>
+        <div class="px-4 py-4">
+          <p class="text-xl font-bold tabular-nums text-teal-900">₹{{ formatMoney(totals().taxable) }}</p>
+          <p class="mt-1 text-xs text-slate-600">Σ taxable value</p>
+        </div>
+      </article>
+      <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md transition hover:shadow-lg">
+        <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Tax total</div>
+        <div class="px-4 py-4">
+          <p class="text-xl font-bold tabular-nums text-slate-900">₹{{ formatMoney(totals().tax) }}</p>
+          <p class="mt-1 text-xs text-slate-600">IGST + CGST + SGST + cess</p>
+        </div>
+      </article>
+      <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md transition hover:shadow-lg">
+        <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Invoice value Σ</div>
+        <div class="px-4 py-4">
+          <p class="text-xl font-bold tabular-nums text-slate-900">₹{{ formatMoney(totals().invoiceValue) }}</p>
+          <p class="mt-1 text-xs text-slate-600">Uses declared values where present</p>
+        </div>
+      </article>
+    </section>
+
+    @if(false) {
+      <section class="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+        <h2 class="mb-3 text-xs font-bold uppercase tracking-wide text-[#1c2b54]">Search &amp; filter</h2>
+        <div class="grid gap-3 md:grid-cols-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold text-slate-600" for="flt-inv">Invoice / note / HSN</label>
+            <input
+              id="flt-inv"
+              type="search"
+              autocomplete="off"
+              class="rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-inner focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+              [value]="filterInvoice()"
+              (input)="filterInvoice.set($any($event.target).value)"
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold text-slate-600" for="flt-gstin">GSTIN</label>
+            <input
+              id="flt-gstin"
+              type="search"
+              autocomplete="off"
+              class="rounded-lg border border-slate-200 px-3 py-2 font-mono text-sm uppercase shadow-inner focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+              [value]="filterGstin()"
+              (input)="filterGstin.set($any($event.target).value)"
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold text-slate-600" for="flt-dt">Date contains</label>
+            <input
+              id="flt-dt"
+              type="search"
+              autocomplete="off"
+              placeholder="e.g. 04/2026"
+              class="rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-inner focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+              [value]="filterDate()"
+              (input)="filterDate.set($any($event.target).value)"
+            />
+          </div>
+        </div>
+      </section>
+    }
+
+    @if (loading()) {
+      <div class="space-y-3" aria-busy="true" aria-label="Loading section">
+        @for (s of [1, 2, 3, 4, 5]; track s) {
+          <div class="h-12 animate-pulse rounded-lg bg-slate-200/90"></div>
+        }
+      </div>
+    } @else if (viewState() === 'error') {
+      <div class="space-y-4">
+        @if (logicalErrorText()) {
+          <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-amber-950 shadow-sm">
+            <p class="text-sm font-bold">Unable to load section</p>
+            <p class="mt-1 text-sm">{{ logicalErrorText() }}</p>
+          </div>
+        }
+        @if (httpError() !== null) {
+          <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-5 text-red-950 shadow-sm">
+            <p class="text-sm font-bold">Request failed</p>
+            <pre class="mt-3 max-h-64 overflow-auto rounded border border-red-100 bg-white p-3 font-mono text-[11px] leading-relaxed text-red-900">{{ httpError() | json }}</pre>
+          </div>
+        }
+      </div>
+    } @else if (viewState() === 'empty' && mergedRows().length === 0) {
+      <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+        <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-3xl text-slate-400" aria-hidden="true">
+          ∅
+        </div>
+        <p class="text-lg font-semibold text-slate-900">No processed records</p>
+        <p class="mt-2 max-w-md text-sm text-slate-600">
+          This section returned no rows from GSTZen. Use <span class="font-semibold">Add Record</span> or import EWB JSON to
+          stage drafts locally.
+        </p>
+      </div>
+    } @else {
+      <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
+        <h2 class="text-base font-bold text-[#222f3f]">Processed records</h2>
+        <p class="text-xs font-medium text-slate-500">{{ filteredRows().length }} shown · {{ mergedRows().length }} total</p>
+      </div>
+      @if (filteredRows().length === 0) {
+        <div class="rounded-xl border border-slate-200 bg-slate-50 px-6 py-12 text-center text-sm text-slate-700">
+          No rows match your filters · clear search boxes to see all records.
+        </div>
+      } @else {
+        <lib-gstr1-section-records-table
+          [rows]="filteredRows()"
+          [uiKind]="uiKind()"
+          [expandedIds]="expandedRowIds()"
+          [formatMoney]="formatMoneyFn"
+          (rowToggle)="toggleExpand($event)"
+        />
+      }
+
+      <section
+        class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-[#f6faf9] shadow-inner"
+        aria-label="Totals"
+      >
+        <div class="bg-[#2c4172] px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Totals (filtered view)</div>
+        <div class="grid gap-3 px-4 py-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div>
+            <p class="text-[10px] font-bold uppercase text-slate-500">Taxable</p>
+            <p class="text-sm font-bold tabular-nums text-teal-900">₹{{ formatMoney(totals().taxable) }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold uppercase text-slate-500">IGST</p>
+            <p class="text-sm font-bold tabular-nums">₹{{ formatMoney(totals().igst) }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold uppercase text-slate-500">CGST</p>
+            <p class="text-sm font-bold tabular-nums">₹{{ formatMoney(totals().cgst) }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold uppercase text-slate-500">SGST</p>
+            <p class="text-sm font-bold tabular-nums">₹{{ formatMoney(totals().sgst) }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold uppercase text-slate-500">Cess</p>
+            <p class="text-sm font-bold tabular-nums">₹{{ formatMoney(totals().cess) }}</p>
+          </div>
+        </div>
+      </section>
+    }
+
+    <div class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-6">
+      <a
+        [routerLink]="['/gstr1/workspace/gstr1-download']"
+        [queryParams]="backQueryParams()"
+        class="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-slate-800 bg-white px-6 text-sm font-bold uppercase tracking-wide text-slate-900 shadow-sm transition hover:bg-slate-50"
+      >
+        ← Back
+      </a>
+      <button
+        type="button"
+        class="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[#1c2b54] text-white shadow-md transition hover:bg-[#152347]"
+        (click)="scrollTop()"
+        aria-label="Scroll to top"
+        title="Scroll to top"
+      >
+        ↑
+      </button>
+    </div>
+  </section>
+</div>
+
+@if (addModalOpen()) {
+  <div
+    class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="add-record-title"
+  >
+    <button
+      type="button"
+      class="absolute inset-0 cursor-default bg-slate-900/50"
+      aria-label="Close dialog"
+      (click)="closeAddModal()"
+    ></button>
+    <div
+      class="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white shadow-2xl transition-all duration-200"
+    >
+      <div class="flex items-center justify-between border-b border-slate-200 bg-[#4db6ac] px-4 py-3">
+        <h2 id="add-record-title" class="text-sm font-bold uppercase tracking-wide text-white">Add record — {{ portalTitle() }}</h2>
+        <button type="button" class="text-white hover:text-slate-100" (click)="closeAddModal()" aria-label="Close">✕</button>
+      </div>
+      <form class="space-y-4 p-4" [formGroup]="recordForm" (ngSubmit)="saveLocalRecord()">
+        @switch (showModalFields(uiKind())) {
+          @case ('b2b') {
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="f-ctin">GSTIN</label>
+              <input id="f-ctin" formControlName="ctin" class="field" maxlength="15" />
+              @if (recordForm.controls.ctin.touched && recordForm.controls.ctin.invalid) {
+                <p class="text-xs text-red-600">Enter a valid 15-character GSTIN.</p>
+              }
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-inum">Invoice no.</label>
+                <input id="f-inum" formControlName="invoiceNo" class="field" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-idt">Invoice date</label>
+                <input id="f-idt" formControlName="invoiceDate" class="field" placeholder="DD/MM/YYYY" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="f-pos">POS (state code)</label>
+              <input id="f-pos" formControlName="pos" class="field" maxlength="2" />
+            </div>
+          }
+          @case ('b2c') {
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="f-pos2">Place of supply</label>
+              <input id="f-pos2" formControlName="pos" class="field" maxlength="2" />
+              @if (recordForm.controls.pos.touched && recordForm.controls.pos.invalid) {
+                <p class="text-xs text-red-600">POS is required.</p>
+              }
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-inum2">Invoice no.</label>
+                <input id="f-inum2" formControlName="invoiceNo" class="field" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-idt2">Invoice date</label>
+                <input id="f-idt2" formControlName="invoiceDate" class="field" placeholder="DD/MM/YYYY" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="f-rate">Rate %</label>
+              <input id="f-rate" formControlName="rate" class="field" />
+            </div>
+          }
+          @case ('exp') {
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-inum3">Invoice no.</label>
+                <input id="f-inum3" formControlName="invoiceNo" class="field" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-idt3">Invoice date</label>
+                <input id="f-idt3" formControlName="invoiceDate" class="field" placeholder="DD/MM/YYYY" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="f-gstp">GST payment</label>
+              <input id="f-gstp" formControlName="gstPayment" class="field" placeholder="Without Payment of Tax" />
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-sb">Shipping bill no.</label>
+                <input id="f-sb" formControlName="shippingBillNo" class="field" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-port">Port code</label>
+                <input id="f-port" formControlName="portCode" class="field" maxlength="6" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="f-expt">Export type</label>
+              <input id="f-expt" formControlName="exportType" class="field" />
+            </div>
+          }
+          @case ('hsn') {
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-hsn">HSN code</label>
+                <input id="f-hsn" formControlName="hsnCode" class="field" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-uqc">UQC</label>
+                <input id="f-uqc" formControlName="uqc" class="field" />
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="f-qty">Quantity</label>
+              <input id="f-qty" formControlName="quantity" class="field" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="f-desc">Description</label>
+              <input id="f-desc" formControlName="description" class="field" />
+            </div>
+          }
+          @case ('cdn') {
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="f-nn">Note number</label>
+              <input id="f-nn" formControlName="noteNumber" class="field" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="f-nd">Note date</label>
+              <input id="f-nd" formControlName="noteDate" class="field" placeholder="DD/MM/YYYY" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="f-nt">Note type</label>
+              <input id="f-nt" formControlName="noteType" class="field" placeholder="C / D" />
+            </div>
+            @if (uiKind() === 'cdnr') {
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-ctin4">Recipient GSTIN</label>
+                <input id="f-ctin4" formControlName="ctin" class="field" maxlength="15" />
+              </div>
+            }
+          }
+          @default {
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="f-ctin5">GSTIN</label>
+              <input id="f-ctin5" formControlName="ctin" class="field" maxlength="15" />
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-inum4">Document no.</label>
+                <input id="f-inum4" formControlName="invoiceNo" class="field" />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-700" for="f-idt4">Document date</label>
+                <input id="f-idt4" formControlName="invoiceDate" class="field" placeholder="DD/MM/YYYY" />
+              </div>
+            </div>
+          }
+        }
+
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-slate-700" for="f-val">Invoice / doc value</label>
+            <input id="f-val" formControlName="invoiceValue" class="field" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-slate-700" for="f-tx">Taxable value</label>
+            <input id="f-tx" formControlName="taxableTotal" class="field" />
+          </div>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-slate-700" for="f-igst">IGST</label>
+            <input id="f-igst" formControlName="igst" class="field" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-slate-700" for="f-cgst">CGST</label>
+            <input id="f-cgst" formControlName="cgst" class="field" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-slate-700" for="f-sgst">SGST</label>
+            <input id="f-sgst" formControlName="sgst" class="field" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-slate-700" for="f-cs">Cess</label>
+            <input id="f-cs" formControlName="cess" class="field" />
+          </div>
+        </div>
+        @if (showModalFields(uiKind()) === 'b2b') {
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-semibold text-slate-700" for="f-irn">IRN (optional)</label>
+            <input id="f-irn" formControlName="irn" class="field" />
+          </div>
+        }
+
+        <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+          <button type="button" class="btn-secondary" (click)="closeAddModal()">Cancel</button>
+          <button type="submit" class="btn-primary" [disabled]="recordForm.invalid">Save draft</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
