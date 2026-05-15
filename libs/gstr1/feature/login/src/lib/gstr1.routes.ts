@@ -80,6 +80,13 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/add-at-statewise',
+            loadComponent: () =>
+              import('./pages/gstr1-at-add-statewise.page').then(
+                (m) => m.Gstr1AtAddStatewisePageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(

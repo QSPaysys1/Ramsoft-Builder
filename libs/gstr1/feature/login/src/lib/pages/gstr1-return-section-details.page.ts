@@ -137,6 +137,14 @@ export class Gstr1ReturnSectionDetailsPageComponent {
     return a === 'cdnur' || a === 'cdnur-einv';
   });
 
+  /** 11A — `at[]` tax liability on advances (state-wise POS block). */
+  readonly isAtRetsaveWorkspace = computed(() => this.apiName() === 'at');
+
+  /** Primary action label on the section toolbar (`at` uses NIC wording). */
+  readonly addRecordPrimaryLabel = computed(() =>
+    this.apiName() === 'at' ? 'Add statewise details' : 'Add Record',
+  );
+
   readonly viewState = signal<ViewState>('idle');
   readonly loading = signal(false);
   readonly httpError = signal<unknown>(null);
@@ -495,6 +503,24 @@ export class Gstr1ReturnSectionDetailsPageComponent {
           this.gstin().trim().toUpperCase(),
           this.retPeriod().trim(),
           'add-cdnur',
+        ],
+        {
+          queryParams: {
+            filing_status: this.filingStatusLabel().trim() || undefined,
+            due_date: this.dueDateLabel().trim() || undefined,
+          },
+        },
+      );
+      return;
+    }
+    if (this.isAtRetsaveWorkspace()) {
+      void this.router.navigate(
+        [
+          '/gstr1/workspace/gstr1-download/section',
+          this.apiName(),
+          this.gstin().trim().toUpperCase(),
+          this.retPeriod().trim(),
+          'add-at-statewise',
         ],
         {
           queryParams: {
