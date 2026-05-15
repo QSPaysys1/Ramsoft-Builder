@@ -236,6 +236,8 @@
                         gstin: gstinSnap().trim().toUpperCase(),
                         ret_period: selectedRetPeriod(),
                         api_name: 'b2b',
+                        filing_status: statusLabel(c.kind),
+                        due_date: c.dueDateLine ?? undefined,
                       }"
                     >
                       View

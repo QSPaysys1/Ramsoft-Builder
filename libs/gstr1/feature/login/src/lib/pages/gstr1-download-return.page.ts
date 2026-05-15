@@ -10,8 +10,10 @@ import {
   PLATFORM_ID,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
+import { AuthStore } from '@ramsoft-builder/auth/data-access/auth';
+import { UserProfileRepository } from '@ramsoft-builder/e-invoices/data-access/einvoice';
 import {
   Gstr1GstnOtpApiService,
   GSTR1_DOWNLOAD_API_NAMES,
@@ -28,9 +30,126 @@ import {
   type Gstr1DownloadCtinGroup,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
 import { filter } from 'rxjs/operators';
-import { firstValueFrom } from 'rxjs';
+import { catchError, firstValueFrom, of, switchMap } from 'rxjs';
 
 type ViewState = 'idle' | 'loading' | 'success' | 'empty' | 'error';
+
+/** Portal section titles — same order as GST return workspace. */
+export const GSTR1_SUMMARY_SECTION_TITLES: readonly string[] = [
+  '4A, 4B, 6B, 6C - B2B, SEZ, DE Invoices',
+  '5 - B2C (Large) Invoices',
+  '6A - Exports Invoices',
+  '7 - B2C (Others)',
+  '8A, 8B, 8C, 8D - Nil Rated Supplies',
+  '9B - Credit / Debit Notes (Registered)',
+  '9B - Credit / Debit Notes (Unregistered)',
+  '11A(1), 11A(2) - Tax Liability (Advances Received)',
+  '11B(1), 11B(2) - Adjustment of Advances',
+  '12 - HSN-wise summary of outward supplies',
+  '13 - Documents Issued',
+  '14 - Supplies made through ECO',
+  '15 - Supplies U/s 9(5)',
+];
+
+/**
+ * Maps GSTZen `api_name` to summary tile indexes in {@link GSTR1_SUMMARY_SECTION_TITLES}.
+ */
+const GSTR1_SUMMARY_TILES_FOR_API: Readonly<
+  Partial<Record<Gstr1DownloadApiName, readonly number[]>>
+> = {
+  b2b: [0],
+  'b2b-einv': [0],
+  b2ba: [0],
+  b2cl: [1],
+  b2cla: [1],
+  exp: [2],
+  'exp-einv': [2],
+  expa: [2],
+  b2cs: [3],
+  b2csa: [3],
+  nil: [4],
+  cdnr: [5],
+  'cdnr-einv': [5],
+  cdnra: [5],
+  cdnur: [6],
+  'cdnur-einv': [6],
+  cdnura: [6],
+  at: [7],
+  ata: [7],
+  txp: [8],
+  txpa: [8],
+  hsnsum: [9],
+  ecom: [11],
+  ecoma: [11],
+  supeco: [12],
+  supecoa: [12],
+};
+
+/** Prefer this `api_name` when the user picks a dashboard tile index. Index 10 has no GSTZen bucket in current list. */
+const GSTR1_SECTION_CARD_PRIMARY_API: ReadonlyArray<Gstr1DownloadApiName | null> = [
+  'b2b',
+  'b2cl',
+  'exp',
+  'b2cs',
+  'nil',
+  'cdnr',
+  'cdnur',
+  'at',
+  'txp',
+  'hsnsum',
+  null,
+  'ecom',
+  'supeco',
+];
+
+function indianFyLabelFromMmYyyy(retPeriod: string): string {
+  if (!RETURN_PERIOD_REGEX.test(retPeriod)) {
+    return '—';
+  }
+  const mm = Number.parseInt(retPeriod.slice(0, 2), 10);
+  const yyyy = Number.parseInt(retPeriod.slice(2), 10);
+  const fyStart = mm >= 4 ? yyyy : yyyy - 1;
+  return `${fyStart}-${String(fyStart + 1).slice(-2)}`;
+}
+
+function monthNameFromMmYyyy(retPeriod: string): string {
+  if (!RETURN_PERIOD_REGEX.test(retPeriod)) {
+    return '—';
+  }
+  const mm = Number.parseInt(retPeriod.slice(0, 2), 10);
+  const yyyy = retPeriod.slice(2);
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  return `${months[mm - 1] ?? retPeriod} ${yyyy}`;
+}
+
+function pickProfileString(
+  obj: Record<string, unknown> | undefined,
+  keys: string[],
+): string {
+  if (!obj) {
+    return '';
+  }
+  for (const k of keys) {
+    const v = obj[k];
+    if (typeof v === 'string' && v.trim()) {
+      return v.trim();
+    }
+  }
+  return '';
+}
 
 function normalizeErrorEnvelope(err: unknown): unknown {
   if (err instanceof HttpErrorResponse) {
@@ -71,12 +190,27 @@ export class Gstr1DownloadReturnPageComponent {
   private readonly api = inject(Gstr1GstnOtpApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly authStore = inject(AuthStore);
+  private readonly userProfile = inject(UserProfileRepository);
 
   readonly apiNameOptions = GSTR1_DOWNLOAD_API_NAMES;
+  readonly summaryTitles = GSTR1_SUMMARY_SECTION_TITLES;
+  /** Exposed for template bindings (portal tile → primary `api_name`). */
+  readonly sectionCardPrimaryApis = GSTR1_SECTION_CARD_PRIMARY_API;
 
   readonly gstin = signal('');
   readonly retPeriod = signal('');
   readonly apiName = signal<Gstr1DownloadApiName>('b2b');
+  /** Return filing status label from dashboard / query. */
+  readonly filingStatusLabel = signal('');
+  /** Due date label (query `due_date`); not supplied by download API. */
+  readonly dueDateLabel = signal('');
+
+  readonly legalName = signal('');
+  readonly tradeName = signal('');
+
+  readonly fileNilGstr1 = signal(false);
+  readonly addRecordOpen = signal(true);
 
   readonly filterQuery = signal('');
 
@@ -96,6 +230,24 @@ export class Gstr1DownloadReturnPageComponent {
   readonly filteredHierarchy = computed(() =>
     filterGstr1DownloadHierarchy([...this.hierarchy()], this.filterQuery()),
   );
+
+  readonly fyLabel = computed(() => indianFyLabelFromMmYyyy(this.retPeriod().trim()));
+  readonly taxPeriodLabel = computed(() => monthNameFromMmYyyy(this.retPeriod().trim()));
+
+  readonly summaryCounts = computed(() => {
+    const out = this.summaryTitles.map(() => 0);
+    const agg = this.aggregate();
+    const st = this.viewState();
+    if ((st === 'success' || st === 'empty') && agg) {
+      const indices = GSTR1_SUMMARY_TILES_FOR_API[this.apiName()];
+      if (indices?.length) {
+        for (const i of indices) {
+          out[i] = agg.invoiceCount;
+        }
+      }
+    }
+    return out;
+  });
 
   /** True when every filtered CTIN and every invoice under it shows its line-detail table. */
   readonly accordionFullyExpanded = computed(() => {
@@ -136,6 +288,38 @@ export class Gstr1DownloadReturnPageComponent {
         this.syncQueryIntoSignals(this.route.snapshot.queryParamMap);
       });
 
+    toObservable(this.authStore.user)
+      .pipe(
+        switchMap((user) => {
+          if (!user?.id) {
+            return of(undefined);
+          }
+          return this.userProfile.watchProfileData(user.id).pipe(
+            catchError(() => of(undefined)),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((prof) => {
+        const p = prof as Record<string, unknown> | undefined;
+        this.legalName.set(
+          pickProfileString(p, [
+            'legalName',
+            'LegalName',
+            'legal_name',
+            'companyName',
+            'CompanyName',
+            'organizationName',
+            'OrganizationName',
+            'name',
+            'Name',
+          ]),
+        );
+        this.tradeName.set(
+          pickProfileString(p, ['tradeName', 'TradeName', 'trade_name', 'dba']),
+        );
+      });
+
     afterNextRender(() => {
       const runAutoFetch = (): void => {
         const g = this.gstin().trim().toUpperCase();
@@ -152,6 +336,8 @@ export class Gstr1DownloadReturnPageComponent {
     const g = (q.get('gstin') ?? '').trim().toUpperCase();
     const r = (q.get('ret_period') ?? '').trim();
     const a = coerceGstr1DownloadApiName(q.get('api_name'));
+    const filing = (q.get('filing_status') ?? '').trim();
+    const due = (q.get('due_date') ?? '').trim();
     if (g) {
       this.gstin.set(g);
     }
@@ -159,6 +345,12 @@ export class Gstr1DownloadReturnPageComponent {
       this.retPeriod.set(r);
     }
     this.apiName.set(a);
+    if (filing) {
+      this.filingStatusLabel.set(filing);
+    }
+    if (due) {
+      this.dueDateLabel.set(due);
+    }
   }
 
   updateGstin(value: string): void {
@@ -173,6 +365,43 @@ export class Gstr1DownloadReturnPageComponent {
     this.apiName.set(coerceGstr1DownloadApiName(value));
   }
 
+  toggleAddRecordSection(): void {
+    this.addRecordOpen.update((v) => !v);
+  }
+
+  toggleFileNil(): void {
+    this.fileNilGstr1.update((v) => !v);
+  }
+
+  summaryTileActive(index: number): boolean {
+    const indices = GSTR1_SUMMARY_TILES_FOR_API[this.apiName()];
+    return indices?.includes(index) ?? false;
+  }
+
+  /** Choose section from portal grid: sets API and loads data. */
+  onSectionCardClick(index: number): void {
+    const primary = GSTR1_SECTION_CARD_PRIMARY_API[index];
+    if (!primary || this.loading()) {
+      return;
+    }
+    this.apiName.set(primary);
+    void this.fetchFromApi();
+  }
+
+  openEInvoiceAdvisory(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+    window.open('https://einvoice1.gst.gov.in/', '_blank', 'noopener,noreferrer');
+  }
+
+  openGstHelp(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+    window.open('https://www.gst.gov.in/', '_blank', 'noopener,noreferrer');
+  }
+
   paramsValid(): boolean {
     const g = this.gstin().trim();
     const r = this.retPeriod().trim();
@@ -185,6 +414,12 @@ export class Gstr1DownloadReturnPageComponent {
     }
     if (!this.paramsValid()) {
       this.logicalErrorText.set('Enter a valid 15-character GSTIN and return period (MMYYYY).');
+      this.httpError.set(null);
+      this.viewState.set('error');
+      return;
+    }
+    if (this.fileNilGstr1()) {
+      this.logicalErrorText.set('Nil GSTR-1 is selected; clear the checkbox to download section data.');
       this.httpError.set(null);
       this.viewState.set('error');
       return;
@@ -390,6 +625,8 @@ export class Gstr1DownloadReturnPageComponent {
         gstin: this.gstin().trim().toUpperCase() || undefined,
         ret_period: this.retPeriod().trim() || undefined,
         api_name: this.apiName(),
+        filing_status: this.filingStatusLabel().trim() || undefined,
+        due_date: this.dueDateLabel().trim() || undefined,
       },
       queryParamsHandling: 'merge',
       replaceUrl: true,
