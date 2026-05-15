@@ -31,8 +31,7 @@ import { INDIAN_STATE_POS_OPTIONS } from '../constants/indian-state-pos.options'
 import { fetchGstinTaxpayerDisplayNames$ } from '../utils/gstin-search-taxpayer.utils';
 import { indianGstinValidator, isIndianGstinFormat } from '../validators/indian-gstin.validator';
 
-/** Rate slabs matching GST portal B2B item grid (percent). */
-export const B2B_GSTR1_RATE_SLABS = [
+const CDNR_RATE_SLABS = [
   0, 0.1, 0.25, 1, 1.5, 3, 5, 6, 7.5, 12, 18, 28, 40,
 ] as const;
 
@@ -40,7 +39,6 @@ function stripAmountCommas(raw: string): string {
   return raw.replace(/,/g, '').trim();
 }
 
-/** NIC invoice date: calendar ISO (YYYY-MM-DD), DD/MM/YYYY, or DD-MM-YYYY → DD-MM-YYYY. */
 function toNicDate(value: string): string {
   const v = value.trim();
   const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
@@ -65,7 +63,6 @@ function formatIndianIntegerDigits(digits: string): string {
   return parts.join(',');
 }
 
-/** Display amount like 5,56,930.30 (Indian grouping). */
 function formatIndianInvoiceAmountDisplay(raw: string): string {
   const s = stripAmountCommas(raw);
   if (!s) {
@@ -101,17 +98,8 @@ function indianInvoiceAmountValidator(control: AbstractControl): ValidationError
   return null;
 }
 
-function optionalGstinValidator(control: AbstractControl): ValidationErrors | null {
-  const raw = (control.value as string | null | undefined)?.trim();
-  if (!raw) {
-    return null;
-  }
-  return indianGstinValidator(control);
-}
-
 const OPTIONAL_AMOUNT = Validators.pattern(/^$|^\d+(\.\d{1,2})?$/);
 
-/** Demo trade-name lookup until master API exists (portal-style preview). */
 const DEMO_RECIPIENT_TRADE_BY_GSTIN: Readonly<Record<string, string>> = {
   '37BFNPA6643G2ZC': 'VENKATA RAMANA TRADERS',
   '01AAAAP1208Q1ZS': 'Registered Customer (demo)',
@@ -119,15 +107,15 @@ const DEMO_RECIPIENT_TRADE_BY_GSTIN: Readonly<Record<string, string>> = {
 };
 
 @Component({
-  selector: 'lib-gstr1-b2b-add-record-page',
+  selector: 'lib-gstr1-cdnr-add-record-page',
   standalone: true,
   imports: [JsonPipe, RouterLink, ReactiveFormsModule],
-  templateUrl: './gstr1-b2b-add-record.page.html',
+  templateUrl: './gstr1-cdnr-add-record.page.html',
   styleUrl: './gstr1-b2b-add-record.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block min-h-[60vh]' },
 })
-export class Gstr1B2bAddRecordPageComponent {
+export class Gstr1CdnrAddRecordPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -136,7 +124,7 @@ export class Gstr1B2bAddRecordPageComponent {
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  readonly apiName = signal<Gstr1DownloadApiName>('b2b');
+  readonly apiName = signal<Gstr1DownloadApiName>('cdnr');
   readonly filerGstin = signal('');
   readonly retPeriod = signal('');
   readonly filingStatusLabel = signal('');
@@ -145,7 +133,6 @@ export class Gstr1B2bAddRecordPageComponent {
   readonly saveSubmitting = signal(false);
   readonly saveError = signal<unknown>(null);
   readonly saveSuccessPayload = signal<unknown>(null);
-
   readonly requestPayloadJson = signal<string>('');
 
   readonly recipientTradeName = signal('');
@@ -153,20 +140,24 @@ export class Gstr1B2bAddRecordPageComponent {
   readonly gstinLookupLoading = signal(false);
 
   readonly statePosOptions = INDIAN_STATE_POS_OPTIONS;
-  readonly rateSlabs = B2B_GSTR1_RATE_SLABS;
+  readonly rateSlabs = CDNR_RATE_SLABS;
 
   readonly form = this.fb.group({
-    ctin: ['', [Validators.required, indianGstinValidator]],
-    inum: ['', Validators.required],
-    idt: ['', [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
-    val: ['', [Validators.required, indianInvoiceAmountValidator]],
-    pos: ['', [Validators.required, Validators.pattern(/^\d{2}$/)]],
+    chkDeemedExport: [false],
+    chkSezWithPayment: [false],
+    chkSezWithoutPayment: [false],
     chkRchrg: [false],
+    chkIntraIgst: [false],
     chkDiffRate: [false],
     diffPercent: ['', OPTIONAL_AMOUNT],
-    etin: ['', optionalGstinValidator],
+    ctin: ['', [Validators.required, indianGstinValidator]],
+    nt_num: ['', Validators.required],
+    nt_dt: ['', [Validators.required, Validators.pattern(/^\d{4}-\d{2}-\d{2}$/)]],
+    ntty: ['C', Validators.required],
+    val: ['', [Validators.required, indianInvoiceAmountValidator]],
+    pos: ['', [Validators.required, Validators.pattern(/^\d{2}$/)]],
     rateRows: this.fb.array(
-      B2B_GSTR1_RATE_SLABS.map(() =>
+      CDNR_RATE_SLABS.map(() =>
         this.fb.group({
           txval: ['', OPTIONAL_AMOUNT],
           iamt: ['', OPTIONAL_AMOUNT],
@@ -199,13 +190,14 @@ export class Gstr1B2bAddRecordPageComponent {
       this.apiName.set(api);
       this.filerGstin.set(g);
       this.retPeriod.set(rp);
-      if (api !== 'b2b' && api !== 'b2b-einv') {
+      if (api !== 'cdnr' && api !== 'cdnr-einv') {
         void this.router.navigate(['/gstr1/workspace/gstr1-download/section', api, g, rp], {
           replaceUrl: true,
         });
       }
       this.refreshRequestPayloadPreview();
     });
+
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((qm) => {
       this.filingStatusLabel.set((qm.get('filing_status') ?? '').trim());
       this.dueDateLabel.set((qm.get('due_date') ?? '').trim());
@@ -233,16 +225,19 @@ export class Gstr1B2bAddRecordPageComponent {
     return this.form.controls.rateRows;
   }
 
-  isIntraStateSupply(): boolean {
+  supplyTypeLabel(): string {
     const pos = this.form.controls.pos.value?.trim() ?? '';
     const filer = this.filerGstin().trim().toUpperCase();
     if (pos.length !== 2 || filer.length !== 15) {
-      return false;
+      return '—';
     }
-    return pos === filer.slice(0, 2);
+    return pos === filer.slice(0, 2) ? 'Intra-State' : 'Inter-State';
   }
 
-  /** Inline validation: show errors as soon as the field is dirty or touched. */
+  isIntraStateSupply(): boolean {
+    return this.supplyTypeLabel() === 'Intra-State';
+  }
+
   showFieldError(ctrl: AbstractControl): boolean {
     return ctrl.invalid && (ctrl.dirty || ctrl.touched);
   }
@@ -255,20 +250,6 @@ export class Gstr1B2bAddRecordPageComponent {
       c.setValue(stripped, { emitEvent: false });
       c.updateValueAndValidity({ emitEvent: false });
     }
-    this.cdr.markForCheck();
-  }
-
-  onInvoiceValBlur(): void {
-    const c = this.form.controls.val;
-    const stripped = stripAmountCommas((c.value ?? '').toString());
-    if (!stripped) {
-      c.setValue('', { emitEvent: true });
-      c.updateValueAndValidity();
-      this.cdr.markForCheck();
-      return;
-    }
-    c.setValue(formatIndianInvoiceAmountDisplay(stripped), { emitEvent: true });
-    c.updateValueAndValidity();
     this.cdr.markForCheck();
   }
 
@@ -290,6 +271,20 @@ export class Gstr1B2bAddRecordPageComponent {
     event?.preventDefault();
     event?.stopPropagation();
     this.applyRecipientGstinLookup();
+  }
+
+  onInvoiceValBlur(): void {
+    const c = this.form.controls.val;
+    const stripped = stripAmountCommas((c.value ?? '').toString());
+    if (!stripped) {
+      c.setValue('', { emitEvent: true });
+      c.updateValueAndValidity();
+      this.cdr.markForCheck();
+      return;
+    }
+    c.setValue(formatIndianInvoiceAmountDisplay(stripped), { emitEvent: true });
+    c.updateValueAndValidity();
+    this.cdr.markForCheck();
   }
 
   private async runRecipientGstinLookup(gstin: string): Promise<void> {
@@ -322,15 +317,11 @@ export class Gstr1B2bAddRecordPageComponent {
     this.recipientMasterName.set('');
   }
 
-  addRecipientToMaster(): void {
-    void this.router.navigate(['/gstr1/workspace/returns-dashboard']);
-  }
-
   paramsValid(): boolean {
     return (
       this.filerGstin().length === 15 &&
       RETURN_PERIOD_REGEX.test(this.retPeriod().trim()) &&
-      (this.apiName() === 'b2b' || this.apiName() === 'b2b-einv')
+      (this.apiName() === 'cdnr' || this.apiName() === 'cdnr-einv')
     );
   }
 
@@ -361,6 +352,23 @@ export class Gstr1B2bAddRecordPageComponent {
     return Number.isFinite(n) ? n : 0;
   }
 
+  private resolveInvTyp(fv: {
+    chkDeemedExport: boolean;
+    chkSezWithPayment: boolean;
+    chkSezWithoutPayment: boolean;
+  }): string {
+    if (fv.chkDeemedExport) {
+      return 'DE';
+    }
+    if (fv.chkSezWithPayment) {
+      return 'SEWP';
+    }
+    if (fv.chkSezWithoutPayment) {
+      return 'SEWOP';
+    }
+    return 'R';
+  }
+
   private refreshRequestPayloadPreview(): void {
     const p = this.buildRetsavePayload();
     this.requestPayloadJson.set(
@@ -379,13 +387,17 @@ export class Gstr1B2bAddRecordPageComponent {
       chkDiffRate: boolean;
       diffPercent: string;
       ctin: string;
-      inum: string;
-      idt: string;
+      nt_num: string;
+      nt_dt: string;
+      ntty: string;
       val: string;
       pos: string;
-      etin: string;
       chkRchrg: boolean;
+      chkDeemedExport: boolean;
+      chkSezWithPayment: boolean;
+      chkSezWithoutPayment: boolean;
     };
+    const dpfRaw = fv.diffPercent?.trim();
 
     const intra = this.isIntraStateSupply();
     const itms: { num: number; itm_det: Record<string, unknown> }[] = [];
@@ -398,9 +410,9 @@ export class Gstr1B2bAddRecordPageComponent {
       samt: string;
     }[];
 
-    for (let i = 0; i < B2B_GSTR1_RATE_SLABS.length; i++) {
+    for (let i = 0; i < CDNR_RATE_SLABS.length; i++) {
       const row = rowVals[i];
-      const rt = B2B_GSTR1_RATE_SLABS[i];
+      const rt = CDNR_RATE_SLABS[i];
       const txval = this.parseAmt(row?.txval);
       let iamt = this.parseAmt(row?.iamt);
       let camt = this.parseAmt(row?.camt);
@@ -432,42 +444,37 @@ export class Gstr1B2bAddRecordPageComponent {
     }
 
     const parseN = (s: string): number => Number.parseFloat(stripAmountCommas(s));
-    const inv: Record<string, unknown> = {
-      inum: (fv.inum ?? '').trim(),
-      idt: toNicDate((fv.idt ?? '').trim()),
-      val: parseN(fv.val ?? ''),
+    const nt: Record<string, unknown> = {
+      ntty: (fv.ntty ?? 'C').trim().toUpperCase().charAt(0),
+      nt_num: (fv.nt_num ?? '').trim(),
+      nt_dt: toNicDate((fv.nt_dt ?? '').trim()),
       pos: (fv.pos ?? '').trim(),
       rchrg: fv.chkRchrg ? 'Y' : 'N',
-      inv_typ: 'R',
+      inv_typ: this.resolveInvTyp(fv),
+      val: parseN(fv.val ?? ''),
       itms,
     };
 
-    const etin = fv.etin?.trim();
-    if (etin) {
-      inv['etin'] = etin.toUpperCase();
-    }
-    const dpf = fv.diffPercent?.trim();
-    if (fv.chkDiffRate && dpf) {
-      inv['diff_percent'] = parseN(dpf);
+    if (fv.chkDiffRate && dpfRaw) {
+      nt['diff_percent'] = parseN(dpfRaw);
     }
 
-    const turnoverFromInvoice = parseN(fv.val ?? '');
+    const turnoverFromNote = parseN(fv.val ?? '');
 
     return {
       fp: this.retPeriod().trim(),
       gstin: this.filerGstin().trim().toUpperCase(),
-      gt: turnoverFromInvoice,
-      cur_gt: turnoverFromInvoice,
-      b2b: [
+      gt: turnoverFromNote,
+      cur_gt: turnoverFromNote,
+      cdnr: [
         {
           ctin: (fv.ctin ?? '').trim().toUpperCase(),
-          inv: [inv],
+          nt: [nt],
         },
       ],
     };
   }
 
-  /** True when any slab row has non-zero taxable / tax. */
   private rateGridHasData(): boolean {
     const rows = this.rateRows.getRawValue() as {
       txval: string;

@@ -125,6 +125,12 @@ export class Gstr1ReturnSectionDetailsPageComponent {
   /** B2C (small) — NIC-style flat `b2cs[]` line on full-page form. */
   readonly isB2csRetsaveWorkspace = computed(() => this.apiName() === 'b2cs');
 
+  /** 9B CDNR — `cdnr[]` retsave bucket (registered credit/debit notes). */
+  readonly isCdnrRetsaveWorkspace = computed(() => {
+    const a = this.apiName();
+    return a === 'cdnr' || a === 'cdnr-einv';
+  });
+
   readonly viewState = signal<ViewState>('idle');
   readonly loading = signal(false);
   readonly httpError = signal<unknown>(null);
@@ -447,6 +453,24 @@ export class Gstr1ReturnSectionDetailsPageComponent {
           this.gstin().trim().toUpperCase(),
           this.retPeriod().trim(),
           'add-b2cs',
+        ],
+        {
+          queryParams: {
+            filing_status: this.filingStatusLabel().trim() || undefined,
+            due_date: this.dueDateLabel().trim() || undefined,
+          },
+        },
+      );
+      return;
+    }
+    if (this.isCdnrRetsaveWorkspace()) {
+      void this.router.navigate(
+        [
+          '/gstr1/workspace/gstr1-download/section',
+          this.apiName(),
+          this.gstin().trim().toUpperCase(),
+          this.retPeriod().trim(),
+          'add-cdnr',
         ],
         {
           queryParams: {

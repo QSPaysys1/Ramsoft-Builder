@@ -66,6 +66,13 @@ export const gstr1Routes: Routes = [
               import('./pages/gstr1-nil-supplies.page').then((m) => m.Gstr1NilSuppliesPageComponent),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/add-cdnr',
+            loadComponent: () =>
+              import('./pages/gstr1-cdnr-add-record.page').then(
+                (m) => m.Gstr1CdnrAddRecordPageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(
