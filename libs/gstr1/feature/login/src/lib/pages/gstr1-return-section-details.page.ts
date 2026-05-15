@@ -113,6 +113,15 @@ export class Gstr1ReturnSectionDetailsPageComponent {
     return a === 'b2b' || a === 'b2b-einv';
   });
 
+  /** B2C (Large) uses NIC-style `b2cl` retsave bucket — full-page form like B2B (no recipient GSTIN). */
+  readonly isB2clRetsaveWorkspace = computed(() => this.apiName() === 'b2cl');
+
+  /** 6A Exports — portal-style full-page add (`exp` / `exp-einv`). */
+  readonly isExpRetsaveWorkspace = computed(() => {
+    const a = this.apiName();
+    return a === 'exp' || a === 'exp-einv';
+  });
+
   readonly viewState = signal<ViewState>('idle');
   readonly loading = signal(false);
   readonly httpError = signal<unknown>(null);
@@ -381,6 +390,42 @@ export class Gstr1ReturnSectionDetailsPageComponent {
           this.gstin().trim().toUpperCase(),
           this.retPeriod().trim(),
           'add-b2b',
+        ],
+        {
+          queryParams: {
+            filing_status: this.filingStatusLabel().trim() || undefined,
+            due_date: this.dueDateLabel().trim() || undefined,
+          },
+        },
+      );
+      return;
+    }
+    if (this.isB2clRetsaveWorkspace()) {
+      void this.router.navigate(
+        [
+          '/gstr1/workspace/gstr1-download/section',
+          this.apiName(),
+          this.gstin().trim().toUpperCase(),
+          this.retPeriod().trim(),
+          'add-b2cl',
+        ],
+        {
+          queryParams: {
+            filing_status: this.filingStatusLabel().trim() || undefined,
+            due_date: this.dueDateLabel().trim() || undefined,
+          },
+        },
+      );
+      return;
+    }
+    if (this.isExpRetsaveWorkspace()) {
+      void this.router.navigate(
+        [
+          '/gstr1/workspace/gstr1-download/section',
+          this.apiName(),
+          this.gstin().trim().toUpperCase(),
+          this.retPeriod().trim(),
+          'add-exp',
         ],
         {
           queryParams: {

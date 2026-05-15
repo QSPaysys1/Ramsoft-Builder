@@ -40,6 +40,20 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/add-b2cl',
+            loadComponent: () =>
+              import('./pages/gstr1-b2cl-add-record.page').then(
+                (m) => m.Gstr1B2clAddRecordPageComponent,
+              ),
+          },
+          {
+            path: 'section/:apiName/:gstin/:retPeriod/add-exp',
+            loadComponent: () =>
+              import('./pages/gstr1-exp-add-record.page').then(
+                (m) => m.Gstr1ExpAddRecordPageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(

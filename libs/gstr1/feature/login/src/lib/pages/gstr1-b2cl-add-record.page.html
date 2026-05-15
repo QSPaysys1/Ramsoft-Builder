@@ -1,0 +1,257 @@
+<div class="gstr1-b2b-add pb-16">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a [routerLink]="['/gstr1/workspace/gstr1-download']" class="text-[#1a56a7] hover:underline">GSTR-1/IFF</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a [routerLink]="backUrl()" [queryParams]="backQueryParams()" class="text-[#1a56a7] hover:underline">B2CL</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <span class="font-semibold text-slate-900" aria-current="page">Add invoice</span>
+      </li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">
+      English
+    </span>
+  </nav>
+
+  <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+    <div class="flex flex-col gap-2 px-4 py-4 md:flex-row md:items-start md:justify-between md:px-6 md:py-5">
+      <div class="flex gap-3">
+        <a
+          [routerLink]="backUrl()"
+          [queryParams]="backQueryParams()"
+          class="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/15 text-white hover:bg-white/25"
+          aria-label="Back"
+        >
+          ←
+        </a>
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-white/90">GSTR-1 · RETSAVE</p>
+          <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">B2C (Large) — Add Invoice</h1>
+          <p class="mt-1 text-xs text-white/95 md:text-sm">
+            <span class="font-mono">{{ filerGstin() }}</span> · Return period <span class="font-mono">{{ retPeriod() }}</span>
+          </p>
+        </div>
+      </div>
+      <p class="text-xs font-medium text-white md:text-right"><span class="text-red-200">*</span> Indicates mandatory fields</p>
+    </div>
+  </header>
+
+  <section class="rounded-b-xl border border-t-0 border-slate-200 bg-white px-4 py-5 shadow-md md:px-6 md:py-6">
+    @if (!paramsValid()) {
+      <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+        Invalid GSTIN or return period in the URL. Go back and open this screen from the B2C (Large) tile again.
+      </div>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
+        <section class="rounded-xl border border-slate-200 bg-slate-50/90 p-4 md:p-5">
+          <h2 class="mb-3 text-xs font-bold uppercase tracking-wide text-[#1c2b54]">Supply conditions</h2>
+          <label class="flex cursor-pointer items-start gap-2 text-xs font-medium text-slate-800">
+            <input type="checkbox" formControlName="chkDiffRate" class="mt-0.5" />
+            <span>
+              Is the supply eligible to be taxed at a differential percentage (%) of the existing rate of tax, as notified by the Government?
+            </span>
+          </label>
+          @if (form.controls.chkDiffRate.value) {
+            <div class="mt-3 max-w-xs">
+              <label class="text-xs font-semibold text-slate-700" for="b2cl-diff-pct">Differential rate (%) <span class="text-red-600">*</span></label>
+              <input
+                id="b2cl-diff-pct"
+                class="field mt-1"
+                type="text"
+                inputmode="decimal"
+                formControlName="diffPercent"
+                [class.field-error]="showFieldError(form.controls.diffPercent)"
+              />
+              @if (showFieldError(form.controls.diffPercent)) {
+                <p class="text-xs text-red-600">Enter a valid differential rate (%).</p>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+          <h2 class="mb-4 text-xs font-bold uppercase tracking-wide text-[#1c2b54]">Invoice details</h2>
+          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="b2cl-inum">Invoice no. <span class="text-red-600">*</span></label>
+              <input
+                id="b2cl-inum"
+                class="field font-mono"
+                [class.field-error]="showFieldError(form.controls.inum)"
+                formControlName="inum"
+                autocomplete="off"
+              />
+              @if (showFieldError(form.controls.inum)) {
+                <p class="text-xs text-red-600">Invoice number is required.</p>
+              }
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="b2cl-idt">Invoice date <span class="text-red-600">*</span></label>
+              <input
+                id="b2cl-idt"
+                type="date"
+                class="field min-h-[42px]"
+                [class.field-error]="showFieldError(form.controls.idt)"
+                formControlName="idt"
+              />
+              @if (showFieldError(form.controls.idt)) {
+                <p class="text-xs text-red-600">Choose a valid invoice date.</p>
+              }
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="b2cl-val">Total invoice value (₹) <span class="text-red-600">*</span></label>
+              <input
+                id="b2cl-val"
+                class="field text-right font-mono tabular-nums"
+                type="text"
+                inputmode="decimal"
+                formControlName="val"
+                placeholder="e.g. 5,56,930.30"
+                (focus)="onInvoiceValFocus()"
+                (blur)="onInvoiceValBlur()"
+                [class.field-error]="showFieldError(form.controls.val)"
+              />
+              @if (showFieldError(form.controls.val)) {
+                <p class="text-xs text-red-600">Enter a valid amount (₹), up to 2 decimal places.</p>
+              }
+            </div>
+            <div class="flex flex-col gap-1 lg:col-span-2">
+              <label class="text-xs font-semibold text-slate-700" for="b2cl-pos">POS <span class="text-red-600">*</span></label>
+              <select
+                id="b2cl-pos"
+                class="field min-h-[42px]"
+                formControlName="pos"
+                [class.field-error]="showFieldError(form.controls.pos)"
+              >
+                <option value="">Select place of supply</option>
+                @for (opt of statePosOptions; track opt.code) {
+                  <option [value]="opt.code">{{ opt.label }}</option>
+                }
+              </select>
+              @if (showFieldError(form.controls.pos)) {
+                <p class="text-xs text-red-600">Select place of supply (POS).</p>
+              }
+            </div>
+            <div class="flex flex-col gap-1">
+              <span class="text-xs font-semibold text-slate-700">Supply type</span>
+              <input class="field-readonly" readonly tabindex="-1" [value]="supplyTypeLabel()" aria-label="Supply type" />
+            </div>
+            <div class="hidden" aria-hidden="true">
+              <div class="flex flex-col gap-1 lg:col-span-2">
+                <label class="text-xs font-semibold text-slate-700" for="b2cl-etin">E-commerce GSTIN (optional)</label>
+                <input
+                  id="b2cl-etin"
+                  class="field font-mono uppercase"
+                  maxlength="15"
+                  formControlName="etin"
+                  [class.field-error]="showFieldError(form.controls.etin)"
+                />
+                @if (showFieldError(form.controls.etin)) {
+                  <p class="text-xs text-red-600">Enter a valid GSTIN or leave blank.</p>
+                }
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+          <h2 class="mb-3 text-xs font-bold uppercase tracking-wide text-[#1c2b54]">Item details</h2>
+          <p class="mb-3 text-xs text-slate-600">
+            Enter amounts only on rows that apply. Taxable value and tax columns marked <span class="text-red-600">*</span> are required when you use a row.
+          </p>
+          <div class="overflow-x-auto rounded-lg border border-slate-200">
+            <table class="b2b-rate-grid w-full min-w-[640px] border-collapse text-left text-xs">
+              <thead class="bg-slate-100 text-[10px] font-bold uppercase tracking-wide text-slate-700">
+                <tr>
+                  <th class="border-b border-slate-200 px-2 py-2" rowspan="2">Rate (%)</th>
+                  <th class="border-b border-slate-200 px-2 py-2" rowspan="2">Taxable value (₹) <span class="text-red-600">*</span></th>
+                  <th class="border-b border-slate-200 px-2 py-2 text-center" [attr.colspan]="isIntraStateSupply() ? 3 : 2">
+                    Amount of tax
+                  </th>
+                </tr>
+                <tr>
+                  @if (isIntraStateSupply()) {
+                    <th class="border-b border-slate-200 px-2 py-2">Central tax (₹) <span class="text-red-600">*</span></th>
+                    <th class="border-b border-slate-200 px-2 py-2">State/UT tax (₹) <span class="text-red-600">*</span></th>
+                  } @else {
+                    <th class="border-b border-slate-200 px-2 py-2">Integrated tax (₹) <span class="text-red-600">*</span></th>
+                  }
+                  <th class="border-b border-slate-200 px-2 py-2">Cess (₹)</th>
+                </tr>
+              </thead>
+              <tbody formArrayName="rateRows">
+                @for (slab of rateSlabs; track slab; let i = $index) {
+                  <tr [formGroupName]="i" class="border-t border-slate-100">
+                    <td class="px-2 py-2 align-middle font-mono text-[11px] font-semibold">{{ slab }}</td>
+                    <td class="px-2 py-2 align-top">
+                      <input class="field !py-1.5 text-[11px]" formControlName="txval" inputmode="decimal" />
+                    </td>
+                    @if (isIntraStateSupply()) {
+                      <td class="px-2 py-2 align-top">
+                        <input class="field !py-1.5 text-[11px]" formControlName="camt" inputmode="decimal" />
+                      </td>
+                      <td class="px-2 py-2 align-top">
+                        <input class="field !py-1.5 text-[11px]" formControlName="samt" inputmode="decimal" />
+                      </td>
+                    } @else {
+                      <td class="px-2 py-2 align-top">
+                        <input class="field !py-1.5 text-[11px]" formControlName="iamt" inputmode="decimal" />
+                      </td>
+                    }
+                    <td class="px-2 py-2 align-top">
+                      <input class="field !py-1.5 text-[11px]" formControlName="csamt" inputmode="decimal" />
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        @if (saveError() !== null) {
+          <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-red-950">
+            <p class="text-sm font-bold">Retsave request failed</p>
+            <pre class="mt-2 max-h-56 overflow-auto rounded border border-red-100 bg-white p-3 font-mono text-[11px]">{{ saveError() | json }}</pre>
+          </div>
+        }
+
+        @if (saveSuccessPayload() !== null) {
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-emerald-950">
+            <p class="text-sm font-bold">Response</p>
+            <pre class="mt-2 max-h-56 overflow-auto rounded border border-emerald-100 bg-white p-3 font-mono text-[11px]">{{ saveSuccessPayload() | json }}</pre>
+          </div>
+        }
+
+        <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-6">
+          <a [routerLink]="backUrl()" [queryParams]="backQueryParams()" class="btn-secondary inline-flex items-center justify-center no-underline">Back</a>
+          <button type="submit" class="btn-primary" [disabled]="saveSubmitting() || form.invalid">
+            @if (saveSubmitting()) {
+              Submitting…
+            } @else {
+              Save
+            }
+          </button>
+        </div>
+
+        <section class="mt-6 rounded-xl border border-slate-300 bg-slate-50 p-4 md:p-5" aria-label="Request payload preview">
+          <h2 class="mb-2 text-xs font-bold uppercase tracking-wide text-[#1c2b54]">Request payload (JSON)</h2>
+          <p class="mb-2 text-[11px] text-slate-600">Body sent to GSTR-1 retsave — updates as you edit the form.</p>
+          <pre class="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded border border-slate-200 bg-white p-3 font-mono text-[11px] leading-relaxed text-slate-900">{{ requestPayloadJson() }}</pre>
+        </section>
+      </form>
+    }
+  </section>
+</div>
