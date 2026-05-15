@@ -54,6 +54,13 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/add-b2cs',
+            loadComponent: () =>
+              import('./pages/gstr1-b2cs-add-record.page').then(
+                (m) => m.Gstr1B2csAddRecordPageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(

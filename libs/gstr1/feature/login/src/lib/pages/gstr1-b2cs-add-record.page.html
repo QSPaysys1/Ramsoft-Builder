@@ -1,0 +1,192 @@
+<div class="gstr1-b2b-add pb-16">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a [routerLink]="['/gstr1/workspace/gstr1-download']" class="text-[#1a56a7] hover:underline">GSTR-1/IFF</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a [routerLink]="backUrl()" [queryParams]="backQueryParams()" class="text-[#1a56a7] hover:underline">B2CS</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <span class="font-semibold text-slate-900" aria-current="page">Add details</span>
+      </li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">
+      English
+    </span>
+  </nav>
+
+  <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+    <div class="flex flex-col gap-2 px-4 py-4 md:flex-row md:items-start md:justify-between md:px-6 md:py-5">
+      <div class="flex gap-3">
+        <a
+          [routerLink]="backUrl()"
+          [queryParams]="backQueryParams()"
+          class="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/60 bg-white/15 text-white hover:bg-white/25"
+          aria-label="Back"
+        >
+          ←
+        </a>
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-white/90">GSTR-1 · RETSAVE</p>
+          <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">B2CS — Add details</h1>
+          <p class="mt-1 text-xs text-white/95 md:text-sm">
+            <span class="font-mono">{{ filerGstin() }}</span> · Return period <span class="font-mono">{{ retPeriod() }}</span>
+          </p>
+        </div>
+      </div>
+      <p class="text-xs font-medium text-white md:text-right"><span class="text-red-200">*</span> Indicates mandatory fields</p>
+    </div>
+  </header>
+
+  <section class="rounded-b-xl border border-t-0 border-slate-200 bg-white px-4 py-5 shadow-md md:px-6 md:py-6">
+    @if (!paramsValid()) {
+      <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+        Invalid GSTIN or return period in the URL. Go back and open this screen from the B2C (Small) tile again.
+      </div>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
+        <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+          <h2 class="mb-4 text-xs font-bold uppercase tracking-wide text-[#1c2b54]">B2C (small) line</h2>
+          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="b2cs-pos">POS <span class="text-red-600">*</span></label>
+              <select
+                id="b2cs-pos"
+                class="field"
+                formControlName="pos"
+                [class.field-error]="showFieldError(form.controls.pos)"
+              >
+                <option value="">Select</option>
+                @for (s of statePosOptions; track s.code) {
+                  <option [value]="s.code">{{ s.label }}</option>
+                }
+              </select>
+              @if (showFieldError(form.controls.pos)) {
+                <p class="text-xs text-red-600">Place of supply is required.</p>
+              }
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="b2cs-txval">Taxable value (₹) <span class="text-red-600">*</span></label>
+              <input
+                id="b2cs-txval"
+                class="field text-right font-mono tabular-nums"
+                type="text"
+                inputmode="decimal"
+                formControlName="txval"
+                [class.field-error]="showFieldError(form.controls.txval)"
+                (focus)="onTxvalFocus()"
+                (blur)="onTxvalBlur()"
+              />
+              @if (showFieldError(form.controls.txval)) {
+                <p class="text-xs text-red-600">Enter a valid taxable value.</p>
+              }
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="b2cs-sply">Supply type</label>
+              <input
+                id="b2cs-sply"
+                type="text"
+                readonly
+                class="field field-readonly cursor-default bg-slate-50 text-slate-700"
+                [value]="supplyTypeLabel() + ' (' + supplyTypeCode() + ')'"
+              />
+            </div>
+
+            <div class="flex flex-col gap-1 md:col-span-2 lg:col-span-3">
+              <span class="text-xs font-semibold text-slate-700">Supplies through e-commerce operator?</span>
+              <div class="flex flex-wrap gap-4 pt-1">
+                <label class="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-slate-800">
+                  <input type="radio" formControlName="typ" value="OE" />
+                  Other than e-commerce (<span class="font-mono">OE</span>)
+                </label>
+                <label class="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-slate-800">
+                  <input type="radio" formControlName="typ" value="E" />
+                  E-commerce (<span class="font-mono">E</span>)
+                </label>
+              </div>
+            </div>
+
+            @if (form.controls.typ.value === 'E') {
+              <div class="flex flex-col gap-1 md:col-span-2">
+                <label class="text-xs font-semibold text-slate-700" for="b2cs-etin">E-commerce GSTIN <span class="text-red-600">*</span></label>
+                <input
+                  id="b2cs-etin"
+                  class="field font-mono uppercase"
+                  formControlName="etin"
+                  maxlength="15"
+                  autocomplete="off"
+                  [class.field-error]="showFieldError(form.controls.etin)"
+                />
+                @if (showFieldError(form.controls.etin)) {
+                  <p class="text-xs text-red-600">Enter a valid 15-character GSTIN.</p>
+                }
+              </div>
+            }
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="b2cs-rt">Rate <span class="text-red-600">*</span></label>
+              <select
+                id="b2cs-rt"
+                class="field"
+                formControlName="rt"
+                [class.field-error]="showFieldError(form.controls.rt)"
+              >
+                <option value="">Select</option>
+                @for (r of rateSlabs; track r) {
+                  <option [value]="r">{{ r }}%</option>
+                }
+              </select>
+              @if (showFieldError(form.controls.rt)) {
+                <p class="text-xs text-red-600">Select a rate.</p>
+              }
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-xl border border-slate-200 bg-slate-900 p-4 md:p-5">
+          <h2 class="mb-2 text-xs font-bold uppercase tracking-wide text-teal-200">Request payload (JSON)</h2>
+          <p class="mb-3 text-[11px] text-slate-400">
+            Same body sent to <span class="font-mono text-slate-200">POST …/gstr1/retsave/</span> (<span class="font-mono">b2cs</span> bucket).
+            IGST or CGST/SGST and cess are derived from taxable value × rate (cess 0).
+          </p>
+          <pre
+            class="max-h-[min(420px,55vh)] overflow-auto rounded-lg bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-emerald-100"
+          ><code>{{ requestPayloadJson() }}</code></pre>
+        </section>
+
+        <div class="flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-4">
+          <a [routerLink]="backUrl()" [queryParams]="backQueryParams()" class="btn-secondary">Back</a>
+          <button type="submit" class="btn-primary" [disabled]="saveSubmitting()">
+            {{ saveSubmitting() ? 'Saving…' : 'Save' }}
+          </button>
+        </div>
+
+        @if (saveError()) {
+          <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-950">
+            <p class="font-semibold">Save failed</p>
+            <pre class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap font-mono text-[11px]">{{ saveError() | json }}</pre>
+          </div>
+        }
+        @if (saveSuccessPayload()) {
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+            <p class="font-semibold">Save response</p>
+            <pre class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap font-mono text-[11px]">{{ saveSuccessPayload() | json }}</pre>
+          </div>
+        }
+      </form>
+    }
+  </section>
+</div>

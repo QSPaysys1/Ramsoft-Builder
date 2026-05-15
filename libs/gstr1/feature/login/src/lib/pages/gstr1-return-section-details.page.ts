@@ -122,6 +122,9 @@ export class Gstr1ReturnSectionDetailsPageComponent {
     return a === 'exp' || a === 'exp-einv';
   });
 
+  /** B2C (small) — NIC-style flat `b2cs[]` line on full-page form. */
+  readonly isB2csRetsaveWorkspace = computed(() => this.apiName() === 'b2cs');
+
   readonly viewState = signal<ViewState>('idle');
   readonly loading = signal(false);
   readonly httpError = signal<unknown>(null);
@@ -426,6 +429,24 @@ export class Gstr1ReturnSectionDetailsPageComponent {
           this.gstin().trim().toUpperCase(),
           this.retPeriod().trim(),
           'add-exp',
+        ],
+        {
+          queryParams: {
+            filing_status: this.filingStatusLabel().trim() || undefined,
+            due_date: this.dueDateLabel().trim() || undefined,
+          },
+        },
+      );
+      return;
+    }
+    if (this.isB2csRetsaveWorkspace()) {
+      void this.router.navigate(
+        [
+          '/gstr1/workspace/gstr1-download/section',
+          this.apiName(),
+          this.gstin().trim().toUpperCase(),
+          this.retPeriod().trim(),
+          'add-b2cs',
         ],
         {
           queryParams: {
