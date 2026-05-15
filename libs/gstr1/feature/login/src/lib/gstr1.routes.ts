@@ -87,6 +87,13 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/add-txpd-statewise',
+            loadComponent: () =>
+              import('./pages/gstr1-txpd-add-statewise.page').then(
+                (m) => m.Gstr1TxpdAddStatewisePageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(
