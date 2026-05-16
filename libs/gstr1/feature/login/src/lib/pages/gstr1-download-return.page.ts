@@ -25,6 +25,7 @@ import {
   mapGstr1RetsumSecSumToPortalTileCounts,
   retsumSecSumHasRowForSecNames,
   sumGstr1RetsumTtlRecForSecNames,
+  isGstr1ProceedToFileResetSuccess,
   type Gstr1DownloadApiName,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
 import { filter } from 'rxjs/operators';
@@ -113,6 +114,17 @@ function normalizeErrorEnvelope(err: unknown): unknown {
   return { message: String(err) };
 }
 
+function gstzenUserFacingMessage(raw: unknown): string | null {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const msg = (raw as Record<string, unknown>)['message'];
+  if (typeof msg === 'string' && msg.trim()) {
+    return msg.trim();
+  }
+  return null;
+}
+
 @Component({
   selector: 'lib-gstr1-download-return-page',
   standalone: true,
@@ -169,6 +181,8 @@ export class Gstr1DownloadReturnPageComponent {
   readonly httpError = signal<unknown>(null);
   readonly rawResponse = signal<unknown>(null);
   readonly logicalErrorText = signal<string | null>(null);
+
+  readonly proceedToFileLoading = signal(false);
 
   readonly fyLabel = computed(() => indianFyLabelFromMmYyyy(this.retPeriod().trim()));
   readonly taxPeriodLabel = computed(() => monthNameFromMmYyyy(this.retPeriod().trim()));
@@ -383,13 +397,62 @@ export class Gstr1DownloadReturnPageComponent {
     }
   }
 
-  proceedToFileSummary(): void {
-    void this.router.navigate(['/gstr1/workspace/returns-dashboard'], {
-      queryParams: {
-        gstin: this.gstin().trim().toUpperCase() || undefined,
-        ret_period: this.retPeriod().trim() || undefined,
-      },
-    });
+  async proceedToFileSummary(): Promise<void> {
+    if (this.proceedToFileLoading()) {
+      return;
+    }
+    if (!this.paramsValid()) {
+      this.toast.show('error', 'Enter a valid 15-character GSTIN and return period (MMYYYY) before proceeding.', 5500);
+      return;
+    }
+    this.proceedToFileLoading.set(true);
+    try {
+      const raw = await firstValueFrom(
+        this.api.resetGstr1Proceed({
+          gstin: this.gstin().trim().toUpperCase(),
+          ret_period: this.retPeriod().trim(),
+        }),
+      );
+      if (!isGstr1ProceedToFileResetSuccess(raw)) {
+        const fromApi =
+          gstzenUserFacingMessage(raw) ??
+          (() => {
+            if (!raw || typeof raw !== 'object') {
+              return null;
+            }
+            const st = String((raw as Record<string, unknown>)['status'] ?? '?');
+            return `GSTR‑1 proceed returned status ${st}.`;
+          })();
+        this.toast.show('error', fromApi ?? 'GSTR‑1 proceed response was not recognized.', 6500);
+        return;
+      }
+
+      const g = this.gstin().trim().toUpperCase();
+      const r = this.retPeriod().trim();
+      const refId = raw.message.reference_id.trim();
+      void this.router.navigate(['/gstr1/workspace/returns-dashboard'], {
+        queryParams: {
+          gstin: g || undefined,
+          ret_period: r || undefined,
+          gstr1_reference_id: refId || undefined,
+        },
+      });
+    } catch (err: unknown) {
+      const normalized = normalizeErrorEnvelope(err);
+      let detail = 'GSTR‑1 proceed request failed.';
+      if (normalized && typeof normalized === 'object') {
+        const body = (normalized as { body?: unknown }).body;
+        const fromBody = gstzenUserFacingMessage(body);
+        if (fromBody) {
+          detail = fromBody;
+        } else if (typeof body === 'string' && body.trim()) {
+          detail = body.trim();
+        }
+      }
+      this.toast.show('error', detail, 6500);
+    } finally {
+      this.proceedToFileLoading.set(false);
+    }
   }
 
   private openSectionWorkspace(api: Gstr1DownloadApiName): void {

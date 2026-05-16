@@ -206,3 +206,47 @@ export interface Gstr1DownloadAggregateStats {
   readonly cessTotal: number;
   readonly taxGrandTotal: number;
 }
+
+/** `POST /api/gstr1/reset/` — “Proceed to file / Summary” (GSTZen Bearer). */
+export interface Gstr1ResetRequestBody {
+  readonly gstin: string;
+  readonly ret_period: string;
+}
+
+/** Success envelope for GSTR‑1 proceed (example `api_call`: `GSTR1 PROCEED TO FILE`). */
+export interface Gstr1ProceedToFileResetSuccess {
+  readonly status: number | string;
+  readonly api_call?: string;
+  readonly message: {
+    readonly reference_id: string;
+    readonly isSync?: string;
+  };
+}
+
+export function isGstr1ProceedToFileResetSuccess(
+  raw: unknown,
+): raw is Gstr1ProceedToFileResetSuccess {
+  if (!raw || typeof raw !== 'object') {
+    return false;
+  }
+  const o = raw as Record<string, unknown>;
+  if (Number(o['status']) !== 1) {
+    return false;
+  }
+
+  const apiCall = o['api_call'];
+  if (typeof apiCall === 'string' && apiCall.trim().length > 0) {
+    const u = apiCall.toUpperCase();
+    // GSTZen wording includes `GSTR1`/`GSTR1A` variants.
+    if (!u.includes('GSTR1') || !u.includes('PROCEED')) {
+      return false;
+    }
+  }
+
+  const msg = o['message'];
+  if (!msg || typeof msg !== 'object' || Array.isArray(msg)) {
+    return false;
+  }
+  const ref = (msg as Record<string, unknown>)['reference_id'];
+  return typeof ref === 'string' && ref.trim().length > 0;
+}

@@ -360,11 +360,15 @@
         <button
           type="button"
           class="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[#1c2b54] px-6 text-sm font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347] disabled:cursor-not-allowed disabled:opacity-50"
-          [disabled]="!paramsValid()"
+          [disabled]="!paramsValid() || proceedToFileLoading()"
           (click)="proceedToFileSummary()"
-          title="Return to filing dashboard with current GSTIN and period"
+          title="Call GSTZen POST /api/gstr1/reset/, then open returns dashboard when successful"
         >
-          Proceed to file / Summary
+          @if (proceedToFileLoading()) {
+            <span>Proceeding…</span>
+          } @else {
+            <span>Proceed to file / Summary</span>
+          }
         </button>
       </div>
     </div>

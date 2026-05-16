@@ -41,6 +41,7 @@ export const appConfig: ApplicationConfig = {
       gstnRettrackUrl: environment.gstr1.gstnRettrackUrl,
       gstr1DownloadUrl: environment.gstr1.gstr1DownloadUrl,
       gstr1aDownloadUrl: environment.gstr1.gstr1aDownloadUrl,
+      gstr1ResetUrl: environment.gstr1.gstr1ResetUrl,
       gstr1RetsaveUrl: environment.gstr1.gstr1RetsaveUrl,
     }),
     {

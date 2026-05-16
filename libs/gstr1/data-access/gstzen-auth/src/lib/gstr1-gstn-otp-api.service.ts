@@ -12,7 +12,11 @@ import type {
 import type { GstnRefreshSessionRequestBody } from './gstn-refresh-session.models';
 import type { GstnRetStatusRequestBody } from './gstn-ret-status.models';
 import type { GstnRettrackRequestBody } from './gstn-rettrack.models';
-import type { Gstr1aDownloadRequestBody, Gstr1DownloadRequestBody } from './gstr1-download.models';
+import type {
+  Gstr1aDownloadRequestBody,
+  Gstr1ResetRequestBody,
+  Gstr1DownloadRequestBody,
+} from './gstr1-download.models';
 import { GSTR1_GSTZEN_AUTH_CONFIG } from './gstr1-gstzen-auth.config';
 
 /**
@@ -122,6 +126,20 @@ export class Gstr1GstnOtpApiService {
         gstin: body.gstin.trim().toUpperCase(),
         ret_period: body.ret_period.trim(),
         api_name: body.api_name,
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  }
+
+  /** `POST api/gstr1/reset/` — GSTR‑1 proceed to file (Bearer). */
+  resetGstr1Proceed(body: Gstr1ResetRequestBody): Observable<unknown> {
+    return this.http.post<unknown>(
+      this.config.gstr1ResetUrl,
+      {
+        gstin: body.gstin.trim().toUpperCase(),
+        ret_period: body.ret_period.trim(),
       },
       {
         headers: { 'Content-Type': 'application/json' },

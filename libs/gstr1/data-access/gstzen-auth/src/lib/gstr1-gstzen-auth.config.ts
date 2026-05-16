@@ -66,6 +66,11 @@ export interface Gstr1GstzenAuthEnvironment {
    */
   readonly gstr1aDownloadUrl: string;
   /**
+   * GSTR-1 proceed / reset — `POST` JSON (`gstin`, `ret_period`) (“Proceed to file / Summary”).
+   * Production: `https://my.gstzen.in/api/gstr1/reset/`.
+   */
+  readonly gstr1ResetUrl: string;
+  /**
    * GSTR-1 return save / retsave — `POST` JSON body per GSTZen (sections such as `b2b`, `fp`, `gstin`, `gt`, `cur_gt`).
    * Production: `https://my.gstzen.in/api/gstr1/retsave/`.
    */
