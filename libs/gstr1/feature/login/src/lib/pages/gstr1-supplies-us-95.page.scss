@@ -1,0 +1,17 @@
+/* Section 15 — portal-style tabs (same language as section 14 ECO). */
+.gstr1-us95 .us95-tab-active {
+  background: white;
+  color: #00897b;
+  box-shadow: 0 1px 0 0 white;
+  position: relative;
+  z-index: 1;
+}
+
+.gstr1-us95 .us95-tab-inactive {
+  background: #4db6ac;
+  color: white;
+}
+
+.gstr1-us95 .us95-tab-inactive:hover {
+  filter: brightness(1.05);
+}

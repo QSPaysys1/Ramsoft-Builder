@@ -115,6 +115,13 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/supplies-us-95',
+            loadComponent: () =>
+              import('./pages/gstr1-supplies-us-95.page').then(
+                (m) => m.Gstr1SuppliesUs95PageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(

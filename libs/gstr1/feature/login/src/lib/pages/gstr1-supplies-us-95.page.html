@@ -1,0 +1,687 @@
+<div class="gstr1-us95 pb-20">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a [routerLink]="['/gstr1/workspace/gstr1-download']" [queryParams]="backQueryParams()" class="text-[#1a56a7] hover:underline">GSTR-1/IFF</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <span class="font-semibold text-slate-900" aria-current="page">Supplies U/s 9(5)</span>
+      </li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">English</span>
+  </nav>
+
+  @if (screen() === 'list') {
+    <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+      <div class="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-5">
+        <div class="min-w-0 flex-1">
+          <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">15 — Supplies U/s 9(5)</h1>
+          <p class="mt-1 text-xs text-white/95 md:text-sm">
+            <span class="font-mono">{{ filerGstin() }}</span> · Return period <span class="font-mono">{{ retPeriod() }}</span>
+            · Data from GSTZen <span class="font-mono">ecom</span> / <span class="font-mono">ecoma</span>
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            class="inline-flex min-h-[38px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-xs font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347]"
+            (click)="openGstHelp()"
+          >
+            HELP
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/50 bg-white/15 text-white hover:bg-white/25 disabled:opacity-50"
+            title="Reload"
+            [disabled]="loading() || !paramsValid()"
+            (click)="loadEcomBuckets()"
+            aria-label="Refresh"
+          >
+            ↻
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section class="rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-md">
+      @if (!paramsValid()) {
+        <div class="px-4 py-8 md:px-6">
+          <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+            Invalid GSTIN or return period. Open this screen from tile <span class="font-semibold">15 — Supplies U/s 9(5)</span> on the GSTR-1 workspace.
+          </div>
+        </div>
+      } @else {
+        @if (httpError()) {
+          <div class="border-b border-amber-100 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-950 md:px-6">
+            {{ httpError() }} Tables may be incomplete until both downloads succeed.
+          </div>
+        }
+
+        <div class="us95-tabs flex flex-wrap gap-0 border-b border-[#4db6ac]/40 bg-[#4db6ac]/15 px-2 pt-2 md:px-4">
+          <button
+            type="button"
+            class="us95-tab min-h-[42px] rounded-t-lg px-3 py-2.5 text-[11px] font-bold uppercase tracking-wide transition md:px-4 md:text-xs"
+            [class.us95-tab-active]="tab() === 'rr'"
+            [class.us95-tab-inactive]="tab() !== 'rr'"
+            (click)="selectTab('rr')"
+          >
+            Registered to Registered
+          </button>
+          <button
+            type="button"
+            class="us95-tab min-h-[42px] rounded-t-lg px-3 py-2.5 text-[11px] font-bold uppercase tracking-wide transition md:px-4 md:text-xs"
+            [class.us95-tab-active]="tab() === 'rur'"
+            [class.us95-tab-inactive]="tab() !== 'rur'"
+            (click)="selectTab('rur')"
+          >
+            Registered to Unregistered
+          </button>
+          <button
+            type="button"
+            class="us95-tab min-h-[42px] rounded-t-lg px-3 py-2.5 text-[11px] font-bold uppercase tracking-wide transition md:px-4 md:text-xs"
+            [class.us95-tab-active]="tab() === 'urr'"
+            [class.us95-tab-inactive]="tab() !== 'urr'"
+            (click)="selectTab('urr')"
+          >
+            Unregistered to Registered
+          </button>
+          <button
+            type="button"
+            class="us95-tab min-h-[42px] rounded-t-lg px-3 py-2.5 text-[11px] font-bold uppercase tracking-wide transition md:px-4 md:text-xs"
+            [class.us95-tab-active]="tab() === 'urur'"
+            [class.us95-tab-inactive]="tab() !== 'urur'"
+            (click)="selectTab('urur')"
+          >
+            Unregistered to Unregistered
+          </button>
+        </div>
+
+        <div class="px-4 py-4 md:px-6 md:py-5">
+          <div class="mb-4 flex justify-end">
+            <p class="text-[11px] font-medium text-slate-600">
+              <span class="text-red-600">*</span> Mandatory fields apply on add · Draft rows stay in this browser until cleared
+            </p>
+          </div>
+
+          @if (loading()) {
+            <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-12 text-center text-sm font-medium text-slate-600">Loading ecom / ecoma…</div>
+          } @else if (currentRows().length === 0) {
+            <div class="rounded-lg border border-sky-200 bg-sky-50 px-4 py-10 text-center text-sm font-medium text-sky-950">
+              There are no records to be displayed.
+            </div>
+          } @else {
+            @switch (tab()) {
+              @case ('rr') {
+                <div class="overflow-x-auto rounded-lg border border-slate-200">
+                  <table class="w-full min-w-[1060px] border-collapse text-left text-sm">
+                    <thead>
+                      <tr class="border-b border-slate-200 bg-slate-100 text-[10px] font-bold uppercase tracking-wide text-slate-800 md:text-xs">
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Record</th>
+                        <th class="border-r border-slate-200 px-2 py-2 font-mono md:px-3">Recipient GSTIN</th>
+                        <th class="border-r border-slate-200 px-2 py-2 font-mono md:px-3">Supplier GSTIN</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Invoice no.</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Date</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Orig. inv / date</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">Value (₹)</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">POS</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Inv. type</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Supply</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Rate %</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">Taxable (₹)</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">IGST</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">CGST</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">SGST</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">Cess</th>
+                        <th class="px-2 py-2 text-center md:px-3">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of rowsB2b(); track trackB2b($index, row)) {
+                        <tr class="border-b border-slate-100 even:bg-slate-50/60">
+                          <td class="border-r border-slate-100 px-2 py-2 text-xs font-semibold md:px-3">
+                            {{ row.kind }}
+                          </td>
+                          <td class="border-r border-slate-100 px-2 py-2 font-mono text-[11px] md:px-3">{{ row.rtin }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 font-mono text-[11px] md:px-3">{{ row.stin }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.inum }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 whitespace-nowrap md:px-3">{{ row.idt }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-[11px] text-slate-700 md:px-3">
+                            @if (row.origInum) {
+                              <span class="font-mono">{{ row.origInum }}</span> · {{ row.origIdt }}
+                            } @else {
+                              —
+                            }
+                          </td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.val | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.pos }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.invTyp }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.splyTy }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.rt }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.txval | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.iamt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.camt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.samt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.csamt | number : '1.2-2' }}</td>
+                          <td class="px-2 py-2 text-center md:px-3">
+                            @if (row.kind === 'Draft' && row.draftKey) {
+                              <button
+                                type="button"
+                                class="text-xs font-bold uppercase text-red-600 hover:text-red-800"
+                                (click)="deleteDraftRow('rr', row.draftKey)"
+                              >
+                                Delete
+                              </button>
+                            } @else {
+                              —
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+              @case ('rur') {
+                <div class="overflow-x-auto rounded-lg border border-slate-200">
+                  <table class="w-full min-w-[980px] border-collapse text-left text-sm">
+                    <thead>
+                      <tr class="border-b border-slate-200 bg-slate-100 text-[10px] font-bold uppercase tracking-wide text-slate-800 md:text-xs">
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Record</th>
+                        <th class="border-r border-slate-200 px-2 py-2 font-mono md:px-3">Supplier GSTIN</th>
+                        <th class="border-r border-slate-200 px-2 py-2 font-mono md:px-3">Orig. supplier</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">POS</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Orig. month</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Supply</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Rate %</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">Taxable (₹)</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">IGST</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">CGST</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">SGST</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">Cess</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Flag</th>
+                        <th class="px-2 py-2 text-center md:px-3">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of rowsB2c(); track trackB2c($index, row)) {
+                        <tr class="border-b border-slate-100 even:bg-slate-50/60">
+                          <td class="border-r border-slate-100 px-2 py-2 text-xs font-semibold md:px-3">{{ row.kind }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 font-mono text-[11px] md:px-3">{{ row.stin }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 font-mono text-[11px] md:px-3">{{ row.ostin || '—' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.pos }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.omon || '—' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.splyTy }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.rt }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.txval | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.iamt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.camt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.samt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.csamt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.flag || '—' }}</td>
+                          <td class="px-2 py-2 text-center md:px-3">
+                            @if (row.kind === 'Draft' && row.draftKey) {
+                              <button
+                                type="button"
+                                class="text-xs font-bold uppercase text-red-600 hover:text-red-800"
+                                (click)="deleteDraftRow('rur', row.draftKey)"
+                              >
+                                Delete
+                              </button>
+                            } @else {
+                              —
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+              @case ('urr') {
+                <div class="overflow-x-auto rounded-lg border border-slate-200">
+                  <table class="w-full min-w-[1020px] border-collapse text-left text-sm">
+                    <thead>
+                      <tr class="border-b border-slate-200 bg-slate-100 text-[10px] font-bold uppercase tracking-wide text-slate-800 md:text-xs">
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Record</th>
+                        <th class="border-r border-slate-200 px-2 py-2 font-mono md:px-3">Recipient GSTIN</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Invoice no.</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Date</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Orig. inv / date</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">Value (₹)</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">POS</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Inv. type</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Supply</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Rate %</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">Taxable (₹)</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">IGST</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">CGST</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">SGST</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">Cess</th>
+                        <th class="px-2 py-2 text-center md:px-3">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of rowsUrp2b(); track trackUrp2b($index, row)) {
+                        <tr class="border-b border-slate-100 even:bg-slate-50/60">
+                          <td class="border-r border-slate-100 px-2 py-2 text-xs font-semibold md:px-3">{{ row.kind }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 font-mono text-[11px] md:px-3">{{ row.rtin }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.inum }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 whitespace-nowrap md:px-3">{{ row.idt }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-[11px] text-slate-700 md:px-3">
+                            @if (row.origInum) {
+                              <span class="font-mono">{{ row.origInum }}</span> · {{ row.origIdt }}
+                            } @else {
+                              —
+                            }
+                          </td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.val | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.pos }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.invTyp }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.splyTy }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.rt }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.txval | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.iamt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.camt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.samt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.csamt | number : '1.2-2' }}</td>
+                          <td class="px-2 py-2 text-center md:px-3">
+                            @if (row.kind === 'Draft' && row.draftKey) {
+                              <button
+                                type="button"
+                                class="text-xs font-bold uppercase text-red-600 hover:text-red-800"
+                                (click)="deleteDraftRow('urr', row.draftKey)"
+                              >
+                                Delete
+                              </button>
+                            } @else {
+                              —
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+              @case ('urur') {
+                <div class="overflow-x-auto rounded-lg border border-slate-200">
+                  <table class="w-full min-w-[720px] border-collapse text-left text-sm">
+                    <thead>
+                      <tr class="border-b border-slate-200 bg-slate-100 text-[10px] font-bold uppercase tracking-wide text-slate-800 md:text-xs">
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Record</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">POS</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Orig. month</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Supply</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Rate %</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">Taxable (₹)</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">IGST</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">CGST</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">SGST</th>
+                        <th class="border-r border-slate-200 px-2 py-2 text-right md:px-3">Cess</th>
+                        <th class="border-r border-slate-200 px-2 py-2 md:px-3">Flag</th>
+                        <th class="px-2 py-2 text-center md:px-3">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of rowsUrp2c(); track trackUrp2c($index, row)) {
+                        <tr class="border-b border-slate-100 even:bg-slate-50/60">
+                          <td class="border-r border-slate-100 px-2 py-2 text-xs font-semibold md:px-3">{{ row.kind }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.pos }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.omon || '—' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.splyTy }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.rt }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.txval | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.iamt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.camt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.samt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 text-right tabular-nums md:px-3">{{ row.csamt | number : '1.2-2' }}</td>
+                          <td class="border-r border-slate-100 px-2 py-2 md:px-3">{{ row.flag || '—' }}</td>
+                          <td class="px-2 py-2 text-center md:px-3">
+                            @if (row.kind === 'Draft' && row.draftKey) {
+                              <button
+                                type="button"
+                                class="text-xs font-bold uppercase text-red-600 hover:text-red-800"
+                                (click)="deleteDraftRow('urur', row.draftKey)"
+                              >
+                                Delete
+                              </button>
+                            } @else {
+                              —
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+            }
+          }
+
+          <div class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-6">
+            <a
+              [routerLink]="['/gstr1/workspace/gstr1-download']"
+              [queryParams]="backQueryParams()"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg border-2 border-slate-700 bg-white px-8 text-sm font-bold uppercase tracking-wide text-slate-900 shadow-sm hover:bg-slate-50"
+            >
+              Back
+            </a>
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg bg-[#1c2b54] px-8 text-sm font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347] disabled:cursor-not-allowed disabled:opacity-50"
+              [disabled]="!paramsValid()"
+              (click)="openAddRecord()"
+            >
+              Add record
+            </button>
+          </div>
+        </div>
+      }
+    </section>
+  } @else {
+    <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+      <div class="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-5">
+        <div class="min-w-0 flex-1">
+          <h1 class="text-base font-bold tracking-tight text-white md:text-lg">
+            15 — Supplies U/s 9(5) — {{ addDetailSuffix() }} — Add details
+          </h1>
+          <p class="mt-1 text-xs text-white/95 md:text-sm">
+            <span class="font-mono">{{ filerGstin() }}</span> · <span class="font-mono">{{ retPeriod() }}</span>
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="inline-flex min-h-[38px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-xs font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347]"
+            (click)="openGstHelp()"
+          >
+            HELP
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section class="rounded-b-xl border border-t-0 border-slate-200 bg-white px-4 py-5 shadow-md md:px-6 md:py-6">
+      @if (!paramsValid()) {
+        <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">Invalid GSTIN or return period.</div>
+      } @else {
+        <div class="mb-4 flex justify-end">
+          <p class="text-[11px] font-medium text-slate-600">
+            <span class="text-red-600">*</span> Required fields for this tab
+          </p>
+        </div>
+
+        <form class="space-y-6" [formGroup]="addForm" (ngSubmit)="saveAddRecord()">
+          @switch (tab()) {
+            @case ('rr') {
+              <div class="grid gap-5 md:grid-cols-2">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-rtin">Recipient GSTIN <span class="text-red-600">*</span></label>
+                  <input id="us95-rr-rtin" formControlName="rtin" maxlength="15" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 font-mono text-sm uppercase text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-stin">Supplier GSTIN <span class="text-red-600">*</span></label>
+                  <input id="us95-rr-stin" formControlName="stin" maxlength="15" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 font-mono text-sm uppercase text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-inum">Invoice number <span class="text-red-600">*</span></label>
+                  <input id="us95-rr-inum" formControlName="inum" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-idt">Invoice date <span class="text-red-600">*</span></label>
+                  <input id="us95-rr-idt" type="date" formControlName="idt" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-val">Total value (₹) <span class="text-red-600">*</span></label>
+                  <input id="us95-rr-val" formControlName="val" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-pos">POS (place of supply) <span class="text-red-600">*</span></label>
+                  <select
+                    id="us95-rr-pos"
+                    formControlName="pos"
+                    class="min-h-[42px] rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm"
+                  >
+                    <option value="">Select state</option>
+                    @for (opt of statePosOptions; track opt.code) {
+                      <option [value]="opt.code">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-invt">Invoice type</label>
+                  <input id="us95-rr-invt" formControlName="inv_typ" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-sply">Supply type</label>
+                  <input id="us95-rr-sply" formControlName="sply_ty" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-rt">Rate % <span class="text-red-600">*</span></label>
+                  <input id="us95-rr-rt" formControlName="rt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-tx">Taxable value (₹) <span class="text-red-600">*</span></label>
+                  <input id="us95-rr-tx" formControlName="txval" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+              </div>
+              <div class="grid gap-5 md:grid-cols-4">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-iamt">IGST</label>
+                  <input id="us95-rr-iamt" formControlName="iamt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-camt">CGST</label>
+                  <input id="us95-rr-camt" formControlName="camt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-samt">SGST</label>
+                  <input id="us95-rr-samt" formControlName="samt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-rr-cs">Cess</label>
+                  <input id="us95-rr-cs" formControlName="csamt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+              </div>
+            }
+            @case ('rur') {
+              <div class="grid gap-5 md:grid-cols-2">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-bc-stin">Supplier GSTIN <span class="text-red-600">*</span></label>
+                  <input id="us95-bc-stin" formControlName="stin" maxlength="15" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 font-mono text-sm uppercase text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-bc-pos">POS (place of supply) <span class="text-red-600">*</span></label>
+                  <select
+                    id="us95-bc-pos"
+                    formControlName="pos"
+                    class="min-h-[42px] rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm"
+                  >
+                    <option value="">Select state</option>
+                    @for (opt of statePosOptions; track opt.code) {
+                      <option [value]="opt.code">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-bc-sply">Supply type</label>
+                  <input id="us95-bc-sply" formControlName="sply_ty" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-bc-rt">Rate % <span class="text-red-600">*</span></label>
+                  <input id="us95-bc-rt" formControlName="rt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5 md:col-span-2">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-bc-tx">Taxable value (₹) <span class="text-red-600">*</span></label>
+                  <input id="us95-bc-tx" formControlName="txval" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+              </div>
+              <div class="grid gap-5 md:grid-cols-4">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-bc-iamt">IGST</label>
+                  <input id="us95-bc-iamt" formControlName="iamt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-bc-camt">CGST</label>
+                  <input id="us95-bc-camt" formControlName="camt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-bc-samt">SGST</label>
+                  <input id="us95-bc-samt" formControlName="samt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-bc-cs">Cess</label>
+                  <input id="us95-bc-cs" formControlName="csamt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+              </div>
+              <div class="max-w-xs">
+                <label class="text-sm font-semibold text-slate-700" for="us95-bc-fl">Flag</label>
+                <input id="us95-bc-fl" formControlName="flag" maxlength="1" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+              </div>
+            }
+            @case ('urr') {
+              <div class="grid gap-5 md:grid-cols-2">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-rtin">Recipient GSTIN <span class="text-red-600">*</span></label>
+                  <input id="us95-ub-rtin" formControlName="rtin" maxlength="15" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 font-mono text-sm uppercase text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-inum">Document number <span class="text-red-600">*</span></label>
+                  <input id="us95-ub-inum" formControlName="inum" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-idt">Document date <span class="text-red-600">*</span></label>
+                  <input id="us95-ub-idt" type="date" formControlName="idt" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-val">Total value (₹) <span class="text-red-600">*</span></label>
+                  <input id="us95-ub-val" formControlName="val" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-pos">POS (place of supply) <span class="text-red-600">*</span></label>
+                  <select
+                    id="us95-ub-pos"
+                    formControlName="pos"
+                    class="min-h-[42px] rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm"
+                  >
+                    <option value="">Select state</option>
+                    @for (opt of statePosOptions; track opt.code) {
+                      <option [value]="opt.code">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-invt">Invoice type</label>
+                  <input id="us95-ub-invt" formControlName="inv_typ" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-sply">Supply type</label>
+                  <input id="us95-ub-sply" formControlName="sply_ty" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-rt">Rate % <span class="text-red-600">*</span></label>
+                  <input id="us95-ub-rt" formControlName="rt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-tx">Taxable value (₹) <span class="text-red-600">*</span></label>
+                  <input id="us95-ub-tx" formControlName="txval" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+              </div>
+              <div class="grid gap-5 md:grid-cols-4">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-iamt">IGST</label>
+                  <input id="us95-ub-iamt" formControlName="iamt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-camt">CGST</label>
+                  <input id="us95-ub-camt" formControlName="camt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-samt">SGST</label>
+                  <input id="us95-ub-samt" formControlName="samt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-ub-cs">Cess</label>
+                  <input id="us95-ub-cs" formControlName="csamt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+              </div>
+            }
+            @case ('urur') {
+              <div class="grid gap-5 md:grid-cols-2">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-uc-pos">POS (place of supply) <span class="text-red-600">*</span></label>
+                  <select
+                    id="us95-uc-pos"
+                    formControlName="pos"
+                    class="min-h-[42px] rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm"
+                  >
+                    <option value="">Select state</option>
+                    @for (opt of statePosOptions; track opt.code) {
+                      <option [value]="opt.code">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-uc-sply">Supply type</label>
+                  <input id="us95-uc-sply" formControlName="sply_ty" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-uc-rt">Rate % <span class="text-red-600">*</span></label>
+                  <input id="us95-uc-rt" formControlName="rt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-uc-tx">Taxable value (₹) <span class="text-red-600">*</span></label>
+                  <input id="us95-uc-tx" formControlName="txval" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+              </div>
+              <div class="grid gap-5 md:grid-cols-4">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-uc-iamt">IGST</label>
+                  <input id="us95-uc-iamt" formControlName="iamt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-uc-camt">CGST</label>
+                  <input id="us95-uc-camt" formControlName="camt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-uc-samt">SGST</label>
+                  <input id="us95-uc-samt" formControlName="samt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-sm font-semibold text-slate-700" for="us95-uc-cs">Cess</label>
+                  <input id="us95-uc-cs" formControlName="csamt" inputmode="decimal" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+                </div>
+              </div>
+              <div class="max-w-xs">
+                <label class="text-sm font-semibold text-slate-700" for="us95-uc-fl">Flag</label>
+                <input id="us95-uc-fl" formControlName="flag" maxlength="1" autocomplete="off" class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm" />
+              </div>
+            }
+          }
+          <p class="text-xs text-slate-500">Saved rows appear as <span class="font-semibold">Draft</span> in the active tab · not sent to GSTZen until you wire retsave.</p>
+          <div class="flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-6">
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg border-2 border-slate-700 bg-white px-8 text-sm font-bold uppercase tracking-wide text-slate-900 shadow-sm hover:bg-slate-50"
+              (click)="backFromAdd()"
+            >
+              Back
+            </button>
+            <button type="submit" class="inline-flex min-h-[42px] items-center justify-center rounded-lg bg-[#1c2b54] px-10 text-sm font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347]">
+              Save
+            </button>
+          </div>
+        </form>
+      }
+    </section>
+  }
+</div>
