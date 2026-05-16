@@ -136,6 +136,27 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/amend-exp',
+            loadComponent: () =>
+              import('./pages/gstr1-expa-amend-record.page').then(
+                (m) => m.Gstr1ExpaAmendRecordPageComponent,
+              ),
+          },
+          {
+            path: 'section/:apiName/:gstin/:retPeriod/amend-cdnra',
+            loadComponent: () =>
+              import('./pages/gstr1-cdnra-amend-record.page').then(
+                (m) => m.Gstr1CdnraAmendRecordPageComponent,
+              ),
+          },
+          {
+            path: 'section/:apiName/:gstin/:retPeriod/amend-cdnura',
+            loadComponent: () =>
+              import('./pages/gstr1-cdnura-amend-record.page').then(
+                (m) => m.Gstr1CdnuraAmendRecordPageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(

@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+.gstr1-cdnura-amend {
+  position: relative;
+}
+
+.cdnura-alert {
+  border-color: #81d4fa;
+  background-color: #e1f5fe;
+  color: #01579b;
+}
+
+.cdnura-form-section {
+  background-color: #fff;
+}
+
+.cdnura-form-section .rounded-lg.border {
+  background-color: #f5f5f5;
+}
+
+.cdnura-alert-dismiss:focus-visible {
+  outline: 2px solid #2e4a7d;
+  outline-offset: 2px;
+}
+
+.cdnura-footer {
+  background-color: #2e4a7d;
+}

@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+.gstr1-cdnra-amend {
+  position: relative;
+}
+
+.cdnra-alert {
+  border-color: #81d4fa;
+  background-color: #e1f5fe;
+  color: #01579b;
+}
+
+.cdnra-form-section {
+  background-color: #fff;
+}
+
+.cdnra-form-section .rounded-lg.border {
+  background-color: #f5f5f5;
+}
+
+.cdnra-alert-dismiss:focus-visible {
+  outline: 2px solid #2e4a7d;
+  outline-offset: 2px;
+}
+
+.cdnra-footer {
+  background-color: #2e4a7d;
+}

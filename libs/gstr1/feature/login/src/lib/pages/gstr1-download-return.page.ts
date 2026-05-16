@@ -454,6 +454,27 @@ export class Gstr1DownloadReturnPageComponent {
       );
       return;
     }
+    if (api === 'expa') {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', api, g, r, 'amend-exp'],
+        { queryParams: qp },
+      );
+      return;
+    }
+    if (api === 'cdnra') {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', api, g, r, 'amend-cdnra'],
+        { queryParams: qp },
+      );
+      return;
+    }
+    if (api === 'cdnura') {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', api, g, r, 'amend-cdnura'],
+        { queryParams: qp },
+      );
+      return;
+    }
     this.apiName.set(api);
     void this.router.navigate(['/gstr1/workspace/gstr1-download/section', api, g, r], {
       queryParams: qp,
