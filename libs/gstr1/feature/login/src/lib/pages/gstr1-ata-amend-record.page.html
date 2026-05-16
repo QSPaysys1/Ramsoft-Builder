@@ -1,0 +1,166 @@
+<div class="gstr1-ata-amend pb-36">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a
+          [routerLink]="['/gstr1/workspace/gstr1-download']"
+          [queryParams]="backQueryParams()"
+          class="text-[#1a56a7] hover:underline"
+          >GSTR-1/IFF</a
+        >
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex max-w-[min(100%,14rem)] items-center gap-2 md:max-w-xl">
+        <span
+          class="font-semibold leading-snug text-slate-900"
+          aria-current="page"
+          title="Amended Tax Liability (Advances Received)"
+        >Amended Tax Liability (Advances Received)</span>
+      </li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">
+      <span aria-hidden="true">🌐</span> English
+    </span>
+  </nav>
+
+  <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+    <div class="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-4">
+      <h1 class="max-w-[min(100%,48rem)] text-lg font-bold leading-snug tracking-tight text-white md:text-xl">
+        11A - Amended Tax Liability (Advances Received)
+      </h1>
+      <button
+        type="button"
+        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded bg-[#2c4d82] text-lg text-white shadow-md hover:bg-[#243d68]"
+        title="Refresh"
+        aria-label="Refresh"
+        (click)="refreshPage()"
+      >
+        ↻
+      </button>
+    </div>
+  </header>
+
+  <div class="ata-info-banner border px-4 py-3 text-sm md:px-6" role="status">
+    There are no records to be displayed.
+  </div>
+
+  <section class="ata-form-shell rounded-b-xl border border-t-0 border-slate-200 bg-white px-4 py-6 shadow-md md:px-6 md:py-7">
+    @if (!paramsValid()) {
+      <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        Invalid GSTIN or return period in the URL. Use <span class="font-semibold">Back</span> and open this screen from the download return workspace.
+      </div>
+    } @else {
+      <p class="mb-4 text-right text-xs font-medium text-red-600"><span class="text-red-600">*</span> Indicates Mandatory Fields</p>
+
+      <div class="ata-form-panel rounded-lg border border-slate-200 p-4 md:p-5">
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-slate-800" for="ata-fy">
+              Financial Year <span class="text-red-600">*</span>
+            </label>
+            <select
+              id="ata-fy"
+              class="ata-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+              [value]="financialYear()"
+              (change)="selectFy($event)"
+            >
+              @for (opt of fyOptions(); track opt) {
+                <option [value]="opt">{{ opt }}</option>
+              }
+            </select>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-slate-800" for="ata-period">
+              Return Filing Period <span class="text-red-600">*</span>
+            </label>
+            <select
+              id="ata-period"
+              class="ata-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+              [value]="filingPeriodMonth()"
+              (change)="selectMonth($event)"
+            >
+              @for (m of monthNames; track m) {
+                <option [value]="m">{{ m }}</option>
+              }
+            </select>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="flex flex-wrap items-center gap-1.5 text-sm font-semibold text-slate-800" for="ata-pos">
+              POS
+              <span
+                class="inline-flex h-5 w-5 cursor-help items-center justify-center rounded-full border border-slate-400 text-[10px] font-bold text-slate-600"
+                title="Place of supply"
+              >i</span>
+              <span class="text-red-600">*</span>
+            </label>
+            <select
+              id="ata-pos"
+              class="ata-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+              [value]="posCode()"
+              (change)="selectPos($event)"
+            >
+              <option value="">Select</option>
+              @for (p of posOptions; track p.code) {
+                <option [value]="p.code">{{ posLabelForCode(p.code) }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <label class="mt-6 flex max-w-4xl cursor-pointer items-start gap-3 text-sm leading-snug text-slate-800">
+          <input
+            type="checkbox"
+            class="ata-checkbox mt-0.5 h-4 w-4 rounded border-slate-400 text-[#2c4d82] focus:ring-[#2c4d82]"
+            [checked]="differentialTax()"
+            (change)="toggleDifferential($event)"
+          />
+          <span>
+            Is the supply eligible to be taxed at a differential percentage (%) of the existing rate of tax, as notified by
+            the Government?
+          </span>
+        </label>
+      </div>
+
+      <div class="ata-actions mt-6 flex flex-wrap justify-end gap-3 rounded-lg border border-slate-200 bg-slate-100/90 px-4 py-4 md:px-5">
+        <button
+          type="button"
+          class="inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded border-2 border-[#2c4d82] bg-white px-6 text-sm font-bold uppercase tracking-wide text-[#2c4d82] hover:bg-slate-50"
+          (click)="backToWorkspace()"
+        >
+          Back
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[44px] min-w-[160px] cursor-not-allowed items-center justify-center rounded bg-[#2c4d82] px-6 text-sm font-bold uppercase tracking-wide text-white opacity-50"
+          disabled
+          aria-disabled="true"
+        >
+          Amend record
+        </button>
+      </div>
+    }
+  </section>
+
+  <div class="ata-footer-wrap fixed bottom-0 left-0 right-0 z-10 text-[11px] text-white md:text-xs" aria-label="GSTN footer">
+    <div class="ata-footer-primary border-t border-slate-700/50 px-4 py-2.5">
+      <div class="mx-auto flex max-w-6xl flex-col flex-wrap items-center justify-between gap-2 text-center md:flex-row md:text-left">
+        <span>© 2026-27 Goods and Services Tax Network</span>
+        <span class="text-white/90">Site Last Updated on 03-05-2026</span>
+        <span class="text-white/80">Designed &amp; Developed by GSTN</span>
+      </div>
+    </div>
+    <div class="ata-footer-secondary px-4 py-2 text-center md:text-left">
+      <p class="mx-auto max-w-6xl text-[10px] leading-snug md:text-[11px]">
+        Site best viewed at 1024 x 768 resolution in Microsoft Edge, Google Chrome 49+, Firefox 45+ and Safari 6+.
+      </p>
+    </div>
+  </div>
+</div>

@@ -475,6 +475,27 @@ export class Gstr1DownloadReturnPageComponent {
       );
       return;
     }
+    if (api === 'b2csa') {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', api, g, r, 'amend-b2csa'],
+        { queryParams: qp },
+      );
+      return;
+    }
+    if (api === 'ata') {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', api, g, r, 'amend-ata'],
+        { queryParams: qp },
+      );
+      return;
+    }
+    if (api === 'txpa') {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', api, g, r, 'amend-txpa'],
+        { queryParams: qp },
+      );
+      return;
+    }
     this.apiName.set(api);
     void this.router.navigate(['/gstr1/workspace/gstr1-download/section', api, g, r], {
       queryParams: qp,

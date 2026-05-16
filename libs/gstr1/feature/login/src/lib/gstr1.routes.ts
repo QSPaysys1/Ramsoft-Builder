@@ -157,6 +157,27 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/amend-b2csa',
+            loadComponent: () =>
+              import('./pages/gstr1-b2csa-amend-record.page').then(
+                (m) => m.Gstr1B2csaAmendRecordPageComponent,
+              ),
+          },
+          {
+            path: 'section/:apiName/:gstin/:retPeriod/amend-ata',
+            loadComponent: () =>
+              import('./pages/gstr1-ata-amend-record.page').then(
+                (m) => m.Gstr1AtaAmendRecordPageComponent,
+              ),
+          },
+          {
+            path: 'section/:apiName/:gstin/:retPeriod/amend-txpa',
+            loadComponent: () =>
+              import('./pages/gstr1-txpa-amend-record.page').then(
+                (m) => m.Gstr1TxpaAmendRecordPageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(

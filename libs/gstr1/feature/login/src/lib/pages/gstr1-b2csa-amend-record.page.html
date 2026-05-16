@@ -1,0 +1,208 @@
+<div class="gstr1-b2csa-amend pb-28">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a
+          [routerLink]="['/gstr1/workspace/gstr1-download']"
+          [queryParams]="backQueryParams()"
+          class="text-[#1a56a7] hover:underline"
+          >GSTR-1/IFF</a
+        >
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <span class="font-semibold text-slate-900" aria-current="page">B2CSA</span>
+      </li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">
+      <span aria-hidden="true">🌐</span> English
+    </span>
+  </nav>
+
+  <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+    <div class="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-4">
+      <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">10 - Amended B2C(Others)</h1>
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="inline-flex h-10 min-w-[3.25rem] items-center justify-center rounded-full bg-[#2e4a7d] px-2 text-[9px] font-bold uppercase leading-tight text-white shadow-md hover:bg-[#253d68]"
+          (click)="openGstHelp()"
+          title="Help"
+        >
+          Help ?
+        </button>
+        <button
+          type="button"
+          class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2e4a7d] text-lg text-white shadow-md hover:bg-[#253d68]"
+          title="Refresh"
+          aria-label="Refresh"
+          (click)="refreshPage()"
+        >
+          ↻
+        </button>
+      </div>
+    </div>
+  </header>
+
+  @if (noRecordsBannerVisible()) {
+    <div class="b2csa-alert flex items-start gap-3 border px-3 py-2.5 md:px-5 md:py-3" role="status">
+      <p class="min-w-0 flex-1 text-sm font-medium leading-snug">There are no records to be displayed.</p>
+      <button
+        type="button"
+        class="b2csa-alert-dismiss -mr-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded text-lg leading-none text-slate-600 hover:bg-white/80"
+        (click)="dismissNoRecordsBanner()"
+        aria-label="Dismiss"
+      >
+        ×
+      </button>
+    </div>
+  }
+
+  @if (posHelpBannerVisible()) {
+    <div class="b2csa-alert flex items-start gap-3 border px-3 py-2.5 md:px-5 md:py-3" role="note">
+      <p class="min-w-0 flex-1 text-sm leading-relaxed">
+        To amend the POS of an already filed record (as reported in table 7 of earlier return period), you are required to
+        use the following steps:
+        <br /><br />
+        1. Search the POS which was originally reported and filed in earlier return period and save with '0' values.<br />
+        2. Search the new POS and save the new POS after adding respective details.
+      </p>
+      <button
+        type="button"
+        class="b2csa-alert-dismiss -mr-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded text-lg leading-none text-slate-600 hover:bg-white/80"
+        (click)="dismissPosHelpBanner()"
+        aria-label="Dismiss"
+      >
+        ×
+      </button>
+    </div>
+  }
+
+  <section class="b2csa-form-section rounded-b-xl border border-t-0 border-slate-200 px-4 py-6 shadow-md md:px-6 md:py-7">
+    @if (!paramsValid()) {
+      <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        Invalid GSTIN or return period in the URL. Use <span class="font-semibold">Back</span> and open this screen from the download return workspace.
+      </div>
+    } @else {
+      <p class="mb-4 text-right text-xs font-medium text-red-600"><span class="text-red-600">*</span> Indicates Mandatory Fields</p>
+
+      <div class="rounded-lg border border-slate-200 p-4 md:p-5">
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-slate-800" for="b2csa-year">Year <span class="text-red-600">*</span></label>
+            <select
+              id="b2csa-year"
+              class="b2csa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+              [value]="year()"
+              (change)="selectYear($event)"
+            >
+              @for (opt of fyOptions(); track opt) {
+                <option [value]="opt">{{ opt }}</option>
+              }
+            </select>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-slate-800" for="b2csa-month">Month <span class="text-red-600">*</span></label>
+            <select
+              id="b2csa-month"
+              class="b2csa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+              [value]="month()"
+              (change)="selectMonth($event)"
+            >
+              @for (m of monthNames; track m) {
+                <option [value]="m">{{ m }}</option>
+              }
+            </select>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="flex flex-wrap items-center gap-1.5 text-sm font-semibold text-slate-800" for="b2csa-pos">
+              Original POS <span class="text-red-600">*</span>
+              <span
+                class="inline-flex h-5 w-5 cursor-help items-center justify-center rounded-full border border-slate-400 text-[10px] font-bold text-slate-600"
+                title="Place of supply as originally reported in the earlier period"
+              >i</span>
+            </label>
+            <select
+              id="b2csa-pos"
+              class="b2csa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+              [value]="originalPosCode()"
+              (change)="selectPos($event)"
+            >
+              @for (p of posOptions; track p.code) {
+                <option [value]="p.code">{{ posLabelForCode(p.code) }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
+          <label class="flex max-w-3xl cursor-pointer items-start gap-3 text-sm leading-snug text-slate-800">
+            <input
+              type="checkbox"
+              class="b2csa-checkbox mt-0.5 h-4 w-4 rounded border-slate-400 text-[#2e4a7d] focus:ring-[#2e4a7d]"
+              [checked]="differentialTax()"
+              (change)="toggleDifferential($event)"
+            />
+            <span>
+              Is the supply eligible to be taxed at a differential percentage (%) of the existing rate of tax, as notified
+              by the Government?
+            </span>
+          </label>
+
+          @if (differentialTax()) {
+            <div class="flex w-full flex-col gap-1.5 lg:w-64 lg:shrink-0">
+              <label class="text-sm font-semibold text-slate-800" for="b2csa-taxpct">Applicable % of Tax Rate</label>
+              <select
+                id="b2csa-taxpct"
+                class="b2csa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+                [value]="taxRatePercent()"
+                (change)="selectTaxPercent($event)"
+              >
+                @for (pct of taxRatePercentOptions; track pct) {
+                  <option [value]="pct">{{ pct }}</option>
+                }
+              </select>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-wrap justify-end gap-3">
+        <button
+          type="button"
+          class="inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded border-2 border-slate-900 bg-white px-6 text-sm font-bold uppercase tracking-wide text-slate-900 hover:bg-slate-50"
+          (click)="backToWorkspace()"
+        >
+          Back
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[44px] min-w-[120px] cursor-not-allowed items-center justify-center rounded bg-[#2e4a7d] px-6 text-sm font-bold uppercase tracking-wide text-white opacity-50"
+          disabled
+          aria-disabled="true"
+        >
+          Add POS
+        </button>
+      </div>
+    }
+  </section>
+
+  <footer
+    class="b2csa-footer fixed bottom-0 left-0 right-0 z-10 border-t border-slate-700 px-4 py-2.5 text-[11px] text-white md:text-xs"
+    aria-label="GSTN footer"
+  >
+    <div class="mx-auto flex max-w-6xl flex-col flex-wrap items-center justify-between gap-2 text-center md:flex-row md:text-left">
+      <span>© 2026-27 Goods and Services Tax Network</span>
+      <span class="text-white/90">Site Last Updated on 03-05-2026</span>
+      <span class="text-white/80">Designed &amp; Developed by GSTN</span>
+    </div>
+  </footer>
+</div>

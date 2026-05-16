@@ -1,0 +1,36 @@
+:host {
+  display: block;
+}
+
+.gstr1-b2csa-amend {
+  position: relative;
+}
+
+.b2csa-alert {
+  border-color: #81d4fa;
+  background-color: #e1f5fe;
+  color: #01579b;
+}
+
+.b2csa-form-section {
+  background-color: #fff;
+}
+
+.b2csa-form-section .rounded-lg.border {
+  background-color: #f9fafb;
+}
+
+.b2csa-field:focus {
+  border-color: #2e4a7d;
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(46 74 125 / 0.2);
+}
+
+.b2csa-alert-dismiss:focus-visible {
+  outline: 2px solid #2e4a7d;
+  outline-offset: 2px;
+}
+
+.b2csa-footer {
+  background-color: #2e4a7d;
+}

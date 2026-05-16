@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+
+.gstr1-txpa-amend {
+  position: relative;
+}
+
+.txpa-info-banner {
+  border-color: #81d4fa;
+  background-color: #e1f5fe;
+  color: #01579b;
+}
+
+.txpa-form-panel {
+  background-color: #fafafa;
+}
+
+.txpa-field:focus {
+  border-color: #2c4d82;
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(44 77 130 / 0.2);
+}
+
+.txpa-footer-primary {
+  background-color: #2c4d82;
+}
+
+.txpa-footer-secondary {
+  background-color: #1a3558;
+  color: rgb(255 255 255 / 0.92);
+}
