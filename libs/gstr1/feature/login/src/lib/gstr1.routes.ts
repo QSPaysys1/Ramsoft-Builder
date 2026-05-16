@@ -108,10 +108,24 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/amend-ecoma',
+            loadComponent: () =>
+              import('./pages/gstr1-ecoma-amend-record.page').then(
+                (m) => m.Gstr1EcomaAmendRecordPageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod/supplies-eco',
             loadComponent: () =>
               import('./pages/gstr1-eco-supplies.page').then(
                 (m) => m.Gstr1EcoSuppliesPageComponent,
+              ),
+          },
+          {
+            path: 'section/:apiName/:gstin/:retPeriod/amend-supecoa',
+            loadComponent: () =>
+              import('./pages/gstr1-supecoa-amend-record.page').then(
+                (m) => m.Gstr1SupecoaAmendRecordPageComponent,
               ),
           },
           {

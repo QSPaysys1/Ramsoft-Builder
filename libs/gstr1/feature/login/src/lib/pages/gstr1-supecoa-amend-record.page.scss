@@ -1,0 +1,56 @@
+:host {
+  display: block;
+}
+
+.gstr1-supecoa-amend {
+  position: relative;
+}
+
+.supecoa-info-banner {
+  border-color: #81d4fa;
+  background-color: #e1f5fe;
+  color: #01579b;
+}
+
+.supecoa-info-instructions {
+  border-color: #81d4fa;
+  background-color: #e1f5fe;
+  color: #01579b;
+}
+
+.supecoa-form-panel {
+  background-color: #fafafa;
+}
+
+.supecoa-field:focus {
+  border-color: #2c4d82;
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(44 77 130 / 0.2);
+}
+
+.supecoa-tab {
+  margin-bottom: -1px;
+  border-bottom: 3px solid transparent;
+}
+
+.supecoa-tab-active {
+  border-bottom-color: #1a3558;
+  font-weight: 700;
+}
+
+.supecoa-tab-inactive {
+  opacity: 0.92;
+}
+
+.supecoa-tab-inactive:hover {
+  opacity: 1;
+}
+
+.supecoa-footer-primary {
+  background-color: #2c4d82;
+}
+
+.supecoa-footer-secondary {
+  background-color: #1a3558;
+  color: rgb(255 255 255 / 0.92);
+}

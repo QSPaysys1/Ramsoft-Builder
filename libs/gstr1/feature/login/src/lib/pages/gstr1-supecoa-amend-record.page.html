@@ -1,0 +1,324 @@
+<div class="gstr1-supecoa-amend pb-36">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a
+          [routerLink]="['/gstr1/workspace/gstr1-download']"
+          [queryParams]="backQueryParams()"
+          class="text-[#1a56a7] hover:underline"
+          >GSTR-1/IFF</a
+        >
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex max-w-[min(100%,14rem)] items-center gap-2 md:max-w-xl">
+        <span class="font-semibold leading-snug text-slate-900" aria-current="page" title="Amended Supplies U/s 9(5)"
+          >Amended Supplies U/s 9(5)</span
+        >
+      </li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">
+      <span aria-hidden="true">🌐</span> English
+    </span>
+  </nav>
+
+  <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+    <div class="flex flex-col gap-3 border-b border-white/20 px-4 py-4 md:flex-row md:items-start md:justify-between md:px-6 md:py-4">
+      <h1 class="max-w-[min(100%,42rem)] text-lg font-bold leading-snug tracking-tight text-white md:text-xl">
+        15A- Amended Supplies U/s 9(5)
+      </h1>
+      <div class="flex flex-wrap items-center gap-2 md:shrink-0">
+        <button
+          type="button"
+          class="inline-flex min-h-[40px] items-center justify-center gap-1 rounded border border-white/80 bg-[#2c4d82] px-4 text-xs font-bold uppercase tracking-wide text-white shadow-md hover:bg-[#243d68] md:text-sm"
+          (click)="openHelp()"
+        >
+          <span aria-hidden="true">?</span> Help
+        </button>
+        <button
+          type="button"
+          class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded border border-white/55 bg-white/15 text-lg text-white shadow-sm hover:bg-white/25"
+          title="Refresh"
+          aria-label="Refresh"
+          (click)="refreshPage()"
+        >
+          ↻
+        </button>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-1 px-2 pb-0 pt-1 md:gap-2 md:px-4 md:pt-2" role="tablist" aria-label="Supply category">
+      <button
+        type="button"
+        role="tab"
+        class="supecoa-tab min-h-[44px] px-2 py-2.5 text-left text-[11px] font-semibold text-white md:px-3 md:text-sm"
+        [class.supecoa-tab-active]="supplyTab() === 'reg2reg'"
+        [class.supecoa-tab-inactive]="supplyTab() !== 'reg2reg'"
+        [attr.aria-selected]="supplyTab() === 'reg2reg'"
+        (click)="selectTab('reg2reg')"
+      >
+        Registered to Registered
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="supecoa-tab min-h-[44px] px-2 py-2.5 text-left text-[11px] font-semibold text-white md:px-3 md:text-sm"
+        [class.supecoa-tab-active]="supplyTab() === 'reg2unreg'"
+        [class.supecoa-tab-inactive]="supplyTab() !== 'reg2unreg'"
+        [attr.aria-selected]="supplyTab() === 'reg2unreg'"
+        (click)="selectTab('reg2unreg')"
+      >
+        Registered to Unregistered
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="supecoa-tab min-h-[44px] px-2 py-2.5 text-left text-[11px] font-semibold text-white md:px-3 md:text-sm"
+        [class.supecoa-tab-active]="supplyTab() === 'unreg2reg'"
+        [class.supecoa-tab-inactive]="supplyTab() !== 'unreg2reg'"
+        [attr.aria-selected]="supplyTab() === 'unreg2reg'"
+        (click)="selectTab('unreg2reg')"
+      >
+        Unregistered to Registered
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="supecoa-tab min-h-[44px] px-2 py-2.5 text-left text-[11px] font-semibold text-white md:px-3 md:text-sm"
+        [class.supecoa-tab-active]="supplyTab() === 'unreg2unreg'"
+        [class.supecoa-tab-inactive]="supplyTab() !== 'unreg2unreg'"
+        [attr.aria-selected]="supplyTab() === 'unreg2unreg'"
+        (click)="selectTab('unreg2unreg')"
+      >
+        Unregistered to Unregistered
+      </button>
+    </div>
+  </header>
+
+  <div class="supecoa-info-banner border px-4 py-3 text-sm md:px-6" role="status">
+    There are no records to be displayed.
+  </div>
+
+  @if (!simpleDocumentForm()) {
+    <div class="supecoa-info-instructions border border-t-0 px-4 py-3 text-sm md:px-6">
+      <p class="m-0 italic leading-snug">
+        To amend the POS of an already filed record (as reported in table 15 of earlier return period), you are required to
+        use the following steps:
+      </p>
+      <ol class="mb-0 mt-3 list-decimal space-y-2 pl-5 leading-snug">
+        <li>Search the POS which was originally reported and filed in earlier return period and save with &apos;0&apos; values.</li>
+        <li>Search the new POS and save the new POS after adding respective details.</li>
+      </ol>
+    </div>
+  }
+
+  <section class="supecoa-form-shell rounded-b-xl border border-t-0 border-slate-200 bg-white px-4 py-6 shadow-md md:px-6 md:py-7">
+    @if (!paramsValid()) {
+      <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        Invalid GSTIN or return period in the URL. Use <span class="font-semibold">Back</span> and open this screen from the download return workspace.
+      </div>
+    } @else {
+      <p class="mb-4 text-right text-xs font-medium text-red-600"><span class="text-red-600">*</span> Indicates Mandatory Fields</p>
+
+      <div class="supecoa-form-panel rounded-lg border border-slate-200 p-4 md:p-5">
+        @if (simpleDocumentForm()) {
+          <div class="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-8">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-800" for="supecoa-fy-doc">
+                Financial Year <span class="text-red-600">*</span>
+              </label>
+              <select
+                id="supecoa-fy-doc"
+                class="supecoa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+                [value]="financialYear()"
+                (change)="selectFy($event)"
+              >
+                @for (opt of fyOptions(); track opt) {
+                  <option [value]="opt">{{ opt }}</option>
+                }
+              </select>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-800" for="supecoa-docno">
+                Document No. <span class="text-red-600">*</span>
+              </label>
+              <input
+                id="supecoa-docno"
+                type="text"
+                class="supecoa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+                placeholder="Enter Document No."
+                [value]="documentNo()"
+                (input)="documentNoInput($event)"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+        } @else if (supplyTab() === 'reg2unreg') {
+          <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-800" for="supecoa-fy-pos">
+                Financial Year <span class="text-red-600">*</span>
+              </label>
+              <select
+                id="supecoa-fy-pos"
+                class="supecoa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+                [value]="financialYear()"
+                (change)="selectFy($event)"
+              >
+                @for (opt of fyOptions(); track opt) {
+                  <option [value]="opt">{{ opt }}</option>
+                }
+              </select>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-800" for="supecoa-month">
+                Month <span class="text-red-600">*</span>
+              </label>
+              <select
+                id="supecoa-month"
+                class="supecoa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+                [value]="filingPeriodMonth()"
+                (change)="selectMonth($event)"
+              >
+                @for (m of monthNames; track m) {
+                  <option [value]="m">{{ m }}</option>
+                }
+              </select>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="flex flex-wrap items-center gap-1.5 text-sm font-semibold text-slate-800" for="supecoa-pos">
+                Original POS
+                <span
+                  class="inline-flex h-5 w-5 cursor-help items-center justify-center rounded-full border border-slate-400 text-[10px] font-bold text-slate-600"
+                  title="Place of supply originally reported"
+                  >i</span
+                >
+                <span class="text-red-600">*</span>
+              </label>
+              <select
+                id="supecoa-pos"
+                class="supecoa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+                [value]="posCode()"
+                (change)="selectPos($event)"
+              >
+                <option value="">Select</option>
+                @for (p of posOptions; track p.code) {
+                  <option [value]="p.code">{{ posLabelForCode(p.code) }}</option>
+                }
+              </select>
+            </div>
+            <div class="flex flex-col gap-1.5 md:col-span-2 lg:col-span-1">
+              <label class="text-sm font-semibold text-slate-800" for="supecoa-supplier">
+                Supplier GSTIN/UIN <span class="text-red-600">*</span>
+              </label>
+              <input
+                id="supecoa-supplier"
+                type="text"
+                class="supecoa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 font-mono text-sm uppercase text-slate-900 shadow-sm"
+                maxlength="15"
+                placeholder="Search by supplier GSTIN/UIN"
+                [value]="supplierGstinUin()"
+                (input)="supplierSearchInput($event)"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+        } @else {
+          <div class="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-800" for="supecoa-fy-pos2">
+                Financial Year <span class="text-red-600">*</span>
+              </label>
+              <select
+                id="supecoa-fy-pos2"
+                class="supecoa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+                [value]="financialYear()"
+                (change)="selectFy($event)"
+              >
+                @for (opt of fyOptions(); track opt) {
+                  <option [value]="opt">{{ opt }}</option>
+                }
+              </select>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-800" for="supecoa-month2">
+                Month <span class="text-red-600">*</span>
+              </label>
+              <select
+                id="supecoa-month2"
+                class="supecoa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+                [value]="filingPeriodMonth()"
+                (change)="selectMonth($event)"
+              >
+                @for (m of monthNames; track m) {
+                  <option [value]="m">{{ m }}</option>
+                }
+              </select>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="flex flex-wrap items-center gap-1.5 text-sm font-semibold text-slate-800" for="supecoa-pos2">
+                Original POS
+                <span
+                  class="inline-flex h-5 w-5 cursor-help items-center justify-center rounded-full border border-slate-400 text-[10px] font-bold text-slate-600"
+                  title="Place of supply originally reported"
+                  >i</span
+                >
+                <span class="text-red-600">*</span>
+              </label>
+              <select
+                id="supecoa-pos2"
+                class="supecoa-field min-h-[44px] w-full rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm"
+                [value]="posCode()"
+                (change)="selectPos($event)"
+              >
+                <option value="">Select</option>
+                @for (p of posOptions; track p.code) {
+                  <option [value]="p.code">{{ posLabelForCode(p.code) }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="supecoa-actions mt-6 flex flex-wrap justify-end gap-3 rounded-lg border border-slate-200 bg-slate-100/90 px-4 py-4 md:px-5">
+        <button
+          type="button"
+          class="inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded border-2 border-[#2c4d82] bg-white px-6 text-sm font-bold uppercase tracking-wide text-[#2c4d82] hover:bg-slate-50"
+          (click)="backToWorkspace()"
+        >
+          Back
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[44px] min-w-[160px] cursor-not-allowed items-center justify-center rounded bg-[#2c4d82] px-6 text-sm font-bold uppercase tracking-wide text-white opacity-50"
+          disabled
+          aria-disabled="true"
+        >
+          Amend record
+        </button>
+      </div>
+    }
+  </section>
+
+  <div class="supecoa-footer-wrap fixed bottom-0 left-0 right-0 z-10 text-[11px] text-white md:text-xs" aria-label="GSTN footer">
+    <div class="supecoa-footer-primary border-t border-slate-700/50 px-4 py-2.5">
+      <div class="mx-auto flex max-w-6xl flex-col flex-wrap items-center justify-between gap-2 text-center md:flex-row md:text-left">
+        <span>© 2026-27 Goods and Services Tax Network</span>
+        <span class="text-white/90">Site Last Updated on 03-05-2026</span>
+        <span class="text-white/80">Designed &amp; Developed by GSTN</span>
+      </div>
+    </div>
+    <div class="supecoa-footer-secondary px-4 py-2 text-center md:text-left">
+      <p class="mx-auto max-w-6xl text-[10px] leading-snug md:text-[11px]">
+        Site best viewed at 1024 x 768 resolution in Microsoft Edge, Google Chrome 49+, Firefox 45+ and Safari 6+.
+      </p>
+    </div>
+  </div>
+</div>

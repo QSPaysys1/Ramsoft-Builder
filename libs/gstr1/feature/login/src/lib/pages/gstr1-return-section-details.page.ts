@@ -286,8 +286,24 @@ export class Gstr1ReturnSectionDetailsPageComponent {
       }
       if (api === 'ecom' || api === 'ecoma') {
         const q = this.route.snapshot.queryParamMap;
+        const suffix = api === 'ecoma' ? 'amend-ecoma' : 'supplies-eco';
         void this.router.navigate(
-          ['/gstr1/workspace/gstr1-download/section', api, g, rp, 'supplies-eco'],
+          ['/gstr1/workspace/gstr1-download/section', api, g, rp, suffix],
+          {
+            replaceUrl: true,
+            queryParams: {
+              filing_status: (q.get('filing_status') ?? '').trim() || undefined,
+              due_date: (q.get('due_date') ?? '').trim() || undefined,
+            },
+          },
+        );
+        return;
+      }
+      if (api === 'supeco' || api === 'supecoa') {
+        const q = this.route.snapshot.queryParamMap;
+        const suffix = api === 'supecoa' ? 'amend-supecoa' : 'supplies-us-95';
+        void this.router.navigate(
+          ['/gstr1/workspace/gstr1-download/section', api, g, rp, suffix],
           {
             replaceUrl: true,
             queryParams: {

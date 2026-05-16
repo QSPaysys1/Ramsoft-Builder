@@ -424,18 +424,30 @@ export class Gstr1DownloadReturnPageComponent {
       );
       return;
     }
-    if (api === 'ecom' || api === 'ecoma') {
-      const apiSeg = api === 'ecoma' ? 'ecoma' : 'ecom';
+    if (api === 'ecoma') {
       void this.router.navigate(
-        ['/gstr1/workspace/gstr1-download/section', apiSeg, g, r, 'supplies-eco'],
+        ['/gstr1/workspace/gstr1-download/section', 'ecoma', g, r, 'amend-ecoma'],
         { queryParams: qp },
       );
       return;
     }
-    if (api === 'supeco' || api === 'supecoa') {
-      const apiSeg = api === 'supecoa' ? 'supecoa' : 'supeco';
+    if (api === 'ecom') {
       void this.router.navigate(
-        ['/gstr1/workspace/gstr1-download/section', apiSeg, g, r, 'supplies-us-95'],
+        ['/gstr1/workspace/gstr1-download/section', 'ecom', g, r, 'supplies-eco'],
+        { queryParams: qp },
+      );
+      return;
+    }
+    if (api === 'supecoa') {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', 'supecoa', g, r, 'amend-supecoa'],
+        { queryParams: qp },
+      );
+      return;
+    }
+    if (api === 'supeco') {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', 'supeco', g, r, 'supplies-us-95'],
         { queryParams: qp },
       );
       return;
