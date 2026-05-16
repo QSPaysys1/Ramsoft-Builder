@@ -1,0 +1,133 @@
+<div class="gstr1-b2cla-amend pb-28">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a
+          [routerLink]="['/gstr1/workspace/gstr1-download']"
+          [queryParams]="backQueryParams()"
+          class="text-[#1a56a7] hover:underline"
+          >GSTR-1/IFF</a
+        >
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <span class="font-semibold text-slate-900" aria-current="page">B2CLA</span>
+      </li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">
+      English
+    </span>
+  </nav>
+
+  <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+    <div class="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-4">
+      <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">
+        9A - Amended B2C (Large) Invoices
+      </h1>
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="inline-flex h-10 min-w-[3.25rem] items-center justify-center rounded-full bg-[#1c2b54] px-2 text-[9px] font-bold uppercase leading-tight text-white shadow-md hover:bg-[#152347]"
+          (click)="openGstHelp()"
+          title="Help"
+        >
+          Help ?
+        </button>
+        <button
+          type="button"
+          class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1c2b54] text-lg text-white shadow-md hover:bg-[#152347]"
+          title="Refresh"
+          aria-label="Refresh"
+          (click)="refreshPage()"
+        >
+          ↻
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="border border-t-0 border-sky-300 bg-sky-50 px-4 py-3 text-sm text-slate-800 md:px-6">
+    There are no records to be displayed.
+  </div>
+
+  <section class="rounded-b-xl border border-t-0 border-slate-200 bg-white px-4 py-6 shadow-md md:px-6 md:py-7">
+    @if (!paramsValid()) {
+      <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        Invalid GSTIN or return period in the URL. Use <span class="font-semibold">Back</span> and open this screen from the download return workspace.
+      </div>
+    } @else {
+      <p class="mb-4 text-right text-xs font-medium text-red-600"><span class="text-red-600">*</span> Indicates Mandatory Fields</p>
+
+      <div class="rounded-lg border border-slate-200 bg-slate-50/80 p-4 md:p-5">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-slate-800" for="b2cla-fy">
+              Financial Year <span class="text-red-600">*</span>
+            </label>
+            <select
+              id="b2cla-fy"
+              class="min-h-[44px] w-full max-w-md rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-sky-200"
+              [value]="financialYear()"
+              (change)="selectFy($event)"
+            >
+              @for (opt of fyOptions(); track opt) {
+                <option [value]="opt">{{ opt }}</option>
+              }
+            </select>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-slate-800" for="b2cla-inum">
+              Invoice no. <span class="text-red-600">*</span>
+            </label>
+            <input
+              id="b2cla-inum"
+              type="text"
+              class="min-h-[44px] w-full max-w-md rounded border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-sky-200"
+              placeholder="Enter Invoice No"
+              autocomplete="off"
+              [value]="invoiceNo()"
+              (input)="updateInvoiceNo($any($event.target).value)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-wrap justify-end gap-3">
+        <button
+          type="button"
+          class="inline-flex min-h-[44px] min-w-[120px] items-center justify-center rounded border-2 border-slate-800 bg-white px-6 text-sm font-bold uppercase tracking-wide text-slate-900 hover:bg-slate-50"
+          (click)="backToWorkspace()"
+        >
+          Back
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[44px] min-w-[160px] cursor-not-allowed items-center justify-center rounded bg-[#1c2b54] px-6 text-sm font-bold uppercase tracking-wide text-white opacity-50"
+          disabled
+          aria-disabled="true"
+        >
+          Amend record
+        </button>
+      </div>
+    }
+  </section>
+
+  <footer
+    class="fixed bottom-0 left-0 right-0 z-10 border-t border-slate-700 bg-[#1c2b54] px-4 py-2.5 text-[11px] text-white md:text-xs"
+    aria-label="GSTN footer"
+  >
+    <div class="mx-auto flex max-w-6xl flex-col flex-wrap items-center justify-between gap-2 text-center md:flex-row md:text-left">
+      <span>© 2026-27 Goods and Services Tax Network</span>
+      <span class="text-white/90">Site Last Updated on 03-05-2026</span>
+      <span class="text-white/80">Designed &amp; Developed by GSTN</span>
+    </div>
+  </footer>
+</div>

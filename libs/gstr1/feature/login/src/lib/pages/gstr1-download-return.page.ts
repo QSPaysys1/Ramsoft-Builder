@@ -447,6 +447,13 @@ export class Gstr1DownloadReturnPageComponent {
       );
       return;
     }
+    if (api === 'b2cla') {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', api, g, r, 'amend-b2cla'],
+        { queryParams: qp },
+      );
+      return;
+    }
     this.apiName.set(api);
     void this.router.navigate(['/gstr1/workspace/gstr1-download/section', api, g, r], {
       queryParams: qp,

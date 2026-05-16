@@ -129,6 +129,13 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/amend-b2cla',
+            loadComponent: () =>
+              import('./pages/gstr1-b2cla-amend-record.page').then(
+                (m) => m.Gstr1B2claAmendRecordPageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(
