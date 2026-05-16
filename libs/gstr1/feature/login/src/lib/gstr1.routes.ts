@@ -101,6 +101,13 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/documents-issued',
+            loadComponent: () =>
+              import('./pages/gstr1-documents-issued.page').then(
+                (m) => m.Gstr1DocumentsIssuedPageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(

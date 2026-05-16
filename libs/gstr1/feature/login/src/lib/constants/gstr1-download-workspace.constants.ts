@@ -45,6 +45,7 @@ export const GSTR1_SUMMARY_TILES_FOR_API: Readonly<
   txp: [8],
   txpa: [8],
   hsnsum: [9],
+  doc_issue: [10],
   ecom: [11],
   ecoma: [11],
   supeco: [12],
@@ -52,7 +53,7 @@ export const GSTR1_SUMMARY_TILES_FOR_API: Readonly<
 };
 
 /** Prefer this `api_name` when the user picks a dashboard tile index. */
-export const GSTR1_SECTION_CARD_PRIMARY_API: ReadonlyArray<Gstr1DownloadApiName | null> = [
+export const GSTR1_SECTION_CARD_PRIMARY_API: ReadonlyArray<Gstr1DownloadApiName> = [
   'b2b',
   'b2cl',
   'exp',
@@ -63,7 +64,7 @@ export const GSTR1_SECTION_CARD_PRIMARY_API: ReadonlyArray<Gstr1DownloadApiName 
   'at',
   'txp',
   'hsnsum',
-  null,
+  'doc_issue',
   'ecom',
   'supeco',
 ];

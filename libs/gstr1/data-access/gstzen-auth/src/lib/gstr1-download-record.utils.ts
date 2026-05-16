@@ -1,5 +1,6 @@
 import {
   GSTR1_DOWNLOAD_API_NAMES,
+  GSTR1_DOWNLOAD_ROUTE_ONLY_API_NAMES,
   GSTR1A_DOWNLOAD_API_NAMES,
   type Gstr1DownloadAggregateStats,
   type Gstr1DownloadApiName,
@@ -12,6 +13,9 @@ import {
 
 export function coerceGstr1DownloadApiName(value: string | null | undefined): Gstr1DownloadApiName {
   const v = (value ?? 'b2b').trim().toLowerCase();
+  if ((GSTR1_DOWNLOAD_ROUTE_ONLY_API_NAMES as readonly string[]).includes(v)) {
+    return v as Gstr1DownloadApiName;
+  }
   return (GSTR1_DOWNLOAD_API_NAMES as readonly string[]).includes(v)
     ? (v as Gstr1DownloadApiName)
     : 'b2b';
@@ -32,6 +36,9 @@ export function extractGstr1DownloadMessageArray(
   raw: unknown,
   apiName: Gstr1DownloadApiName | Gstr1aDownloadApiName,
 ): unknown[] {
+  if (apiName === 'doc_issue') {
+    return [];
+  }
   if (!raw || typeof raw !== 'object') {
     return [];
   }

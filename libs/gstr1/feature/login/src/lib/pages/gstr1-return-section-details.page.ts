@@ -270,6 +270,20 @@ export class Gstr1ReturnSectionDetailsPageComponent {
       const api = coerceGstr1DownloadApiName(pm.get('apiName'));
       const g = (pm.get('gstin') ?? '').trim().toUpperCase();
       const rp = (pm.get('retPeriod') ?? '').trim();
+      if (api === 'doc_issue') {
+        const q = this.route.snapshot.queryParamMap;
+        void this.router.navigate(
+          ['/gstr1/workspace/gstr1-download/section', 'doc_issue', g, rp, 'documents-issued'],
+          {
+            replaceUrl: true,
+            queryParams: {
+              filing_status: (q.get('filing_status') ?? '').trim() || undefined,
+              due_date: (q.get('due_date') ?? '').trim() || undefined,
+            },
+          },
+        );
+        return;
+      }
       this.apiName.set(api);
       this.gstin.set(g);
       this.retPeriod.set(rp);
@@ -341,6 +355,10 @@ export class Gstr1ReturnSectionDetailsPageComponent {
     if (this.loading()) {
       return;
     }
+    const api = this.apiName();
+    if (api === 'doc_issue') {
+      return;
+    }
     this.loading.set(true);
     this.viewState.set('loading');
     this.httpError.set(null);
@@ -351,7 +369,7 @@ export class Gstr1ReturnSectionDetailsPageComponent {
         this.api.downloadGstr1Return({
           gstin: this.gstin().trim().toUpperCase(),
           ret_period: this.retPeriod().trim(),
-          api_name: this.apiName(),
+          api_name: api,
         }),
       );
       this.rawResponse.set(raw);
@@ -375,14 +393,14 @@ export class Gstr1ReturnSectionDetailsPageComponent {
         return;
       }
 
-      const bucket = extractGstr1DownloadMessageArray(raw, this.apiName());
+      const bucket = extractGstr1DownloadMessageArray(raw, api);
       if (bucket.length === 0) {
         this.apiRows.set([]);
         this.viewState.set('empty');
         return;
       }
 
-      this.apiRows.set(mapBucketToSectionRows(this.apiName(), bucket));
+      this.apiRows.set(mapBucketToSectionRows(api, bucket));
       this.viewState.set('success');
     } catch (err: unknown) {
       this.httpError.set(normalizeErrorEnvelope(err));

@@ -33,7 +33,18 @@ export const GSTR1_DOWNLOAD_API_NAMES = [
   'supecoa',
 ] as const;
 
-export type Gstr1DownloadApiName = (typeof GSTR1_DOWNLOAD_API_NAMES)[number];
+/** Names accepted by GSTZen `POST /api/gstr1/download/` only. */
+export type Gstr1GstzenDownloadApiName = (typeof GSTR1_DOWNLOAD_API_NAMES)[number];
+
+/**
+ * Workspace / route `api_name` values, including tiles that are retsave-only (no download bucket on GSTZen).
+ * Example: `doc_issue` — Table 13 documents issued.
+ */
+export const GSTR1_DOWNLOAD_ROUTE_ONLY_API_NAMES = ['doc_issue'] as const;
+
+export type Gstr1DownloadApiName =
+  | Gstr1GstzenDownloadApiName
+  | (typeof GSTR1_DOWNLOAD_ROUTE_ONLY_API_NAMES)[number];
 
 /** GSTR-1A `POST /api/gstr1a/download/` sections (GSTZen portal). */
 export const GSTR1A_DOWNLOAD_API_NAMES = [
@@ -130,7 +141,7 @@ export const GSTR1A_DOWNLOAD_API_OPTIONS: readonly {
 export interface Gstr1DownloadRequestBody {
   readonly gstin: string;
   readonly ret_period: string;
-  readonly api_name: Gstr1DownloadApiName;
+  readonly api_name: Gstr1GstzenDownloadApiName;
 }
 
 /** Request body for GSTR-1A section downloads only. */

@@ -1,0 +1,5 @@
+/* Portal-style Table 13 — spacing tweaks only; layout is Tailwind in template. */
+.gstr1-documents-issued .doc-sec table th,
+.gstr1-documents-issued .doc-sec table td {
+  vertical-align: middle;
+}
