@@ -329,6 +329,24 @@ export class Gstr1DownloadReturnPageComponent {
       );
       return;
     }
+    if (primary === 'ecom') {
+      void this.router.navigate(
+        [
+          '/gstr1/workspace/gstr1-download/section',
+          'ecom',
+          this.gstin().trim().toUpperCase(),
+          this.retPeriod().trim(),
+          'supplies-eco',
+        ],
+        {
+          queryParams: {
+            filing_status: this.filingStatusLabel().trim() || undefined,
+            due_date: this.dueDateLabel().trim() || undefined,
+          },
+        },
+      );
+      return;
+    }
     this.apiName.set(primary);
     void this.router.navigate(
       [

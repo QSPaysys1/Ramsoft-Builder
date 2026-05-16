@@ -1,0 +1,327 @@
+<div class="gstr1-eco-supplies pb-20">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a [routerLink]="['/gstr1/workspace/gstr1-download']" [queryParams]="backQueryParams()" class="text-[#1a56a7] hover:underline">GSTR-1/IFF</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <span class="font-semibold text-slate-900" aria-current="page">Supplies through ECO</span>
+      </li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">English</span>
+  </nav>
+
+  @if (screen() === 'list') {
+    <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+      <div class="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-5">
+        <div class="min-w-0 flex-1">
+          <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">14 — Supplies made through E-Commerce Operators</h1>
+          <p class="mt-1 text-xs text-white/95 md:text-sm">
+            <span class="font-mono">{{ filerGstin() }}</span> · Return period <span class="font-mono">{{ retPeriod() }}</span>
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            class="inline-flex min-h-[38px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-xs font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347]"
+            (click)="openGstHelp()"
+          >
+            HELP ?
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/50 bg-white/15 text-white hover:bg-white/25"
+            title="Reload drafts"
+            (click)="refreshDrafts()"
+            aria-label="Refresh"
+          >
+            ↻
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section class="eco-panel rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-md">
+      @if (!paramsValid()) {
+        <div class="px-4 py-8 md:px-6">
+          <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+            Invalid GSTIN or return period. Open this screen from tile <span class="font-semibold">14 — Supplies made through ECO</span> on the GSTR-1 workspace.
+          </div>
+        </div>
+      } @else {
+        <div class="eco-tabs flex flex-wrap gap-0 border-b border-[#4db6ac]/40 bg-[#4db6ac]/15 px-2 pt-2 md:px-4">
+          <button
+            type="button"
+            class="eco-tab min-h-[42px] rounded-t-lg px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition md:px-5 md:text-sm"
+            [class.eco-tab-active]="ecoTab() === 'tcs'"
+            [class.eco-tab-inactive]="ecoTab() !== 'tcs'"
+            (click)="selectTab('tcs')"
+          >
+            Liable to collect tax u/s 52 (TCS)
+          </button>
+          <button
+            type="button"
+            class="eco-tab min-h-[42px] rounded-t-lg px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition md:px-5 md:text-sm"
+            [class.eco-tab-active]="ecoTab() === 'ninefive'"
+            [class.eco-tab-inactive]="ecoTab() !== 'ninefive'"
+            (click)="selectTab('ninefive')"
+          >
+            Liable to pay tax u/s 9(5)
+          </button>
+        </div>
+
+        <div class="px-4 py-4 md:px-6 md:py-5">
+          <div class="mb-4 flex justify-end">
+            <p class="text-[11px] font-medium text-slate-600">
+              <span class="text-red-600">*</span> Indicates mandatory fields
+            </p>
+          </div>
+
+          @if (currentRows().length === 0) {
+            <div class="rounded-lg border border-sky-200 bg-sky-50 px-4 py-10 text-center text-sm font-medium text-sky-950">
+              There are no records to be displayed.
+            </div>
+          } @else {
+            <div class="overflow-x-auto rounded-lg border border-slate-200">
+              <table class="w-full min-w-[720px] border-collapse text-left text-sm">
+                <thead>
+                  <tr class="border-b border-slate-200 bg-slate-100 text-xs font-bold uppercase tracking-wide text-slate-800">
+                    <th class="border-r border-slate-200 px-3 py-2">#</th>
+                    <th class="border-r border-slate-200 px-3 py-2 font-mono">GSTIN (ECO)</th>
+                    <th class="border-r border-slate-200 px-3 py-2">Trade / Legal name</th>
+                    <th class="border-r border-slate-200 px-3 py-2 text-right">Net value (₹)</th>
+                    <th class="border-r border-slate-200 px-3 py-2 text-right">IGST</th>
+                    <th class="border-r border-slate-200 px-3 py-2 text-right">CGST</th>
+                    <th class="border-r border-slate-200 px-3 py-2 text-right">SGST</th>
+                    <th class="border-r border-slate-200 px-3 py-2 text-right">Cess</th>
+                    <th class="px-3 py-2 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of currentRows(); track row.num) {
+                    <tr class="border-b border-slate-100">
+                      <td class="border-r border-slate-100 px-3 py-2 text-slate-700">{{ row.num }}</td>
+                      <td class="border-r border-slate-100 px-3 py-2 font-mono text-xs">{{ row.ecoGstin }}</td>
+                      <td class="border-r border-slate-100 px-3 py-2">{{ row.tradeLegalName }}</td>
+                      <td class="border-r border-slate-100 px-3 py-2 text-right tabular-nums">{{ row.netVal | number : '1.2-2' }}</td>
+                      <td class="border-r border-slate-100 px-3 py-2 text-right tabular-nums">{{ row.igst | number : '1.2-2' }}</td>
+                      <td class="border-r border-slate-100 px-3 py-2 text-right tabular-nums">{{ row.cgst | number : '1.2-2' }}</td>
+                      <td class="border-r border-slate-100 px-3 py-2 text-right tabular-nums">{{ row.sgst | number : '1.2-2' }}</td>
+                      <td class="border-r border-slate-100 px-3 py-2 text-right tabular-nums">{{ row.cess | number : '1.2-2' }}</td>
+                      <td class="px-3 py-2 text-center">
+                        <button
+                          type="button"
+                          class="text-xs font-bold uppercase text-red-600 hover:text-red-800"
+                          (click)="deleteRow(ecoTab(), row.num)"
+                          aria-label="Delete row"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          <div class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-6">
+            <a
+              [routerLink]="['/gstr1/workspace/gstr1-download']"
+              [queryParams]="backQueryParams()"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg border-2 border-slate-700 bg-white px-8 text-sm font-bold uppercase tracking-wide text-slate-900 shadow-sm hover:bg-slate-50"
+            >
+              Back
+            </a>
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg bg-[#1c2b54] px-8 text-sm font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347] disabled:cursor-not-allowed disabled:opacity-50"
+              [disabled]="!paramsValid()"
+              (click)="openAddRecord()"
+            >
+              Add record
+            </button>
+          </div>
+        </div>
+      }
+    </section>
+  } @else {
+    <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+      <div class="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-5">
+        <div class="min-w-0 flex-1">
+          <h1 class="text-base font-bold tracking-tight text-white md:text-lg">
+            14 — Supplies made through E-Commerce Operators — {{ addDetailTitleSuffix() }} — Add details
+          </h1>
+          <p class="mt-1 text-xs text-white/95 md:text-sm">
+            <span class="font-mono">{{ filerGstin() }}</span> · <span class="font-mono">{{ retPeriod() }}</span>
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="inline-flex min-h-[38px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-xs font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347]"
+            (click)="openGstHelp()"
+          >
+            HELP ?
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section class="eco-panel rounded-b-xl border border-t-0 border-slate-200 bg-white px-4 py-5 shadow-md md:px-6 md:py-6">
+      @if (!paramsValid()) {
+        <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+          Invalid GSTIN or return period.
+        </div>
+      } @else {
+        <div class="mb-4 flex justify-end">
+          <p class="text-[11px] font-medium text-slate-600">
+            <span class="text-red-600">*</span> Indicates mandatory fields
+          </p>
+        </div>
+
+        <form class="space-y-6" [formGroup]="addForm" (ngSubmit)="saveAddRecord()">
+          <div class="grid gap-5 md:grid-cols-3">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="eco-gstin">
+                GSTIN of e-commerce operator <span class="text-red-600">*</span>
+              </label>
+              <input
+                id="eco-gstin"
+                formControlName="ecoGstin"
+                maxlength="15"
+                autocomplete="off"
+                placeholder="Enter GSTIN"
+                class="rounded-lg border border-slate-200 px-3 py-2.5 font-mono text-sm uppercase tracking-wide text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+                (blur)="onEcoGstinBlur()"
+              />
+              @if (gstinLookupLoading()) {
+                <p class="text-[11px] text-slate-500">Looking up trade / legal name…</p>
+              }
+              @if (addForm.controls.ecoGstin.touched && addForm.controls.ecoGstin.invalid) {
+                <p class="text-xs text-red-600">Enter a valid 15-character GSTIN.</p>
+              }
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="eco-trade">
+                Trade / Legal name <span class="text-red-600">*</span>
+              </label>
+              <input
+                id="eco-trade"
+                formControlName="tradeLegal"
+                class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 shadow-inner disabled:bg-slate-100 disabled:text-slate-600"
+              />
+              @if (addForm.touched && !addForm.getRawValue()['tradeLegal']) {
+                <p class="text-xs text-red-600">Enter GSTIN and wait for name lookup.</p>
+              }
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="eco-net">
+                Net value of supplies (₹) <span class="text-red-600">*</span>
+              </label>
+              <input
+                id="eco-net"
+                formControlName="netVal"
+                class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+                inputmode="decimal"
+                autocomplete="off"
+              />
+              @if (addForm.controls.netVal.touched && addForm.controls.netVal.invalid) {
+                <p class="text-xs text-red-600">Enter a valid amount.</p>
+              }
+            </div>
+          </div>
+
+          <div class="grid gap-5 md:grid-cols-3">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="eco-igst">
+                Integrated tax (₹) <span class="text-red-600">*</span>
+              </label>
+              <input
+                id="eco-igst"
+                formControlName="igst"
+                class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+                inputmode="decimal"
+                autocomplete="off"
+              />
+              @if (addForm.controls.igst.touched && addForm.controls.igst.invalid) {
+                <p class="text-xs text-red-600">Enter a valid amount.</p>
+              }
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="eco-cgst">
+                Central tax (₹) <span class="text-red-600">*</span>
+              </label>
+              <input
+                id="eco-cgst"
+                formControlName="cgst"
+                class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+                inputmode="decimal"
+                autocomplete="off"
+              />
+              @if (addForm.controls.cgst.touched && addForm.controls.cgst.invalid) {
+                <p class="text-xs text-red-600">Enter a valid amount.</p>
+              }
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label class="text-sm font-semibold text-slate-700" for="eco-sgst">
+                State/UT tax (₹) <span class="text-red-600">*</span>
+              </label>
+              <input
+                id="eco-sgst"
+                formControlName="sgst"
+                class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+                inputmode="decimal"
+                autocomplete="off"
+              />
+              @if (addForm.controls.sgst.touched && addForm.controls.sgst.invalid) {
+                <p class="text-xs text-red-600">Enter a valid amount.</p>
+              }
+            </div>
+          </div>
+
+          <div class="grid gap-5 md:grid-cols-3">
+            <div class="flex flex-col gap-1.5 md:col-span-1">
+              <label class="text-sm font-semibold text-slate-700" for="eco-ces">Cess (₹)</label>
+              <input
+                id="eco-ces"
+                formControlName="cess"
+                class="rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+                inputmode="decimal"
+                autocomplete="off"
+              />
+              @if (addForm.controls.cess.touched && addForm.controls.cess.invalid) {
+                <p class="text-xs text-red-600">Enter a valid amount or leave blank.</p>
+              }
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-6">
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg border-2 border-slate-700 bg-white px-8 text-sm font-bold uppercase tracking-wide text-slate-900 shadow-sm hover:bg-slate-50"
+              (click)="backFromAdd()"
+            >
+              Back
+            </button>
+            <button
+              type="submit"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg bg-[#1c2b54] px-10 text-sm font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347]"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      }
+    </section>
+  }
+</div>

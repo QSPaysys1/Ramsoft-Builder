@@ -1,0 +1,17 @@
+/* Section 14 — portal-style tabs (active vs inactive strip). */
+.gstr1-eco-supplies .eco-tab-active {
+  background: white;
+  color: #00897b;
+  box-shadow: 0 1px 0 0 white;
+  position: relative;
+  z-index: 1;
+}
+
+.gstr1-eco-supplies .eco-tab-inactive {
+  background: #4db6ac;
+  color: white;
+}
+
+.gstr1-eco-supplies .eco-tab-inactive:hover {
+  filter: brightness(1.05);
+}

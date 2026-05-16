@@ -284,6 +284,20 @@ export class Gstr1ReturnSectionDetailsPageComponent {
         );
         return;
       }
+      if (api === 'ecom' || api === 'ecoma') {
+        const q = this.route.snapshot.queryParamMap;
+        void this.router.navigate(
+          ['/gstr1/workspace/gstr1-download/section', api, g, rp, 'supplies-eco'],
+          {
+            replaceUrl: true,
+            queryParams: {
+              filing_status: (q.get('filing_status') ?? '').trim() || undefined,
+              due_date: (q.get('due_date') ?? '').trim() || undefined,
+            },
+          },
+        );
+        return;
+      }
       this.apiName.set(api);
       this.gstin.set(g);
       this.retPeriod.set(rp);

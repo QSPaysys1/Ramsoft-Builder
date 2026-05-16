@@ -108,6 +108,13 @@ export const gstr1Routes: Routes = [
               ),
           },
           {
+            path: 'section/:apiName/:gstin/:retPeriod/supplies-eco',
+            loadComponent: () =>
+              import('./pages/gstr1-eco-supplies.page').then(
+                (m) => m.Gstr1EcoSuppliesPageComponent,
+              ),
+          },
+          {
             path: 'section/:apiName/:gstin/:retPeriod',
             loadComponent: () =>
               import('./pages/gstr1-return-section-details.page').then(
