@@ -119,31 +119,112 @@ export function extractGstr1RetsumSecSum(raw: unknown): unknown[] {
 }
 
 function ttlRecFromSecSumRow(row: Record<string, unknown>): number {
-  const v = row['ttl_rec'];
-  if (typeof v === 'number' && Number.isFinite(v)) {
-    return Math.max(0, Math.trunc(v));
-  }
-  if (typeof v === 'string' && v.trim() !== '') {
-    const n = Number.parseInt(v, 10);
-    return Number.isFinite(n) ? Math.max(0, n) : 0;
+  for (const key of ['ttl_rec', 'ttlRec', 'TTL_REC'] as const) {
+    const v = row[key];
+    if (typeof v === 'number' && Number.isFinite(v)) {
+      return Math.max(0, Math.trunc(v));
+    }
+    if (typeof v === 'string' && v.trim() !== '') {
+      const n = Number.parseInt(v, 10);
+      if (Number.isFinite(n)) {
+        return Math.max(0, n);
+      }
+    }
   }
   return 0;
+}
+
+/** Normalized RETSUM section key from one `sec_sum` row (string or numeric `sec_nm`). */
+export function gstr1RetsumSecNmFromRow(item: unknown): string {
+  if (!item || typeof item !== 'object') {
+    return '';
+  }
+  const o = item as Record<string, unknown>;
+  const raw = o['sec_nm'] ?? o['secNm'];
+  if (typeof raw === 'string') {
+    return raw.trim().toUpperCase();
+  }
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    return String(Math.trunc(raw)).toUpperCase();
+  }
+  return '';
+}
+
+/**
+ * True when `secSum` contains at least one row whose `sec_nm` matches an entry in `secNames`.
+ * Used to decide whether amendment-specific totals exist vs. falling back to primary tile counts.
+ */
+export function retsumSecSumHasRowForSecNames(
+  secSum: readonly unknown[],
+  secNames: readonly string[],
+): boolean {
+  if (secNames.length === 0) {
+    return false;
+  }
+  const want = new Set(
+    secNames
+      .map((s) => s.trim().toUpperCase())
+      .filter((s) => s.length > 0),
+  );
+  if (want.size === 0) {
+    return false;
+  }
+  for (const item of secSum) {
+    const nm = gstr1RetsumSecNmFromRow(item);
+    if (nm && want.has(nm)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Sums `ttl_rec` for RETSUM rows whose `sec_nm` matches one of `secNames` (case-insensitive).
+ * Use this for GSTR-1A / table-9x amendment buckets (e.g. `EXPA`), not the original-return `EXP` row.
+ */
+export function sumGstr1RetsumTtlRecForSecNames(
+  secSum: readonly unknown[],
+  secNames: readonly string[],
+): number {
+  if (secNames.length === 0) {
+    return 0;
+  }
+  const want = new Set(
+    secNames
+      .map((s) => s.trim().toUpperCase())
+      .filter((s) => s.length > 0),
+  );
+  if (want.size === 0) {
+    return 0;
+  }
+  let sum = 0;
+  for (const item of secSum) {
+    const nm = gstr1RetsumSecNmFromRow(item);
+    if (!nm || !want.has(nm)) {
+      continue;
+    }
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+    sum += ttlRecFromSecSumRow(item as Record<string, unknown>);
+  }
+  return sum;
 }
 
 /** Maps GSTZen RETSUM `sec_sum` rows to the 13 GSTR-1 workspace portal tiles (B2B… SUPECOM). */
 export function mapGstr1RetsumSecSumToPortalTileCounts(secSum: readonly unknown[]): number[] {
   const byName = new Map<string, number>();
   for (const item of secSum) {
+    const nm = gstr1RetsumSecNmFromRow(item);
+    if (!nm) {
+      continue;
+    }
     if (!item || typeof item !== 'object') {
       continue;
     }
     const o = item as Record<string, unknown>;
-    const nmRaw = o['sec_nm'];
-    const nm = typeof nmRaw === 'string' ? nmRaw.trim().toUpperCase() : '';
-    if (!nm) {
-      continue;
-    }
-    byName.set(nm, ttlRecFromSecSumRow(o));
+    const prev = byName.get(nm) ?? 0;
+    byName.set(nm, prev + ttlRecFromSecSumRow(o));
   }
 
   const out = Array.from({ length: 13 }, () => 0);

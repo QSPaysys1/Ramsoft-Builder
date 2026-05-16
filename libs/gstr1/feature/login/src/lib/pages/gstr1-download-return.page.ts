@@ -6,12 +6,14 @@ import {
   Component,
   computed,
   DestroyRef,
+  HostListener,
   inject,
   PLATFORM_ID,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
+import { AuthToastService } from '@ramsoft-builder/auth/ui/login';
 import { AuthStore } from '@ramsoft-builder/auth/data-access/auth';
 import { UserProfileRepository } from '@ramsoft-builder/e-invoices/data-access/einvoice';
 import {
@@ -21,15 +23,22 @@ import {
   extractGstr1RetsumSecSum,
   isGstr1DownloadSuccessEnvelope,
   mapGstr1RetsumSecSumToPortalTileCounts,
+  retsumSecSumHasRowForSecNames,
+  sumGstr1RetsumTtlRecForSecNames,
   type Gstr1DownloadApiName,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
 import { filter } from 'rxjs/operators';
 import { catchError, firstValueFrom, of, switchMap } from 'rxjs';
 import {
+  GSTR1_AMEND_RECORD_DETAIL_TILES,
   GSTR1_SECTION_CARD_PRIMARY_API,
   GSTR1_SUMMARY_SECTION_TITLES,
   GSTR1_SUMMARY_TILES_FOR_API,
+  type Gstr1AmendRecordDetailTile,
 } from '../constants/gstr1-download-workspace.constants';
+import { docIssueStorageKey } from '../utils/gstr1-doc-issue.state';
+import { ecoSuppliesStorageKey } from '../utils/gstr1-eco-supplies.state';
+import { us95DraftsStorageKey } from '../utils/gstr1-supplies-us-95.drafts';
 
 function indianFyLabelFromMmYyyy(retPeriod: string): string {
   if (!RETURN_PERIOD_REGEX.test(retPeriod)) {
@@ -114,6 +123,15 @@ function normalizeErrorEnvelope(err: unknown): unknown {
   host: { class: 'block min-h-[60vh]' },
 })
 export class Gstr1DownloadReturnPageComponent {
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeResetModal(event: Event): void {
+    if (!this.resetConfirmOpen()) {
+      return;
+    }
+    event.preventDefault();
+    this.cancelResetConfirm();
+  }
+
   private readonly platformId = inject(PLATFORM_ID);
   private readonly destroyRef = inject(DestroyRef);
   private readonly api = inject(Gstr1GstnOtpApiService);
@@ -121,10 +139,12 @@ export class Gstr1DownloadReturnPageComponent {
   private readonly router = inject(Router);
   private readonly authStore = inject(AuthStore);
   private readonly userProfile = inject(UserProfileRepository);
+  private readonly toast = inject(AuthToastService);
 
   readonly summaryTitles = GSTR1_SUMMARY_SECTION_TITLES;
   /** Exposed for template bindings (portal tile → primary `api_name`). */
   readonly sectionCardPrimaryApis = GSTR1_SECTION_CARD_PRIMARY_API;
+  readonly amendRecordTiles = GSTR1_AMEND_RECORD_DETAIL_TILES;
 
   readonly gstin = signal('');
   readonly retPeriod = signal('');
@@ -139,8 +159,12 @@ export class Gstr1DownloadReturnPageComponent {
 
   readonly fileNilGstr1 = signal(false);
   readonly addRecordOpen = signal(true);
+  readonly amendRecordOpen = signal(false);
+  readonly resetConfirmOpen = signal(false);
 
   readonly retsumLoading = signal(false);
+  /** Last successful RETSUM `sec_sum` payload (for amend-tile counts by `EXPA`, `B2BA`, …). */
+  readonly retsumSecSum = signal<readonly unknown[]>([]);
   readonly retsumTileCounts = signal<number[] | null>(null);
   readonly httpError = signal<unknown>(null);
   readonly rawResponse = signal<unknown>(null);
@@ -248,6 +272,10 @@ export class Gstr1DownloadReturnPageComponent {
     this.addRecordOpen.update((v) => !v);
   }
 
+  toggleAmendSection(): void {
+    this.amendRecordOpen.update((v) => !v);
+  }
+
   toggleFileNil(): void {
     this.fileNilGstr1.update((v) => !v);
   }
@@ -272,114 +300,157 @@ export class Gstr1DownloadReturnPageComponent {
 
   navigateToSection(index: number): void {
     const primary = GSTR1_SECTION_CARD_PRIMARY_API[index];
-    if (!primary || !this.paramsValid() || this.fileNilGstr1() || this.retsumLoading()) {
+    if (!primary) {
       return;
     }
-    if (primary === 'nil' && this.nilTileUsesRetsaveGrid()) {
-      void this.router.navigate(
-        [
-          '/gstr1/workspace/gstr1-download/section',
-          primary,
-          this.gstin().trim().toUpperCase(),
-          this.retPeriod().trim(),
-          'add-nil',
-        ],
-        {
-          queryParams: {
-            filing_status: this.filingStatusLabel().trim() || undefined,
-            due_date: this.dueDateLabel().trim() || undefined,
-          },
-        },
-      );
+    void this.openSectionWorkspace(primary);
+  }
+
+  navigateToAmendRecordTile(tile: Gstr1AmendRecordDetailTile): void {
+    if (!this.paramsValid() || this.fileNilGstr1() || this.retsumLoading()) {
       return;
     }
-    if (primary === 'hsnsum') {
-      void this.router.navigate(
-        [
-          '/gstr1/workspace/gstr1-download/section',
-          primary,
-          this.gstin().trim().toUpperCase(),
-          this.retPeriod().trim(),
-          'add-hsn',
-        ],
-        {
-          queryParams: {
-            filing_status: this.filingStatusLabel().trim() || undefined,
-            due_date: this.dueDateLabel().trim() || undefined,
-          },
-        },
-      );
-      return;
+    void this.openSectionWorkspace(tile.amendApi);
+  }
+
+  amendRecordTileDisabled(): boolean {
+    return this.retsumLoading() || this.fileNilGstr1() || !this.paramsValid();
+  }
+
+  amendRecordTileHint(tile: Gstr1AmendRecordDetailTile): string {
+    return `Open ${tile.amendApi} workspace`;
+  }
+
+  amendRecordTileCount(tile: Gstr1AmendRecordDetailTile): number {
+    const secSum = this.retsumSecSum();
+    if (retsumSecSumHasRowForSecNames(secSum, tile.retsumSecNames)) {
+      return sumGstr1RetsumTtlRecForSecNames(secSum, tile.retsumSecNames);
     }
-    if (primary === 'doc_issue') {
-      void this.router.navigate(
-        [
-          '/gstr1/workspace/gstr1-download/section',
-          'doc_issue',
-          this.gstin().trim().toUpperCase(),
-          this.retPeriod().trim(),
-          'documents-issued',
-        ],
-        {
-          queryParams: {
-            filing_status: this.filingStatusLabel().trim() || undefined,
-            due_date: this.dueDateLabel().trim() || undefined,
-          },
-        },
-      );
-      return;
-    }
-    if (primary === 'ecom') {
-      void this.router.navigate(
-        [
-          '/gstr1/workspace/gstr1-download/section',
-          'ecom',
-          this.gstin().trim().toUpperCase(),
-          this.retPeriod().trim(),
-          'supplies-eco',
-        ],
-        {
-          queryParams: {
-            filing_status: this.filingStatusLabel().trim() || undefined,
-            due_date: this.dueDateLabel().trim() || undefined,
-          },
-        },
-      );
-      return;
-    }
-    if (primary === 'supeco') {
-      void this.router.navigate(
-        [
-          '/gstr1/workspace/gstr1-download/section',
-          'supeco',
-          this.gstin().trim().toUpperCase(),
-          this.retPeriod().trim(),
-          'supplies-us-95',
-        ],
-        {
-          queryParams: {
-            filing_status: this.filingStatusLabel().trim() || undefined,
-            due_date: this.dueDateLabel().trim() || undefined,
-          },
-        },
-      );
-      return;
-    }
-    this.apiName.set(primary);
-    void this.router.navigate(
-      [
-        '/gstr1/workspace/gstr1-download/section',
-        primary,
-        this.gstin().trim().toUpperCase(),
-        this.retPeriod().trim(),
-      ],
-      {
-        queryParams: {
-          filing_status: this.filingStatusLabel().trim() || undefined,
-          due_date: this.dueDateLabel().trim() || undefined,
-        },
-      },
+    const counts = this.summaryCounts();
+    return counts[tile.primaryTileIndex] ?? 0;
+  }
+
+  resetWorkspace(): void {
+    this.fileNilGstr1.set(false);
+    this.httpError.set(null);
+    this.logicalErrorText.set(null);
+    this.rawResponse.set(null);
+    this.retsumSecSum.set([]);
+    this.retsumTileCounts.set(null);
+    this.syncQueryIntoSignals(this.route.snapshot.queryParamMap);
+  }
+
+  openResetConfirm(): void {
+    this.resetConfirmOpen.set(true);
+  }
+
+  cancelResetConfirm(): void {
+    this.resetConfirmOpen.set(false);
+  }
+
+  /** User confirmed reset — clear browser drafts, RETSUM cache, sync from URL. */
+  confirmResetWorkspace(): void {
+    this.clearSessionDraftsForCurrentReturn();
+    this.resetWorkspace();
+    this.resetConfirmOpen.set(false);
+    this.toast.show(
+      'success',
+      'Saved data has been cleared. Press View to reload return summary.',
+      5500,
     );
+  }
+
+  private clearSessionDraftsForCurrentReturn(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+    const g = this.gstin().trim().toUpperCase();
+    const r = this.retPeriod().trim();
+    if (g.length !== 15 || !RETURN_PERIOD_REGEX.test(r)) {
+      return;
+    }
+    const keys = [
+      docIssueStorageKey(g, r),
+      ecoSuppliesStorageKey(g, r),
+      us95DraftsStorageKey(g, r),
+    ];
+    try {
+      for (const k of keys) {
+        sessionStorage.removeItem(k);
+      }
+    } catch {
+      /* quota / private mode */
+    }
+  }
+
+  proceedToFileSummary(): void {
+    void this.router.navigate(['/gstr1/workspace/returns-dashboard'], {
+      queryParams: {
+        gstin: this.gstin().trim().toUpperCase() || undefined,
+        ret_period: this.retPeriod().trim() || undefined,
+      },
+    });
+  }
+
+  private openSectionWorkspace(api: Gstr1DownloadApiName): void {
+    if (!this.paramsValid() || this.fileNilGstr1() || this.retsumLoading()) {
+      return;
+    }
+    const g = this.gstin().trim().toUpperCase();
+    const r = this.retPeriod().trim();
+    const qp = {
+      filing_status: this.filingStatusLabel().trim() || undefined,
+      due_date: this.dueDateLabel().trim() || undefined,
+    };
+
+    if (api === 'nil' && this.nilTileUsesRetsaveGrid()) {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', api, g, r, 'add-nil'],
+        { queryParams: qp },
+      );
+      return;
+    }
+    if (api === 'hsnsum') {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', api, g, r, 'add-hsn'],
+        { queryParams: qp },
+      );
+      return;
+    }
+    if (api === 'doc_issue') {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', 'doc_issue', g, r, 'documents-issued'],
+        { queryParams: qp },
+      );
+      return;
+    }
+    if (api === 'ecom' || api === 'ecoma') {
+      const apiSeg = api === 'ecoma' ? 'ecoma' : 'ecom';
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', apiSeg, g, r, 'supplies-eco'],
+        { queryParams: qp },
+      );
+      return;
+    }
+    if (api === 'supeco' || api === 'supecoa') {
+      const apiSeg = api === 'supecoa' ? 'supecoa' : 'supeco';
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', apiSeg, g, r, 'supplies-us-95'],
+        { queryParams: qp },
+      );
+      return;
+    }
+    if (api === 'b2ba') {
+      void this.router.navigate(
+        ['/gstr1/workspace/gstr1-download/section', api, g, r, 'amend-b2b'],
+        { queryParams: qp },
+      );
+      return;
+    }
+    this.apiName.set(api);
+    void this.router.navigate(['/gstr1/workspace/gstr1-download/section', api, g, r], {
+      queryParams: qp,
+    });
   }
 
   openEInvoiceAdvisory(): void {
@@ -457,6 +528,7 @@ export class Gstr1DownloadReturnPageComponent {
       }
 
       const secSum = extractGstr1RetsumSecSum(raw);
+      this.retsumSecSum.set(secSum);
       this.retsumTileCounts.set(mapGstr1RetsumSecSumToPortalTileCounts(secSum));
       this.rawResponse.set(raw);
       return true;

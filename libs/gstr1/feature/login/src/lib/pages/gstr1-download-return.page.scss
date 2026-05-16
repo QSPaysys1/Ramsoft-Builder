@@ -3,3 +3,10 @@
   min-height: 100%;
   background: linear-gradient(180deg, #f1f5f9 0%, #f8fafc 48%, #fff 100%);
 }
+
+/** Center the last row (2 tiles) under a 4-column desktop grid (Tailwind `xl`). */
+@media (min-width: 1280px) {
+  .amend-record-grid > button:nth-last-child(2) {
+    grid-column-start: 2;
+  }
+}
