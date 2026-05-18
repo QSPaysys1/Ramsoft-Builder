@@ -6,6 +6,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  HostListener,
   inject,
   PLATFORM_ID,
   signal,
@@ -16,21 +17,31 @@ import { AuthStore } from '@ramsoft-builder/auth/data-access/auth';
 import { UserProfileRepository } from '@ramsoft-builder/e-invoices/data-access/einvoice';
 import {
   Gstr1GstnOtpApiService,
+  GSTR1A_DOWNLOAD_API_NAMES,
   GSTR1A_DOWNLOAD_API_OPTIONS,
   RETURN_PERIOD_REGEX,
   aggregateGstr1DownloadRows,
   coerceGstr1aDownloadApiName,
   extractGstr1DownloadMessageArray,
+  extractGstr1RetsumSecSum,
   filterGstr1DownloadHierarchy,
   flattenGstr1DownloadHierarchy,
   isGstr1DownloadSuccessEnvelope,
+  mapGstr1RetsumSecSumToPortalTileCounts,
   parseGstr1DownloadHierarchy,
+  retsumSecSumHasRowForSecNames,
+  sumGstr1RetsumTtlRecForSecNames,
   type Gstr1DownloadAggregateStats,
   type Gstr1DownloadCtinGroup,
   type Gstr1aDownloadApiName,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
 import { filter } from 'rxjs/operators';
 import { catchError, firstValueFrom, of, switchMap } from 'rxjs';
+import {
+  GSTR1_AMEND_RECORD_DETAIL_TILES,
+  GSTR1_SECTION_CARD_PRIMARY_API,
+  type Gstr1AmendRecordDetailTile,
+} from '../constants/gstr1-download-workspace.constants';
 
 type ViewState = 'idle' | 'loading' | 'success' | 'empty' | 'error';
 
@@ -164,6 +175,15 @@ function pickProfileString(
   host: { class: 'block min-h-[60vh]' },
 })
 export class Gstr1aViewPageComponent {
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeResetModal(event: Event): void {
+    if (!this.resetConfirmOpen()) {
+      return;
+    }
+    event.preventDefault();
+    this.cancelResetConfirm();
+  }
+
   private readonly platformId = inject(PLATFORM_ID);
   private readonly destroyRef = inject(DestroyRef);
   private readonly api = inject(Gstr1GstnOtpApiService);
@@ -174,6 +194,9 @@ export class Gstr1aViewPageComponent {
 
   readonly summaryTitles = GSTR1A_SUMMARY_SECTION_TITLES;
   readonly apiOptions = GSTR1A_DOWNLOAD_API_OPTIONS;
+  /** Same primary `api_name` order as GSTR-1 workspace tiles (tile 10 is `doc_issue` — not on GSTR-1A download). */
+  readonly sectionCardPrimaryApis = GSTR1_SECTION_CARD_PRIMARY_API;
+  readonly amendRecordTiles = GSTR1_AMEND_RECORD_DETAIL_TILES;
 
   readonly gstin = signal('');
   readonly retPeriod = signal('');
@@ -190,6 +213,20 @@ export class Gstr1aViewPageComponent {
   readonly rawResponse = signal<unknown>(null);
   readonly lastSyncedAt = signal<Date | null>(null);
 
+  /** `POST api/gstr1a/download/` with `api_name=retsum` — fills portal tile counts. */
+  readonly retsumLoading = signal(false);
+  readonly retsumSecSum = signal<readonly unknown[]>([]);
+  readonly retsumTileCounts = signal<number[] | null>(null);
+  readonly retsumHttpError = signal<unknown>(null);
+  readonly retsumLogicalError = signal<string | null>(null);
+
+  readonly resetConfirmOpen = signal(false);
+
+  /** Round-trip downloaded section JSON to `POST /api/gstr1a/retsave/` (portal “save” equivalent). */
+  readonly retsaveSubmitting = signal(false);
+  readonly retsaveError = signal<unknown>(null);
+  readonly retsaveSuccessPayload = signal<unknown>(null);
+
   readonly legalName = signal('');
   readonly tradeName = signal('');
 
@@ -200,25 +237,18 @@ export class Gstr1aViewPageComponent {
   readonly expandedInvoices = signal(new Set<string>());
 
   readonly addRecordOpen = signal(true);
-  readonly amendRecordOpen = signal(false);
+  readonly amendRecordOpen = signal(true);
 
   readonly filteredHierarchy = computed(() =>
     filterGstr1DownloadHierarchy([...this.hierarchy()], this.filterQuery()),
   );
 
   readonly summaryCounts = computed(() => {
-    const out = this.summaryTitles.map(() => 0);
-    const agg = this.aggregate();
-    const st = this.viewState();
-    if ((st === 'success' || st === 'empty') && agg) {
-      const indices = GSTR1A_SUMMARY_TILES_FOR_API[this.apiName()];
-      if (indices?.length) {
-        for (const i of indices) {
-          out[i] = agg.invoiceCount;
-        }
-      }
+    const cached = this.retsumTileCounts();
+    if (cached && cached.length === this.summaryTitles.length) {
+      return cached;
     }
-    return out;
+    return this.summaryTitles.map(() => 0);
   });
 
   readonly selectedApiHint = computed(() => {
@@ -253,6 +283,18 @@ export class Gstr1aViewPageComponent {
   readonly moneyFmt = new Intl.NumberFormat('en-IN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+  });
+
+  /** Enabled when the current download has a non-empty `message[api_name]` bucket suitable for retsave. */
+  readonly canSubmitGstr1aRetsave = computed(() => {
+    if (!this.paramsValid() || this.retsumLoading() || this.loading() || this.retsaveSubmitting()) {
+      return false;
+    }
+    if (this.viewState() !== 'success') {
+      return false;
+    }
+    const raw = this.rawResponse();
+    return this.getRetsaveSectionForApi(raw, this.apiName()) !== null;
   });
 
   constructor() {
@@ -300,14 +342,7 @@ export class Gstr1aViewPageComponent {
       });
 
     afterNextRender(() => {
-      const runAutoFetch = (): void => {
-        const g = this.gstin().trim().toUpperCase();
-        const r = this.retPeriod().trim();
-        if (RETURN_PERIOD_REGEX.test(r) && g.length === 15) {
-          void this.fetchFromApi();
-        }
-      };
-      runAutoFetch();
+      void this.bootstrapFetch();
     });
   }
 
@@ -345,6 +380,19 @@ export class Gstr1aViewPageComponent {
     return indices?.includes(index) ?? false;
   }
 
+  /** Highlight tiles that match the active section, including amendment APIs (e.g. `b2ba`). */
+  summaryTileActiveExtended(index: number): boolean {
+    return this.summaryTileActive(index);
+  }
+
+  gstr1aPrimaryApiAt(index: number): Gstr1aDownloadApiName | null {
+    const raw = GSTR1_SECTION_CARD_PRIMARY_API[index];
+    if (!raw || !(GSTR1A_DOWNLOAD_API_NAMES as readonly string[]).includes(raw)) {
+      return null;
+    }
+    return raw as Gstr1aDownloadApiName;
+  }
+
   toggleAddSection(): void {
     this.addRecordOpen.update((v) => !v);
   }
@@ -357,6 +405,160 @@ export class Gstr1aViewPageComponent {
     const g = this.gstin().trim();
     const r = this.retPeriod().trim();
     return g.length === 15 && RETURN_PERIOD_REGEX.test(r);
+  }
+
+  openGstHelp(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+    window.open('https://www.gst.gov.in/', '_blank', 'noopener,noreferrer');
+  }
+
+  openResetConfirm(): void {
+    this.resetConfirmOpen.set(true);
+  }
+
+  cancelResetConfirm(): void {
+    this.resetConfirmOpen.set(false);
+  }
+
+  /** Clears cached RETSUM and section payload; restores fields from URL. */
+  confirmResetWorkspace(): void {
+    this.retsumSecSum.set([]);
+    this.retsumTileCounts.set(null);
+    this.retsumHttpError.set(null);
+    this.retsumLogicalError.set(null);
+    this.retsaveError.set(null);
+    this.retsaveSuccessPayload.set(null);
+    this.rawResponse.set(null);
+    this.hierarchy.set([]);
+    this.aggregate.set(null);
+    this.viewState.set('idle');
+    this.httpError.set(null);
+    this.logicalErrorText.set(null);
+    this.filterQuery.set('');
+    this.expandedCtins.set(new Set());
+    this.expandedInvoices.set(new Set());
+    this.syncQueryIntoSignals(this.route.snapshot.queryParamMap);
+    this.resetConfirmOpen.set(false);
+  }
+
+  amendRecordTileDisabled(): boolean {
+    return this.retsumLoading() || !this.paramsValid();
+  }
+
+  amendRecordTileHint(tile: Gstr1AmendRecordDetailTile): string {
+    return `Load ${tile.amendApi} (GSTR-1A)`;
+  }
+
+  amendRecordTileCount(tile: Gstr1AmendRecordDetailTile): number {
+    const secSum = this.retsumSecSum();
+    if (retsumSecSumHasRowForSecNames(secSum, tile.retsumSecNames)) {
+      return sumGstr1RetsumTtlRecForSecNames(secSum, tile.retsumSecNames);
+    }
+    const counts = this.summaryCounts();
+    return counts[tile.primaryTileIndex] ?? 0;
+  }
+
+  async navigateToAddTile(index: number): Promise<void> {
+    const api = this.gstr1aPrimaryApiAt(index);
+    if (!api || this.retsumLoading()) {
+      return;
+    }
+    if (index === 0 && api === 'b2b') {
+      const g = this.gstin().trim().toUpperCase();
+      const r = this.retPeriod().trim();
+      const fl = this.filingLabel().trim();
+      if (g.length === 15 && RETURN_PERIOD_REGEX.test(r)) {
+        await this.router.navigate(['/gstr1/workspace/gstr1a-b2b', g, r], {
+          queryParams: { filing_status: fl || undefined },
+        });
+      }
+      return;
+    }
+    this.apiName.set(api);
+    await this.fetchFromApi();
+  }
+
+  async navigateToAmendTile(tile: Gstr1AmendRecordDetailTile): Promise<void> {
+    if (this.amendRecordTileDisabled()) {
+      return;
+    }
+    const a = tile.amendApi;
+    if (!(GSTR1A_DOWNLOAD_API_NAMES as readonly string[]).includes(a)) {
+      return;
+    }
+    this.apiName.set(a as Gstr1aDownloadApiName);
+    await this.fetchFromApi();
+  }
+
+  /** First paint: RETSUM tile counts, then section JSON for `api_name` (e.g. `b2b` from dashboard). */
+  async bootstrapFetch(): Promise<void> {
+    if (!this.paramsValid()) {
+      return;
+    }
+    await this.fetchRetsumGstr1a();
+    await this.fetchFromApi();
+  }
+
+  /** GSTZen `POST /api/gstr1a/download/` with `api_name=retsum`. */
+  async fetchRetsumGstr1a(): Promise<boolean> {
+    if (this.retsumLoading()) {
+      return false;
+    }
+    if (!this.paramsValid()) {
+      this.retsumLogicalError.set('Enter a valid 15-character GSTIN and return period (MMYYYY).');
+      this.retsumHttpError.set(null);
+      return false;
+    }
+
+    this.retsumLoading.set(true);
+    this.retsumHttpError.set(null);
+    this.retsumLogicalError.set(null);
+
+    try {
+      const raw = await firstValueFrom(
+        this.api.downloadGstr1aReturn({
+          gstin: this.gstin().trim().toUpperCase(),
+          ret_period: this.retPeriod().trim(),
+          api_name: 'retsum',
+        }),
+      );
+
+      if (!isGstr1DownloadSuccessEnvelope(raw)) {
+        const st =
+          raw && typeof raw === 'object' && 'status' in (raw as object)
+            ? String((raw as Record<string, unknown>)['status'])
+            : '?';
+        let msg = `RETSUM did not return success (status = ${st}).`;
+        if (
+          raw &&
+          typeof raw === 'object' &&
+          'message' in (raw as object) &&
+          typeof (raw as { message?: unknown }).message === 'string'
+        ) {
+          msg = (raw as { message: string }).message;
+        }
+        this.retsumLogicalError.set(msg);
+        return false;
+      }
+
+      const secSum = extractGstr1RetsumSecSum(raw);
+      this.retsumSecSum.set(secSum);
+      this.retsumTileCounts.set(mapGstr1RetsumSecSumToPortalTileCounts(secSum));
+      return true;
+    } catch (err: unknown) {
+      this.retsumHttpError.set(normalizeErrorEnvelope(err));
+      this.retsumLogicalError.set('GSTR-1A RETSUM request failed.');
+      return false;
+    } finally {
+      this.retsumLoading.set(false);
+    }
+  }
+
+  async loadRetsumAndSection(): Promise<void> {
+    await this.fetchRetsumGstr1a();
+    await this.fetchFromApi();
   }
 
   async fetchFromApi(): Promise<void> {
@@ -374,6 +576,8 @@ export class Gstr1aViewPageComponent {
     this.viewState.set('loading');
     this.httpError.set(null);
     this.logicalErrorText.set(null);
+    this.retsaveError.set(null);
+    this.retsaveSuccessPayload.set(null);
     this.hierarchy.set([]);
     this.aggregate.set(null);
 
@@ -458,8 +662,9 @@ export class Gstr1aViewPageComponent {
     }
   }
 
-  refresh(): void {
-    void this.fetchFromApi();
+  async refresh(): Promise<void> {
+    await this.fetchRetsumGstr1a();
+    await this.fetchFromApi();
   }
 
   invoiceExpandId(ctin: string, invoiceKey: string): string {
@@ -515,6 +720,110 @@ export class Gstr1aViewPageComponent {
 
   formatMoney(n: number): string {
     return this.moneyFmt.format(n);
+  }
+
+  /**
+   * POST active section from the last successful download to GSTZen GSTR-1A retsave.
+   * Mirrors portal “ADD RECORD → SAVE” for buckets such as `b2b` (4A, 4B, 6B, 6C).
+   */
+  async submitGstr1aRetsave(): Promise<void> {
+    if (!this.canSubmitGstr1aRetsave()) {
+      return;
+    }
+    const raw = this.rawResponse();
+    const api = this.apiName();
+    const section = this.getRetsaveSectionForApi(raw, api);
+    if (section === null || !isGstr1DownloadSuccessEnvelope(raw)) {
+      return;
+    }
+
+    const msg = raw.message as Record<string, unknown>;
+    const gt =
+      typeof msg['gt'] === 'number' ? msg['gt'] : this.inferGtFromSection(api, section);
+    const curGt =
+      typeof msg['cur_gt'] === 'number' ? msg['cur_gt'] : gt;
+
+    const body: Record<string, unknown> = {
+      fp: this.retPeriod().trim(),
+      gstin: this.gstin().trim().toUpperCase(),
+      gt,
+      cur_gt: curGt,
+      [api]: section,
+    };
+
+    this.retsaveSubmitting.set(true);
+    this.retsaveError.set(null);
+    this.retsaveSuccessPayload.set(null);
+    try {
+      const res = await firstValueFrom(this.api.retsaveGstr1aReturn(body));
+      this.retsaveSuccessPayload.set(res);
+    } catch (err: unknown) {
+      this.retsaveError.set(normalizeErrorEnvelope(err));
+    } finally {
+      this.retsaveSubmitting.set(false);
+    }
+  }
+
+  private getRetsaveSectionForApi(
+    raw: unknown,
+    apiName: Gstr1aDownloadApiName,
+  ): unknown | null {
+    if (!isGstr1DownloadSuccessEnvelope(raw) || apiName === 'retsum') {
+      return null;
+    }
+    if (apiName === 'hsnsum') {
+      return null;
+    }
+    const msg = raw.message as Record<string, unknown>;
+    const bucket = msg[apiName];
+    if (bucket === undefined || bucket === null) {
+      return null;
+    }
+    if (Array.isArray(bucket)) {
+      return bucket.length > 0 ? bucket : null;
+    }
+    if (typeof bucket === 'object') {
+      if (apiName === 'nil') {
+        const inv = (bucket as Record<string, unknown>)['inv'];
+        return Array.isArray(inv) && inv.length > 0 ? bucket : null;
+      }
+      return Object.keys(bucket as object).length > 0 ? bucket : null;
+    }
+    return null;
+  }
+
+  private inferGtFromSection(apiName: Gstr1aDownloadApiName, section: unknown): number {
+    if (apiName === 'b2b' || apiName === 'b2ba') {
+      return this.sumB2bLikeInvoiceValues(section);
+    }
+    if (apiName === 'b2cl' || apiName === 'b2cla') {
+      return this.sumB2clLikeInvoiceValues(section);
+    }
+    return 0;
+  }
+
+  private sumB2bLikeInvoiceValues(section: unknown): number {
+    if (!Array.isArray(section)) {
+      return 0;
+    }
+    let s = 0;
+    for (const g of section) {
+      if (g && typeof g === 'object' && Array.isArray((g as Record<string, unknown>)['inv'])) {
+        for (const inv of (g as Record<string, unknown>)['inv'] as unknown[]) {
+          if (inv && typeof inv === 'object') {
+            const v = (inv as Record<string, unknown>)['val'];
+            if (typeof v === 'number') {
+              s += v;
+            }
+          }
+        }
+      }
+    }
+    return s;
+  }
+
+  private sumB2clLikeInvoiceValues(section: unknown): number {
+    return this.sumB2bLikeInvoiceValues(section);
   }
 
   formatSynced(d: Date | null): string {

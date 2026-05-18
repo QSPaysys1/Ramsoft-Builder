@@ -75,6 +75,11 @@ export interface Gstr1GstzenAuthEnvironment {
    * Production: `https://my.gstzen.in/api/gstr1/retsave/`.
    */
   readonly gstr1RetsaveUrl: string;
+  /**
+   * GSTR-1A return save / retsave — same JSON shape as GSTR-1 retsave for the active section.
+   * Production: `https://my.gstzen.in/api/gstr1a/retsave/`.
+   */
+  readonly gstr1aRetsaveUrl: string;
 }
 
 export const GSTR1_GSTZEN_AUTH_CONFIG = new InjectionToken<Gstr1GstzenAuthEnvironment>(

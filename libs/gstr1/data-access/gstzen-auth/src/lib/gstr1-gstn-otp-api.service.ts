@@ -155,4 +155,13 @@ export class Gstr1GstnOtpApiService {
       headers: { 'Content-Type': 'application/json' },
     });
   }
+
+  /**
+   * `POST api/gstr1a/retsave/` — persist GSTR-1A section data (Bearer). Same envelope fields as GSTR-1 retsave.
+   */
+  retsaveGstr1aReturn(body: Record<string, unknown>): Observable<unknown> {
+    return this.http.post<unknown>(this.config.gstr1aRetsaveUrl, body, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }

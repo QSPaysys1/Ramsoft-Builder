@@ -55,5 +55,6 @@ export const environment = {
     gstr1aDownloadUrl: `${GSTZEN_DEV}/api/gstr1a/download/`,
     gstr1ResetUrl: `${GSTZEN_DEV}/api/gstr1/reset/`,
     gstr1RetsaveUrl: `${GSTZEN_DEV}/api/gstr1/retsave/`,
+    gstr1aRetsaveUrl: `${GSTZEN_DEV}/api/gstr1a/retsave/`,
   } satisfies Gstr1Environment,
 };

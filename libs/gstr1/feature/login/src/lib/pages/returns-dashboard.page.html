@@ -179,7 +179,10 @@
     <section class="mb-10" aria-label="GSTR-1 and GSTR-1A returns">
       <h2 class="mb-2 text-lg font-bold text-[#222f3f]">GSTR-1 &amp; GSTR-1A</h2>
       <p class="mb-4 text-sm text-slate-600">
-        Filing posture uses the same Rettrack (<span class="font-semibold">View / track returns</span>) payload as the dashboard summary. Open detailed views when available.
+        Filing posture uses the same Rettrack (<span class="font-semibold">View / track returns</span>) payload as the dashboard summary. Open detailed views when available. For
+        GSTR-1A, <span class="font-semibold">Prepare online</span> opens the workspace where tile
+        <span class="font-semibold">4A, 4B, 6B, 6C — B2B, SEZ, DE</span> loads <span class="font-mono text-xs">b2b</span> and can persist via
+        <span class="font-mono text-xs">POST …/api/gstr1a/retsave/</span>.
       </p>
       <div class="grid gap-4 lg:grid-cols-2">
         @for (c of primaryReturnCards(); track c.spec.id) {
@@ -260,7 +263,7 @@
                       [queryParams]="{
                         gstin: gstinSnap().trim().toUpperCase(),
                         ret_period: selectedRetPeriod(),
-                        api_name: 'exp',
+                        api_name: 'b2b',
                         filing_status: statusLabel(c.kind),
                       }"
                     >

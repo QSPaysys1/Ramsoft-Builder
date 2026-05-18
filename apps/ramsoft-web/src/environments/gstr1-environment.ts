@@ -30,4 +30,6 @@ export interface Gstr1Environment {
   readonly gstr1ResetUrl: string;
   /** `POST` GSTR-1 retsave — full return JSON payload (Bearer). */
   readonly gstr1RetsaveUrl: string;
+  /** `POST` GSTR-1A retsave — section payload with `fp`, `gstin`, `gt`, `cur_gt` (Bearer). */
+  readonly gstr1aRetsaveUrl: string;
 }

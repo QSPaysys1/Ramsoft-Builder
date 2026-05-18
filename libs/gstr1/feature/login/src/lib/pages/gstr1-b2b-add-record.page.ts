@@ -146,6 +146,9 @@ export class Gstr1B2bAddRecordPageComponent {
   readonly saveError = signal<unknown>(null);
   readonly saveSuccessPayload = signal<unknown>(null);
 
+  /** From GSTR-1A workspace: `?gstr1a=1` → `POST .../api/gstr1a/retsave/`. */
+  readonly isGstr1aWorkspace = signal(false);
+
   readonly requestPayloadJson = signal<string>('');
 
   readonly recipientTradeName = signal('');
@@ -209,6 +212,9 @@ export class Gstr1B2bAddRecordPageComponent {
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((qm) => {
       this.filingStatusLabel.set((qm.get('filing_status') ?? '').trim());
       this.dueDateLabel.set((qm.get('due_date') ?? '').trim());
+      this.isGstr1aWorkspace.set(
+        qm.get('gstr1a') === '1' || (qm.get('return') ?? '').toLowerCase() === 'gstr1a',
+      );
     });
 
     this.form.controls.ctin.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -335,6 +341,9 @@ export class Gstr1B2bAddRecordPageComponent {
   }
 
   backUrl(): unknown[] {
+    if (this.isGstr1aWorkspace()) {
+      return ['/gstr1/workspace/gstr1a-view'];
+    }
     return [
       '/gstr1/workspace/gstr1-download/section',
       this.apiName(),
@@ -345,6 +354,16 @@ export class Gstr1B2bAddRecordPageComponent {
 
   backQueryParams(): Record<string, string> {
     const o: Record<string, string> = {};
+    if (this.isGstr1aWorkspace()) {
+      o['gstin'] = this.filerGstin();
+      o['ret_period'] = this.retPeriod().trim();
+      o['api_name'] = 'b2b';
+      const fs = this.filingStatusLabel().trim();
+      if (fs) {
+        o['filing_status'] = fs;
+      }
+      return o;
+    }
     const fs = this.filingStatusLabel().trim();
     const dd = this.dueDateLabel().trim();
     if (fs) {
@@ -517,7 +536,10 @@ export class Gstr1B2bAddRecordPageComponent {
     }
 
     try {
-      const res = await firstValueFrom(this.api.retsaveGstr1Return(payload));
+      const req = this.isGstr1aWorkspace()
+        ? this.api.retsaveGstr1aReturn(payload)
+        : this.api.retsaveGstr1Return(payload);
+      const res = await firstValueFrom(req);
       this.saveSuccessPayload.set(res);
     } catch (err: unknown) {
       if (err instanceof HttpErrorResponse) {
