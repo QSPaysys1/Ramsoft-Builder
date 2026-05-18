@@ -433,7 +433,7 @@ function invoiceFromUnknown(inv: unknown, ctinFallback: string): Gstr1DownloadIn
     invoiceValue: deriveInvoiceFaceValue(invObj, items),
     pos: pickStr(invObj, ['pos']),
     reverseCharge: pickStr(invObj, ['rchrg', 'rev']),
-    irn: pickStr(invObj, ['irn']),
+    irn: pickStr(invObj, ['irn', 'etin']),
     items,
   };
 }

@@ -10,12 +10,27 @@
       </li>
       <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
       <li class="inline-flex items-center gap-2">
-        <a [routerLink]="['/gstr1/workspace/gstr1-download']" class="text-[#1a56a7] hover:underline">GSTR-1/IFF</a>
+        @if (isGstr1aWorkspace()) {
+          <a
+            [routerLink]="['/gstr1/workspace/gstr1a-view']"
+            [queryParams]="gstr1aViewQueryParams()"
+            class="text-[#1a56a7] hover:underline"
+            >GSTR-1A</a>
+        } @else {
+          <a [routerLink]="['/gstr1/workspace/gstr1-download']" class="text-[#1a56a7] hover:underline">GSTR-1/IFF</a>
+        }
       </li>
-      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
-      <li class="inline-flex items-center gap-2">
-        <a [routerLink]="backUrl()" [queryParams]="backQueryParams()" class="text-[#1a56a7] hover:underline">B2CL</a>
-      </li>
+      @if (!isGstr1aWorkspace()) {
+        <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+        <li class="inline-flex items-center gap-2">
+          <a [routerLink]="backUrl()" [queryParams]="backQueryParams()" class="text-[#1a56a7] hover:underline">B2CL workspace</a>
+        </li>
+      } @else {
+        <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+        <li class="inline-flex items-center gap-2">
+          <a [routerLink]="backUrl()" [queryParams]="backQueryParams()" class="text-[#1a56a7] hover:underline">B2CL</a>
+        </li>
+      }
       <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
       <li class="inline-flex items-center gap-2">
         <span class="font-semibold text-slate-900" aria-current="page">Add invoice</span>
@@ -38,7 +53,13 @@
           ←
         </a>
         <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-white/90">GSTR-1 · RETSAVE</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-white/90">
+            @if (isGstr1aWorkspace()) {
+              GSTR-1A · RETSAVE
+            } @else {
+              GSTR-1 · RETSAVE
+            }
+          </p>
           <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">B2C (Large) — Add Invoice</h1>
           <p class="mt-1 text-xs text-white/95 md:text-sm">
             <span class="font-mono">{{ filerGstin() }}</span> · Return period <span class="font-mono">{{ retPeriod() }}</span>
