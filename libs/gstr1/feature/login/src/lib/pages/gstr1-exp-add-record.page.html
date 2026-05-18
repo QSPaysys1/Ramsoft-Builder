@@ -10,12 +10,27 @@
       </li>
       <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
       <li class="inline-flex items-center gap-2">
-        <a [routerLink]="['/gstr1/workspace/gstr1-download']" class="text-[#1a56a7] hover:underline">GSTR-1/IFF</a>
+        @if (isGstr1aWorkspace()) {
+          <a
+            [routerLink]="['/gstr1/workspace/gstr1a-view']"
+            [queryParams]="gstr1aViewQueryParams()"
+            class="text-[#1a56a7] hover:underline"
+            >GSTR-1A</a>
+        } @else {
+          <a [routerLink]="['/gstr1/workspace/gstr1-download']" class="text-[#1a56a7] hover:underline">GSTR-1/IFF</a>
+        }
       </li>
-      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
-      <li class="inline-flex items-center gap-2">
-        <a [routerLink]="backUrl()" [queryParams]="backQueryParams()" class="text-[#1a56a7] hover:underline">EXP</a>
-      </li>
+      @if (!isGstr1aWorkspace()) {
+        <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+        <li class="inline-flex items-center gap-2">
+          <a [routerLink]="backUrl()" [queryParams]="backQueryParams()" class="text-[#1a56a7] hover:underline">EXP workspace</a>
+        </li>
+      } @else {
+        <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+        <li class="inline-flex items-center gap-2">
+          <a [routerLink]="backUrl()" [queryParams]="backQueryParams()" class="text-[#1a56a7] hover:underline">EXP</a>
+        </li>
+      }
       <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
       <li class="inline-flex items-center gap-2">
         <span class="font-semibold text-slate-900" aria-current="page">Exports — Add Details</span>
@@ -38,7 +53,13 @@
           ←
         </a>
         <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-white/90">GSTR-1 · RETSAVE</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-white/90">
+            @if (isGstr1aWorkspace()) {
+              GSTR-1A · RETSAVE
+            } @else {
+              GSTR-1 · RETSAVE
+            }
+          </p>
           <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">6A — Exports — Add Details</h1>
           <p class="mt-1 text-xs text-white/95 md:text-sm">
             <span class="font-mono">{{ filerGstin() }}</span> · Return period <span class="font-mono">{{ retPeriod() }}</span>
@@ -52,7 +73,12 @@
   <section class="rounded-b-xl border border-t-0 border-slate-200 bg-white px-4 py-5 shadow-md md:px-6 md:py-6">
     @if (!paramsValid()) {
       <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
-        Invalid GSTIN or return period in the URL. Go back and open this screen from the Exports (6A) tile again.
+        <p>
+          Invalid GSTIN or return period in the URL. Go back and open this screen from the Exports (6A) tile again.
+          @if (isGstr1aWorkspace()) {
+            <span class="font-semibold">Use the GSTR-1A workspace add-record flow.</span>
+          }
+        </p>
       </div>
     } @else {
       <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
@@ -224,7 +250,13 @@
 
         <section class="mt-6 rounded-xl border border-slate-300 bg-slate-50 p-4 md:p-5" aria-label="Request payload preview">
           <h2 class="mb-2 text-xs font-bold uppercase tracking-wide text-[#1c2b54]">Request payload (JSON)</h2>
-          <p class="mb-2 text-[11px] text-slate-600">Body sent to GSTR-1 retsave — updates as you edit the form.</p>
+          <p class="mb-2 text-[11px] text-slate-600">
+            @if (isGstr1aWorkspace()) {
+              Body sent to <span class="font-mono">POST /api/gstr1a/retsave/</span> — updates as you edit the form.
+            } @else {
+              Body sent to GSTR-1 retsave — updates as you edit the form.
+            }
+          </p>
           <pre class="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded border border-slate-200 bg-white p-3 font-mono text-[11px] leading-relaxed text-slate-900">{{ requestPayloadJson() }}</pre>
         </section>
       </form>

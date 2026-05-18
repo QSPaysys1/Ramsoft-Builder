@@ -487,6 +487,17 @@ export class Gstr1aViewPageComponent {
       }
       return;
     }
+    if (index === 2 && api === 'exp') {
+      const g = this.gstin().trim().toUpperCase();
+      const r = this.retPeriod().trim();
+      const fl = this.filingLabel().trim();
+      if (g.length === 15 && RETURN_PERIOD_REGEX.test(r)) {
+        await this.router.navigate(['/gstr1/workspace/gstr1a-exp', g, r], {
+          queryParams: { filing_status: fl || undefined },
+        });
+      }
+      return;
+    }
     this.apiName.set(api);
     await this.fetchFromApi();
   }
