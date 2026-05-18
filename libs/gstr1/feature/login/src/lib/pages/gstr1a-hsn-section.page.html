@@ -1,0 +1,395 @@
+<div class="gstr1-b2b-add pb-16">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li><a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a></li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li><a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a></li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li>
+        <a
+          routerLink="/gstr1/workspace/gstr1a-view"
+          [queryParams]="backToGstr1aQueryParams()"
+          class="text-[#1a56a7] hover:underline"
+          >GSTR-1A</a>
+      </li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li><span class="font-semibold text-slate-900" aria-current="page">HSN</span></li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">
+      English
+    </span>
+  </nav>
+
+  <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+    <div class="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-start md:justify-between md:px-6 md:py-5">
+      <div class="min-w-0 flex-1">
+        <p class="text-[11px] font-semibold uppercase tracking-wide text-white/90">GSTR-1A · Section 12</p>
+        <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">12 - HSN - wise summary of outward supplies</h1>
+        <p class="mt-2 text-xs text-white/95 md:text-sm">
+          <span class="font-mono">{{ gstin() }}</span> · Return period <span class="font-mono">{{ retPeriod() }}</span>
+          @if (lastSyncedAt(); as synced) {
+            <span class="mt-1 block text-[11px] text-white/85 md:inline md:mt-0 md:before:content-['_·_']">
+              Last synced {{ formatSynced(synced) }}
+            </span>
+          }
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 md:justify-end">
+        <button
+          type="button"
+          class="inline-flex min-h-[38px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-xs font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347]"
+          (click)="openGstHelp()"
+        >
+          HELP ?
+        </button>
+        <button
+          type="button"
+          class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/50 bg-white/15 text-white hover:bg-white/25 disabled:opacity-50"
+          [disabled]="sectionLoading() || !paramsValid()"
+          (click)="loadSectionFromApi()"
+          title="Refresh HSN summary"
+          aria-label="Refresh"
+        >
+          ↻
+        </button>
+        <p class="w-full text-xs font-medium text-white md:w-auto md:text-right">
+          <span class="text-red-200">*</span> Indicates mandatory fields
+        </p>
+      </div>
+    </div>
+    <div class="flex border-b border-teal-700/30 bg-[#3d9b91] px-4 md:px-6">
+      <button
+        type="button"
+        class="relative px-4 py-3 text-xs font-bold uppercase tracking-wide transition md:text-sm"
+        [class.text-white]="supplyTab() === 'b2b'"
+        [class.text-white/75]="supplyTab() !== 'b2b'"
+        (click)="setSupplyTab('b2b')"
+      >
+        B2B Supplies
+        @if (supplyTab() === 'b2b') {
+          <span class="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#1c2b54]"></span>
+        }
+      </button>
+      <button
+        type="button"
+        class="relative px-4 py-3 text-xs font-bold uppercase tracking-wide transition md:text-sm"
+        [class.text-white]="supplyTab() === 'b2c'"
+        [class.text-white/75]="supplyTab() !== 'b2c'"
+        (click)="setSupplyTab('b2c')"
+      >
+        B2C Supplies
+        @if (supplyTab() === 'b2c') {
+          <span class="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-[#1c2b54]"></span>
+        }
+      </button>
+    </div>
+  </header>
+
+  <section class="rounded-b-xl border border-t-0 border-slate-200 bg-white px-4 py-5 shadow-md md:px-6 md:py-6">
+    @if (!paramsValid()) {
+      <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+        Invalid GSTIN or return period in the URL. Open this screen from tile <span class="font-semibold">12 — HSN-wise summary</span> on the GSTR-1A workspace.
+      </div>
+    } @else {
+      <section class="mb-6 rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm md:px-6 md:py-5">
+        <div class="grid gap-3 sm:grid-cols-3">
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">FY</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ fyLabel() }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Tax period</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ taxPeriodLabel() }} · <span class="font-mono">{{ retPeriod() }}</span></p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Status</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">
+              @if (filingLabel().length) {
+                {{ filingLabel() }}
+              } @else {
+                —
+              }
+            </p>
+          </div>
+          <div class="sm:col-span-3">
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Legal name</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ legalName() || '—' }}</p>
+          </div>
+          <div class="sm:col-span-3">
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Trade name</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ tradeName() || '—' }}</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="mb-6 space-y-3 rounded-xl border border-slate-200 bg-slate-50/90 p-4 text-xs text-slate-700 md:p-5 md:text-sm">
+        <p class="font-semibold text-[#1c2b54]">Note</p>
+        <ol class="list-inside list-decimal space-y-1.5 leading-relaxed">
+          <li>Select HSN from search / local master hints — align the final code with notified tariff entries before filing.</li>
+          <li>Keep the statutory <span class="font-semibold">Description</span> aligned with notified HSN text; the local lookup fills a starting point you can edit.</li>
+          <li>Click <span class="font-semibold">ADD</span> after changes to POST <span class="font-mono text-[11px]">POST /api/gstr1a/retsave/</span>.</li>
+        </ol>
+      </div>
+
+      @if (sectionLoading()) {
+        <div class="mb-6 rounded-lg border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm font-medium text-slate-600">
+          Loading saved HSN lines…
+        </div>
+      } @else if (sectionError() !== null) {
+        <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+          <p class="font-bold">Could not load HSN summary</p>
+          <pre class="mt-2 max-h-40 overflow-auto font-mono text-[11px]">{{ sectionError() | json }}</pre>
+        </div>
+      }
+
+      @if (!sectionLoading() && sectionError() === null && displayedSavedRows().length === 0) {
+        <div class="mb-6 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-medium text-sky-950">
+          There are no saved records to be displayed.
+        </div>
+      }
+
+      @if (!sectionLoading() && displayedSavedRows().length > 0) {
+        <div class="mb-6 overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+          <table class="min-w-full border-collapse text-left text-xs text-slate-800 md:text-sm">
+            <thead class="bg-[#1c2b54] text-[11px] font-bold uppercase tracking-wide text-white">
+              <tr>
+                <th class="px-3 py-2">#</th>
+                <th class="px-3 py-2">HSN</th>
+                <th class="px-3 py-2">Description</th>
+                <th class="px-3 py-2">UQC</th>
+                <th class="px-3 py-2 text-right">Qty</th>
+                <th class="px-3 py-2 text-right">Taxable</th>
+                <th class="px-3 py-2 text-right">Rate %</th>
+                <th class="px-3 py-2 text-right">IGST</th>
+                <th class="px-3 py-2 text-right">CGST</th>
+                <th class="px-3 py-2 text-right">SGST</th>
+                <th class="px-3 py-2 text-right">Cess</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of displayedSavedRows(); track row.hsn_sc + '-' + ($index + '-' + supplyTab())) {
+                <tr class="border-t border-slate-200 bg-white odd:bg-slate-50/80">
+                  <td class="px-3 py-2 font-mono tabular-nums">{{ row.num ?? '—' }}</td>
+                  <td class="px-3 py-2 font-mono">{{ row.hsn_sc }}</td>
+                  <td class="max-w-[14rem] truncate px-3 py-2" [title]="row.desc">{{ row.desc || '—' }}</td>
+                  <td class="px-3 py-2 font-mono">{{ row.uqc }}</td>
+                  <td class="px-3 py-2 text-right font-mono tabular-nums">{{ formatMoney(row.qty) }}</td>
+                  <td class="px-3 py-2 text-right font-mono tabular-nums">{{ formatMoney(row.txval) }}</td>
+                  <td class="px-3 py-2 text-right font-mono tabular-nums">{{ row.rt }}</td>
+                  <td class="px-3 py-2 text-right font-mono tabular-nums">{{ formatMoney(row.iamt) }}</td>
+                  <td class="px-3 py-2 text-right font-mono tabular-nums">{{ formatMoney(row.camt) }}</td>
+                  <td class="px-3 py-2 text-right font-mono tabular-nums">{{ formatMoney(row.samt) }}</td>
+                  <td class="px-3 py-2 text-right font-mono tabular-nums">{{ formatMoney(row.csamt) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <section class="mb-6 rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 md:px-5">
+          <div>
+            <h2 class="text-sm font-bold uppercase tracking-wide text-[#1c2b54]">Add / Edit Details</h2>
+            <p class="mt-1 text-[11px] text-slate-600">
+              Active tab:
+              <span class="font-semibold">{{ supplyTab() === 'b2b' ? 'B2B' : 'B2C' }}</span> · Payload uses
+              <span class="font-mono">hsn.hsn_b2b</span> vs <span class="font-mono">hsn.hsn_b2c</span>.
+            </p>
+          </div>
+          <button type="button" class="btn-primary !bg-[#152347] !text-[11px]" (click)="downloadHsnCodesList()">
+            Download HSN codes list
+          </button>
+        </div>
+
+        <form [formGroup]="form" class="space-y-5 p-4 md:p-6" (ngSubmit)="submit()">
+          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="g1a-hsn-sc">HSN <span class="text-red-600">*</span></label>
+              <input
+                id="g1a-hsn-sc"
+                class="field font-mono"
+                formControlName="hsn_sc"
+                maxlength="10"
+                autocomplete="off"
+                placeholder="Enter Product Name as in Master/HSN Code"
+                (blur)="onHsnBlur()"
+                [class.field-error]="showFieldError(form.controls.hsn_sc)"
+              />
+              @if (showFieldError(form.controls.hsn_sc)) {
+                <p class="text-xs text-red-600">Enter a valid HSN/SAC (2–10 alphanumeric).</p>
+              }
+              @if (showHsnLookupMissHint()) {
+                <p class="text-[11px] text-amber-800">No local description match — verify against GST tariff / notifications.</p>
+              }
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="g1a-hsn-desc-ro">Description</label>
+              <input
+                id="g1a-hsn-desc-ro"
+                class="field bg-slate-50 text-slate-800"
+                formControlName="desc"
+                autocomplete="off"
+                placeholder="Statutory / notified description"
+                [class.field-error]="showFieldError(form.controls.desc)"
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="g1a-hsn-product">
+                Product Name as in My Master <span class="text-red-600">*</span>
+              </label>
+              <input
+                id="g1a-hsn-product"
+                class="field"
+                formControlName="product_name"
+                autocomplete="off"
+                placeholder="Trade / stock description"
+                [class.field-error]="showFieldError(form.controls.product_name)"
+              />
+            </div>
+
+            <div class="flex flex-col gap-1 lg:col-span-2">
+              <span class="text-xs font-semibold text-slate-700">Description as per HSN Code</span>
+              <input
+                class="field bg-slate-100 font-mono text-sm text-slate-700"
+                [value]="descPerHsnDisplay()"
+                readonly
+                tabindex="-1"
+                aria-label="Description as per HSN code"
+              />
+              @if (hsnAsideDescription()) {
+                <p class="text-[11px] text-slate-500">{{ hsnAsideDescription() }}</p>
+              }
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="g1a-hsn-uqc">UQC <span class="text-red-600">*</span></label>
+              <select
+                id="g1a-hsn-uqc"
+                class="field"
+                formControlName="uqc"
+                [class.field-error]="showFieldError(form.controls.uqc)"
+              >
+                @for (opt of uqcOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+              @if (showFieldError(form.controls.uqc)) {
+                <p class="text-xs text-red-600">Select UQC.</p>
+              }
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="g1a-hsn-qty">Total Quantity <span class="text-red-600">*</span></label>
+              <input
+                id="g1a-hsn-qty"
+                class="field text-right font-mono tabular-nums"
+                formControlName="qty"
+                inputmode="decimal"
+                [class.field-error]="showFieldError(form.controls.qty)"
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="g1a-hsn-txval">
+                Total taxable value (₹) <span class="text-red-600">*</span>
+              </label>
+              <input
+                id="g1a-hsn-txval"
+                class="field text-right font-mono tabular-nums"
+                formControlName="txval"
+                inputmode="decimal"
+                [class.field-error]="showFieldError(form.controls.txval)"
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="g1a-hsn-rt">Rate (%) <span class="text-red-600">*</span></label>
+              <select
+                id="g1a-hsn-rt"
+                class="field"
+                formControlName="rt"
+                [class.field-error]="showFieldError(form.controls.rt)"
+              >
+                @for (opt of rateOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="g1a-hsn-iamt">
+                Integrated tax (₹) <span class="text-red-600">*</span>
+              </label>
+              <input
+                id="g1a-hsn-iamt"
+                class="field text-right font-mono tabular-nums"
+                formControlName="iamt"
+                inputmode="decimal"
+                [class.field-error]="showFieldError(form.controls.iamt)"
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="g1a-hsn-camt">Central tax (₹)</label>
+              <input id="g1a-hsn-camt" class="field text-right font-mono tabular-nums" formControlName="camt" inputmode="decimal" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="g1a-hsn-samt">State/UT tax (₹)</label>
+              <input id="g1a-hsn-samt" class="field text-right font-mono tabular-nums" formControlName="samt" inputmode="decimal" />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold text-slate-700" for="g1a-hsn-csamt">Cess (₹)</label>
+              <input id="g1a-hsn-csamt" class="field text-right font-mono tabular-nums" formControlName="csamt" inputmode="decimal" />
+            </div>
+          </div>
+
+          @if (saveError() !== null) {
+            <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-red-950">
+              <p class="text-sm font-bold">GSTR-1A retsave failed</p>
+              <pre class="mt-2 max-h-56 overflow-auto rounded border border-red-100 bg-white p-3 font-mono text-[11px]">{{ saveError() | json }}</pre>
+            </div>
+          }
+
+          @if (saveSuccessPayload() !== null) {
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-emerald-950">
+              <p class="text-sm font-bold">GSTR-1A retsave response</p>
+              <pre class="mt-2 max-h-56 overflow-auto rounded border border-emerald-100 bg-white p-3 font-mono text-[11px]">{{ saveSuccessPayload() | json }}</pre>
+            </div>
+          }
+
+          <div class="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-6">
+            <a
+              routerLink="/gstr1/workspace/gstr1a-view"
+              [queryParams]="backToGstr1aQueryParams()"
+              class="btn-secondary inline-flex items-center justify-center no-underline"
+              >BACK</a>
+            <button type="button" class="btn-secondary" [disabled]="resetDisabled()" (click)="resetForm()">RESET</button>
+            <button type="submit" class="btn-primary disabled:opacity-45" [disabled]="saveSubmitting() || form.invalid">
+              @if (saveSubmitting()) {
+                Saving…
+              } @else {
+                ADD
+              }
+            </button>
+          </div>
+
+          <section class="rounded-xl border border-slate-300 bg-slate-50 p-4 md:p-5" aria-label="Request payload preview">
+            <h3 class="mb-2 text-xs font-bold uppercase tracking-wide text-[#1c2b54]">Request payload (JSON)</h3>
+            <p class="mb-2 text-[11px] text-slate-600">
+              Preview for <span class="font-mono">POST /api/gstr1a/retsave/</span> · Section object uses top-level
+              <span class="font-mono">hsn</span>
+              (<span class="font-mono">hsn_b2b</span>/<span class="font-mono">hsn_b2c</span>). Some integrations still expose legacy
+              <span class="font-mono">hsn.data[]</span> — confirm against your GSTZen environment.
+            </p>
+            <pre class="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded border border-slate-200 bg-white p-3 font-mono text-[11px] leading-relaxed text-slate-900">{{ requestPayloadJson() }}</pre>
+          </section>
+        </form>
+      </section>
+    }
+  </section>
+</div>

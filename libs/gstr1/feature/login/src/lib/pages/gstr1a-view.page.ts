@@ -398,7 +398,7 @@ export class Gstr1aViewPageComponent {
    * These may be opened even while RETSUM is still loading.
    */
   addTileOpensDedicatedWorkspace(index: number): boolean {
-    return index >= 0 && index <= 7;
+    return (index >= 0 && index <= 7) || index === 9;
   }
 
   addRecordTileDisabled(index: number): boolean {
@@ -572,6 +572,17 @@ export class Gstr1aViewPageComponent {
       const fl = this.filingLabel().trim();
       if (g.length === 15 && RETURN_PERIOD_REGEX.test(r)) {
         await this.router.navigate(['/gstr1/workspace/gstr1a-at', g, r], {
+          queryParams: { filing_status: fl || undefined },
+        });
+      }
+      return;
+    }
+    if (index === 9 && api === 'hsnsum') {
+      const g = this.gstin().trim().toUpperCase();
+      const r = this.retPeriod().trim();
+      const fl = this.filingLabel().trim();
+      if (g.length === 15 && RETURN_PERIOD_REGEX.test(r)) {
+        await this.router.navigate(['/gstr1/workspace/gstr1a-hsn', g, r], {
           queryParams: { filing_status: fl || undefined },
         });
       }

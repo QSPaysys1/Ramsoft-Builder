@@ -264,6 +264,13 @@ export const gstr1Routes: Routes = [
           ),
       },
       {
+        path: 'gstr1a-hsn/:gstin/:retPeriod',
+        loadComponent: () =>
+          import('./pages/gstr1a-hsn-section.page').then(
+            (m) => m.Gstr1aHsnSectionPageComponent,
+          ),
+      },
+      {
         path: 'gstr1a-view',
         loadComponent: () =>
           import('./pages/gstr1a-view.page').then((m) => m.Gstr1aViewPageComponent),
