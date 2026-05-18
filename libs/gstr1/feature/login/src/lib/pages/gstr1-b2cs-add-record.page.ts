@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  computed,
   DestroyRef,
   inject,
   signal,
@@ -112,6 +113,8 @@ export class Gstr1B2csAddRecordPageComponent {
   readonly retPeriod = signal('');
   readonly filingStatusLabel = signal('');
   readonly dueDateLabel = signal('');
+  /** Opened from GSTR-1A B2CS workspace (`?gstr1a=1`). */
+  readonly fromGstr1a = signal(false);
 
   readonly saveSubmitting = signal(false);
   readonly saveError = signal<unknown>(null);
@@ -119,8 +122,20 @@ export class Gstr1B2csAddRecordPageComponent {
 
   readonly requestPayloadJson = signal<string>('');
 
+  readonly moneyFmt = new Intl.NumberFormat('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
   readonly statePosOptions = INDIAN_STATE_POS_OPTIONS;
   readonly rateSlabs = B2CS_GSTR1_RATE_SLABS;
+
+  readonly gstr1aViewQueryParams = computed(() => ({
+    gstin: this.filerGstin(),
+    ret_period: this.retPeriod().trim(),
+    api_name: 'b2cs',
+    filing_status: this.filingStatusLabel().trim() || undefined,
+  }));
 
   readonly form = this.fb.group({
     pos: ['', [Validators.required, Validators.pattern(/^\d{2}$/)]],
@@ -162,6 +177,7 @@ export class Gstr1B2csAddRecordPageComponent {
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((qm) => {
       this.filingStatusLabel.set((qm.get('filing_status') ?? '').trim());
       this.dueDateLabel.set((qm.get('due_date') ?? '').trim());
+      this.fromGstr1a.set((qm.get('gstr1a') ?? '').trim() === '1');
     });
 
     this.form.controls.pos.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -173,26 +189,57 @@ export class Gstr1B2csAddRecordPageComponent {
       .subscribe(() => this.refreshRequestPayloadPreview());
   }
 
-  /** NIC `sply_ty`: INTER / INTRA from POS vs filer GSTIN state code. */
-  supplyTypeCode(): 'INTER' | 'INTRA' {
-    return this.isInterStateSupply() ? 'INTER' : 'INTRA';
-  }
-
+  /** Portal-style supply type label (Inter-State / Intra-State / — until POS is valid). */
   supplyTypeLabel(): string {
-    return this.isInterStateSupply() ? 'Inter-State' : 'Intra-State';
+    const k = this.supplyTaxKind();
+    if (k === 'inter') {
+      return 'Inter-State';
+    }
+    if (k === 'intra') {
+      return 'Intra-State';
+    }
+    return '—';
   }
 
-  isInterStateSupply(): boolean {
+  /**
+   * Whether IGST applies vs CGST+SGST. Indeterminate until POS and filer GSTIN are both valid.
+   */
+  supplyTaxKind(): 'inter' | 'intra' | 'unknown' {
     const pos = this.form.controls.pos.value?.trim() ?? '';
     const filer = this.filerGstin().trim().toUpperCase();
     if (pos.length !== 2 || filer.length !== 15) {
-      return false;
+      return 'unknown';
     }
-    return pos !== filer.slice(0, 2);
+    return pos !== filer.slice(0, 2) ? 'inter' : 'intra';
   }
 
   showFieldError(ctrl: AbstractControl): boolean {
     return ctrl.invalid && (ctrl.dirty || ctrl.touched);
+  }
+
+  /** Read-only derived taxes for the form (portal parity). */
+  derivedTaxFields(): { igst: number; cgst: number; sgst: number; cess: number } {
+    const txval = this.parseAmt(this.form.controls.txval.value ?? '');
+    const rtRaw = (this.form.controls.rt.value ?? '').toString().trim();
+    const rt = Number.parseFloat(rtRaw);
+    if (!Number.isFinite(rt) || rtRaw === '') {
+      return { igst: 0, cgst: 0, sgst: 0, cess: 0 };
+    }
+    const taxTotal = roundMoney2((txval * rt) / 100);
+    const kind = this.supplyTaxKind();
+    if (kind === 'inter') {
+      return { igst: taxTotal, cgst: 0, sgst: 0, cess: 0 };
+    }
+    if (kind === 'intra') {
+      const cgst = roundMoney2(taxTotal / 2);
+      const sgst = roundMoney2(taxTotal - cgst);
+      return { igst: 0, cgst, sgst, cess: 0 };
+    }
+    return { igst: 0, cgst: 0, sgst: 0, cess: 0 };
+  }
+
+  formatDerivedMoney(n: number): string {
+    return this.moneyFmt.format(n);
   }
 
   onTxvalFocus(): void {
@@ -229,6 +276,9 @@ export class Gstr1B2csAddRecordPageComponent {
   }
 
   backUrl(): unknown[] {
+    if (this.fromGstr1a()) {
+      return ['/gstr1/workspace/gstr1a-b2cs', this.filerGstin(), this.retPeriod().trim()];
+    }
     return [
       '/gstr1/workspace/gstr1-download/section',
       this.apiName(),
@@ -241,6 +291,12 @@ export class Gstr1B2csAddRecordPageComponent {
     const o: Record<string, string> = {};
     const fs = this.filingStatusLabel().trim();
     const dd = this.dueDateLabel().trim();
+    if (this.fromGstr1a()) {
+      if (fs) {
+        o['filing_status'] = fs;
+      }
+      return o;
+    }
     if (fs) {
       o['filing_status'] = fs;
     }
@@ -285,7 +341,7 @@ export class Gstr1B2csAddRecordPageComponent {
     if (!Number.isFinite(rt) || (fv.rt ?? '').trim() === '') {
       return null;
     }
-    const inter = this.isInterStateSupply();
+    const inter = this.supplyTaxKind() === 'inter';
     const taxTotal = roundMoney2((txval * rt) / 100);
 
     const row: Record<string, unknown> = {};

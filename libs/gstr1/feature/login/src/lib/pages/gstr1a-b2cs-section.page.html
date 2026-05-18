@@ -1,0 +1,337 @@
+<div class="gstr1a-b2cs-section pb-12">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li><a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a></li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li><a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a></li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li>
+        <a
+          routerLink="/gstr1/workspace/gstr1a-view"
+          [queryParams]="backToGstr1aQueryParams()"
+          class="text-[#1a56a7] hover:underline"
+          >GSTR-1A</a>
+      </li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li><span class="font-semibold text-slate-900" aria-current="page">B2CS</span></li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">
+      English
+    </span>
+  </nav>
+
+  <div class="mb-4 flex flex-wrap items-center gap-3">
+    <a
+      routerLink="/gstr1/workspace/gstr1a-view"
+      [queryParams]="backToGstr1aQueryParams()"
+      class="inline-flex min-h-[38px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50"
+    >
+      ← Back to GSTR-1A
+    </a>
+    <button
+      type="button"
+      class="inline-flex min-h-[38px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-50"
+      [disabled]="loading() || !paramsValid()"
+      (click)="loadSection()"
+    >
+      Refresh
+    </button>
+  </div>
+
+  @if (!paramsValid()) {
+    <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+      <p class="font-bold">Invalid URL</p>
+      <p class="mt-1">Use a 15-character GSTIN and return period (<span class="font-mono">MMYYYY</span>) in the path.</p>
+    </div>
+  } @else {
+    <section class="mb-6 rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-md md:px-6 md:py-5">
+      <div class="grid gap-3 sm:grid-cols-3">
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">GSTIN</p>
+          <p class="mt-0.5 font-mono text-sm font-semibold text-slate-900">{{ gstin() }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">FY</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ fyLabel() }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Tax period</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ taxPeriodLabel() }} · <span class="font-mono">{{ retPeriod() }}</span></p>
+        </div>
+        <div class="sm:col-span-3">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Legal name</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ legalName() || '—' }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Trade name</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ tradeName() || '—' }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Status</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">
+            @if (filingLabel().length) {
+              {{ filingLabel() }}
+            } @else {
+              —
+            }
+          </p>
+        </div>
+      </div>
+      <p class="mt-4 text-[11px] font-medium text-slate-500 lg:text-right">
+        <span class="text-red-600">*</span> Indicates mandatory fields (on add screens)
+      </p>
+    </section>
+
+    <section class="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md" aria-label="B2CS section">
+      <div class="bg-[#4db6ac] px-4 py-3 text-white md:px-5 md:py-4">
+        <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <h1 class="text-sm font-bold md:text-base">7 - B2C (Others)</h1>
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="inline-flex min-h-[36px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-[11px] font-bold uppercase tracking-wide text-white hover:bg-[#152347]"
+              (click)="openGstHelp()"
+            >
+              HELP ?
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/50 bg-white/15 text-white hover:bg-white/25 disabled:opacity-50"
+              [disabled]="loading()"
+              (click)="loadSection()"
+              title="Refresh section"
+              aria-label="Refresh"
+            >
+              ↻
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="border-b border-slate-100 bg-slate-50/90 px-4 py-3 md:px-5">
+        <p class="text-xs font-bold uppercase tracking-wide text-slate-600">B2C (small) · POS / rate / tax breakdown</p>
+        <p class="mt-2 text-sm text-slate-700">
+          GSTZen <span class="font-mono text-xs">{{ sectionHint }}</span> — portal table <span class="font-semibold">7</span>. Rows are flat
+          <span class="font-mono text-xs">b2cs[]</span> objects (<span class="font-mono text-xs">pos</span>,
+          <span class="font-mono text-xs">sply_ty</span>, <span class="font-mono text-xs">typ</span>,
+          <span class="font-mono text-xs">txval</span>, <span class="font-mono text-xs">rt</span>,
+          <span class="font-mono text-xs">iamt</span> / <span class="font-mono text-xs">camt</span>+
+          <span class="font-mono text-xs">samt</span>, <span class="font-mono text-xs">csamt</span>). Save with
+          <span class="font-mono text-xs">POST /api/gstr1a/retsave/</span>.
+        </p>
+      </div>
+    </section>
+
+    @if (viewState() === 'error') {
+      <div class="space-y-4">
+        @if (logicalErrorText()) {
+          <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-amber-950">
+            <p class="text-sm font-bold">Download response</p>
+            <p class="mt-1 text-sm">{{ logicalErrorText() }}</p>
+          </div>
+        }
+        @if (httpError() !== null) {
+          <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-5 text-red-950">
+            <p class="text-sm font-bold">Request failed</p>
+            <pre class="mt-3 max-h-64 overflow-auto rounded border border-red-100 bg-white p-3 font-mono text-[11px]">{{ httpError() | json }}</pre>
+          </div>
+        }
+      </div>
+    } @else if (loading()) {
+      <div class="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center shadow-sm" aria-busy="true">
+        <p class="text-sm font-semibold text-slate-800">Loading B2CS section…</p>
+        <div class="mt-4 space-y-2">
+          @for (x of [1, 2, 3, 4, 5]; track x) {
+            <div class="h-3 animate-pulse rounded bg-slate-200"></div>
+          }
+        </div>
+      </div>
+    } @else if (viewState() === 'idle') {
+      <div class="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-slate-600">
+        <p class="text-sm">Waiting for route parameters…</p>
+      </div>
+    } @else {
+      @if (aggregateStats(); as agg) {
+        @if (retsaveError() !== null) {
+          <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-red-950">
+            <p class="text-sm font-bold">Retsave failed</p>
+            <pre class="mt-2 max-h-48 overflow-auto rounded border border-red-100 bg-white p-3 font-mono text-[11px]">{{ retsaveError() | json }}</pre>
+          </div>
+        }
+        @if (retsaveSuccessPayload() !== null) {
+          <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-emerald-950">
+            <p class="text-sm font-bold">Retsave response</p>
+            <pre class="mt-2 max-h-48 overflow-auto rounded border border-emerald-100 bg-white p-3 font-mono text-[11px]">{{ retsaveSuccessPayload() | json }}</pre>
+          </div>
+        }
+
+        <div class="mb-4 flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            class="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-teal-800/40 bg-white px-4 text-xs font-bold uppercase tracking-wide text-[#0f2744] shadow-sm hover:bg-slate-50 disabled:opacity-45"
+            [disabled]="!canSubmitGstr1aRetsave() || retsaveSubmitting()"
+            (click)="submitGstr1aRetsave()"
+          >
+            @if (retsaveSubmitting()) {
+              Saving…
+            } @else {
+              Submit retsave
+            }
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase text-slate-800 disabled:opacity-45"
+            [disabled]="rawResponse() === null"
+            (click)="copyJson()"
+          >
+            Copy JSON
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-[40px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase text-slate-800 disabled:opacity-45"
+            [disabled]="rawResponse() === null"
+            (click)="downloadJson()"
+          >
+            Download JSON
+          </button>
+        </div>
+
+        <section class="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Metrics">
+          <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+            <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Records</div>
+            <div class="px-4 py-4">
+              <p class="text-3xl font-bold text-emerald-700">{{ agg.rowCount }}</p>
+              <p class="mt-1 text-xs text-slate-600">Rows in <span class="font-mono">b2cs[]</span></p>
+            </div>
+          </article>
+          <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+            <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Taxable value</div>
+            <div class="px-4 py-4">
+              <p class="text-xl font-bold text-teal-800">₹{{ formatMoney(agg.txvalTotal) }}</p>
+            </div>
+          </article>
+          <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+            <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">GST (IGST / CGST+SGST)</div>
+            <div class="px-4 py-4">
+              <p class="text-lg font-bold text-slate-900">₹{{ formatMoney(agg.taxTotal) }}</p>
+              <p class="mt-1 text-[11px] text-slate-600">
+                IGST ₹{{ formatMoney(agg.iamtTotal) }} · CGST ₹{{ formatMoney(agg.camtTotal) }} · SGST ₹{{ formatMoney(agg.samtTotal) }}
+              </p>
+            </div>
+          </article>
+          <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+            <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Last synced</div>
+            <div class="px-4 py-4">
+              <p class="text-sm font-semibold text-teal-800">{{ formatSynced(lastSyncedAt()) }}</p>
+              <p class="mt-1 text-[11px] text-slate-600">CESS ₹{{ formatMoney(agg.csamtTotal) }}</p>
+            </div>
+          </article>
+        </section>
+
+        @if (viewState() === 'empty') {
+          <div
+            class="mb-6 rounded-lg border border-sky-200 bg-sky-50 px-4 py-12 text-center text-sm font-medium text-sky-950"
+            role="status"
+          >
+            There are no records to be displayed.
+          </div>
+        } @else {
+          <section class="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+            <label class="text-xs font-bold uppercase tracking-wide text-slate-500" for="g1ab2cs-filter">Search rows</label>
+            <input
+              id="g1ab2cs-filter"
+              type="search"
+              autocomplete="off"
+              placeholder="POS, supply type, ETIN, rate…"
+              class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm shadow-inner focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+              [value]="filterQuery()"
+              (input)="filterQuery.set($any($event.target).value)"
+            />
+          </section>
+
+          <div class="mb-6 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+            <table class="w-full min-w-[880px] border-collapse text-left text-xs md:text-sm">
+              <thead class="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                <tr>
+                  <th class="px-3 py-3">POS</th>
+                  <th class="px-3 py-3">Supply type</th>
+                  <th class="px-3 py-3">Type</th>
+                  <th class="px-3 py-3 font-mono">ETIN</th>
+                  <th class="px-3 py-3 text-right">Rate (%)</th>
+                  <th class="px-3 py-3 text-right">Taxable (₹)</th>
+                  <th class="px-3 py-3 text-right">IGST (₹)</th>
+                  <th class="px-3 py-3 text-right">CGST (₹)</th>
+                  <th class="px-3 py-3 text-right">SGST (₹)</th>
+                  <th class="px-3 py-3 text-right">CESS (₹)</th>
+                  <th class="px-3 py-3 text-right">Diff. (%)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                @for (r of filteredRows(); track $index) {
+                  <tr class="hover:bg-slate-50/80">
+                    <td class="px-3 py-2.5">
+                      <span class="font-mono font-semibold">{{ r.pos }}</span>
+                      <span class="mt-0.5 block text-[11px] text-slate-500">{{ r.posLabel }}</span>
+                    </td>
+                    <td class="px-3 py-2.5">{{ r.supplyLabel }}</td>
+                    <td class="px-3 py-2.5">{{ r.typLabel }}</td>
+                    <td class="max-w-[140px] truncate px-3 py-2.5 font-mono text-[11px]" [title]="r.etin">{{ r.etin || '—' }}</td>
+                    <td class="px-3 py-2.5 text-right font-semibold">{{ formatRatePercent(r.rt) }}</td>
+                    <td class="px-3 py-2.5 text-right font-semibold text-teal-800">₹{{ formatMoney(r.txval) }}</td>
+                    <td class="px-3 py-2.5 text-right">₹{{ formatMoney(r.iamt) }}</td>
+                    <td class="px-3 py-2.5 text-right">₹{{ formatMoney(r.camt) }}</td>
+                    <td class="px-3 py-2.5 text-right">₹{{ formatMoney(r.samt) }}</td>
+                    <td class="px-3 py-2.5 text-right">₹{{ formatMoney(r.csamt) }}</td>
+                    <td class="px-3 py-2.5 text-right text-slate-700">
+                      {{ formatDiffPercent(r.diff_percent) }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (filteredRows().length === 0 && rows().length > 0) {
+            <p class="mb-6 text-center text-sm text-slate-600">No rows match your search.</p>
+          }
+        }
+
+        <section class="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-inner md:p-5">
+          <h3 class="text-sm font-bold text-[#222f3f]">API response</h3>
+          <p class="mt-1 text-xs text-slate-600"><span class="font-mono">POST /api/gstr1a/download/</span> · <span class="font-mono">api_name=b2cs</span></p>
+          <pre class="mt-3 max-h-96 overflow-auto rounded-lg border border-slate-200 bg-white p-3 font-mono text-[11px] leading-relaxed">{{ rawResponse() | json }}</pre>
+        </section>
+      }
+    }
+
+    <footer
+      class="sticky bottom-0 z-10 mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg"
+      aria-label="Actions"
+    >
+      <div
+        class="flex flex-col items-stretch gap-4 border-t-4 border-[#4db6ac] px-4 py-4 md:flex-row md:items-center md:justify-center md:gap-6 md:px-6 md:py-5"
+      >
+        <a
+          routerLink="/gstr1/workspace/gstr1a-view"
+          [queryParams]="backToGstr1aQueryParams()"
+          class="inline-flex min-h-[44px] items-center justify-center rounded-lg border-2 border-[#1c2b54] bg-white px-8 text-sm font-bold uppercase tracking-wide text-[#1c2b54] shadow-sm hover:bg-slate-50"
+        >
+          Back
+        </a>
+        <a
+          [routerLink]="addRecordLink()"
+          [queryParams]="addRecordQueryParams()"
+          class="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[#1c2b54] px-8 text-sm font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347]"
+        >
+          Add record
+        </a>
+        <button
+          type="button"
+          disabled
+          class="inline-flex min-h-[44px] cursor-not-allowed items-center justify-center rounded-lg bg-[#1c2b54]/45 px-8 text-sm font-bold uppercase tracking-wide text-white"
+          title="Not wired in this workspace"
+        >
+          Import EWB data
+        </button>
+      </div>
+    </footer>
+  }
+</div>

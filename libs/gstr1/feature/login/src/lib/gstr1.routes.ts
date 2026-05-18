@@ -222,6 +222,20 @@ export const gstr1Routes: Routes = [
           ),
       },
       {
+        path: 'gstr1a-b2cs/:gstin/:retPeriod',
+        loadComponent: () =>
+          import('./pages/gstr1a-b2cs-section.page').then(
+            (m) => m.Gstr1aB2csSectionPageComponent,
+          ),
+      },
+      {
+        path: 'gstr1a-nil/:gstin/:retPeriod',
+        loadComponent: () =>
+          import('./pages/gstr1a-nil-section.page').then(
+            (m) => m.Gstr1aNilSectionPageComponent,
+          ),
+      },
+      {
         path: 'gstr1a-view',
         loadComponent: () =>
           import('./pages/gstr1a-view.page').then((m) => m.Gstr1aViewPageComponent),

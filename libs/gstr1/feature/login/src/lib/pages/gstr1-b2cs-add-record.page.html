@@ -10,7 +10,15 @@
       </li>
       <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
       <li class="inline-flex items-center gap-2">
-        <a [routerLink]="['/gstr1/workspace/gstr1-download']" class="text-[#1a56a7] hover:underline">GSTR-1/IFF</a>
+        @if (fromGstr1a()) {
+          <a
+            routerLink="/gstr1/workspace/gstr1a-view"
+            [queryParams]="gstr1aViewQueryParams()"
+            class="text-[#1a56a7] hover:underline"
+            >GSTR-1A</a>
+        } @else {
+          <a [routerLink]="['/gstr1/workspace/gstr1-download']" class="text-[#1a56a7] hover:underline">GSTR-1/IFF</a>
+        }
       </li>
       <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
       <li class="inline-flex items-center gap-2">
@@ -38,7 +46,13 @@
           ←
         </a>
         <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-white/90">GSTR-1 · RETSAVE</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-white/90">
+            @if (fromGstr1a()) {
+              GSTR-1A · RETSAVE
+            } @else {
+              GSTR-1 · RETSAVE
+            }
+          </p>
           <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">B2CS — Add details</h1>
           <p class="mt-1 text-xs text-white/95 md:text-sm">
             <span class="font-mono">{{ filerGstin() }}</span> · Return period <span class="font-mono">{{ retPeriod() }}</span>
@@ -101,7 +115,7 @@
                 type="text"
                 readonly
                 class="field field-readonly cursor-default bg-slate-50 text-slate-700"
-                [value]="supplyTypeLabel() + ' (' + supplyTypeCode() + ')'"
+                [value]="supplyTypeLabel()"
               />
             </div>
 
@@ -137,7 +151,7 @@
             }
 
             <div class="flex flex-col gap-1">
-              <label class="text-xs font-semibold text-slate-700" for="b2cs-rt">Rate <span class="text-red-600">*</span></label>
+              <label class="text-xs font-semibold text-slate-700" for="b2cs-rt">Rate (%) <span class="text-red-600">*</span></label>
               <select
                 id="b2cs-rt"
                 class="field"
@@ -150,9 +164,79 @@
                 }
               </select>
               @if (showFieldError(form.controls.rt)) {
-                <p class="text-xs text-red-600">Select a rate.</p>
+                <p class="text-xs text-red-600">Select a rate (%).</p>
               }
             </div>
+
+            @if (supplyTaxKind() === 'inter') {
+              <div class="grid gap-4 md:col-span-2 md:grid-cols-2 lg:col-span-3">
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-slate-700" for="b2cs-igst">
+                    Integrated tax (₹) <span class="text-red-600">*</span>
+                  </label>
+                  <input
+                    id="b2cs-igst"
+                    type="text"
+                    readonly
+                    tabindex="-1"
+                    class="field field-readonly cursor-default bg-slate-50 text-right font-mono tabular-nums text-slate-800"
+                    [value]="formatDerivedMoney(derivedTaxFields().igst)"
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-slate-700" for="b2cs-cess-inter">CESS (₹)</label>
+                  <input
+                    id="b2cs-cess-inter"
+                    type="text"
+                    readonly
+                    tabindex="-1"
+                    class="field field-readonly cursor-default bg-slate-50 text-right font-mono tabular-nums text-slate-800"
+                    [value]="formatDerivedMoney(derivedTaxFields().cess)"
+                  />
+                </div>
+              </div>
+            } @else if (supplyTaxKind() === 'intra') {
+              <div class="grid gap-4 md:col-span-2 md:grid-cols-3 lg:col-span-3">
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-slate-700" for="b2cs-cgst">Central Tax (₹)</label>
+                  <input
+                    id="b2cs-cgst"
+                    type="text"
+                    readonly
+                    tabindex="-1"
+                    class="field field-readonly cursor-default bg-slate-50 text-right font-mono tabular-nums text-slate-800"
+                    [value]="formatDerivedMoney(derivedTaxFields().cgst)"
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-slate-700" for="b2cs-sgst">State/UT Tax (₹)</label>
+                  <input
+                    id="b2cs-sgst"
+                    type="text"
+                    readonly
+                    tabindex="-1"
+                    class="field field-readonly cursor-default bg-slate-50 text-right font-mono tabular-nums text-slate-800"
+                    [value]="formatDerivedMoney(derivedTaxFields().sgst)"
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-slate-700" for="b2cs-cess-intra">CESS (₹)</label>
+                  <input
+                    id="b2cs-cess-intra"
+                    type="text"
+                    readonly
+                    tabindex="-1"
+                    class="field field-readonly cursor-default bg-slate-50 text-right font-mono tabular-nums text-slate-800"
+                    [value]="formatDerivedMoney(derivedTaxFields().cess)"
+                  />
+                </div>
+              </div>
+            } @else {
+              <p class="text-xs leading-relaxed text-slate-500 md:col-span-2 lg:col-span-3">
+                Select <span class="font-semibold">POS</span> to show <span class="font-semibold">Integrated tax</span> (inter-state) or
+                <span class="font-semibold">Central</span> / <span class="font-semibold">State·UT tax</span> (intra-state).
+              </p>
+            }
           </div>
         </section>
 

@@ -22,6 +22,14 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client,
   },
   {
+    path: 'gstr1/workspace/gstr1a-b2cs/**',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'gstr1/workspace/gstr1a-nil/**',
+    renderMode: RenderMode.Client,
+  },
+  {
     path: '**',
     renderMode: RenderMode.Prerender,
   },
