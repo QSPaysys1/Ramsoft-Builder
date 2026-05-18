@@ -53,7 +53,7 @@ export const GSTR1A_SUMMARY_SECTION_TITLES: readonly string[] = [
   '8A, 8B, 8C, 8D - Nil Rated Supplies',
   '9B - Credit / Debit Notes (Registered)',
   '9B - Credit / Debit Notes (Unregistered)',
-  '11A(1), 11A(2) - Tax Liability (Advances Received)',
+  '11A(1), 11A(2) - Tax Liability (Advance Received)',
   '11B(1), 11B(2) - Adjustment of Advances',
   '12 - HSN-wise summary of outward supplies',
   '13 - Documents Issued',
@@ -393,6 +393,27 @@ export class Gstr1aViewPageComponent {
     return raw as Gstr1aDownloadApiName;
   }
 
+  /**
+   * Add-record tiles that navigate to a full-page workspace (B2B…11A AT) instead of loading JSON inline.
+   * These may be opened even while RETSUM is still loading.
+   */
+  addTileOpensDedicatedWorkspace(index: number): boolean {
+    return index >= 0 && index <= 7;
+  }
+
+  addRecordTileDisabled(index: number): boolean {
+    if (this.gstr1aPrimaryApiAt(index) === null) {
+      return true;
+    }
+    if (this.addTileOpensDedicatedWorkspace(index) && !this.paramsValid()) {
+      return true;
+    }
+    if (this.retsumLoading() && !this.addTileOpensDedicatedWorkspace(index)) {
+      return true;
+    }
+    return false;
+  }
+
   toggleAddSection(): void {
     this.addRecordOpen.update((v) => !v);
   }
@@ -462,7 +483,10 @@ export class Gstr1aViewPageComponent {
 
   async navigateToAddTile(index: number): Promise<void> {
     const api = this.gstr1aPrimaryApiAt(index);
-    if (!api || this.retsumLoading()) {
+    if (!api) {
+      return;
+    }
+    if (this.retsumLoading() && !this.addTileOpensDedicatedWorkspace(index)) {
       return;
     }
     if (index === 0 && api === 'b2b') {
