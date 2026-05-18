@@ -236,6 +236,34 @@ export const gstr1Routes: Routes = [
           ),
       },
       {
+        path: 'gstr1a-cdnr/:gstin/:retPeriod',
+        loadComponent: () =>
+          import('./pages/gstr1a-cdnr-section.page').then(
+            (m) => m.Gstr1aCdnrSectionPageComponent,
+          ),
+      },
+      {
+        path: 'gstr1a-cdnur/:gstin/:retPeriod',
+        loadComponent: () =>
+          import('./pages/gstr1a-cdnur-section.page').then(
+            (m) => m.Gstr1aCdnurSectionPageComponent,
+          ),
+      },
+      {
+        path: 'gstr1a-at/:gstin/:retPeriod',
+        loadComponent: () =>
+          import('./pages/gstr1a-at-section.page').then(
+            (m) => m.Gstr1aAtSectionPageComponent,
+          ),
+      },
+      {
+        path: 'gstr1a-at/:gstin/:retPeriod/add-statewise',
+        loadComponent: () =>
+          import('./pages/gstr1a-at-add-statewise.page').then(
+            (m) => m.Gstr1aAtAddStatewisePageComponent,
+          ),
+      },
+      {
         path: 'gstr1a-view',
         loadComponent: () =>
           import('./pages/gstr1a-view.page').then((m) => m.Gstr1aViewPageComponent),

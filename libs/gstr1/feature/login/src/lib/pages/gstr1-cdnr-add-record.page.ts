@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  computed,
   DestroyRef,
   inject,
   signal,
@@ -129,6 +130,15 @@ export class Gstr1CdnrAddRecordPageComponent {
   readonly retPeriod = signal('');
   readonly filingStatusLabel = signal('');
   readonly dueDateLabel = signal('');
+  /** Opened from GSTR-1A CDNR workspace (`?gstr1a=1`). */
+  readonly fromGstr1a = signal(false);
+
+  readonly gstr1aViewQueryParams = computed(() => ({
+    gstin: this.filerGstin(),
+    ret_period: this.retPeriod().trim(),
+    api_name: 'cdnr',
+    filing_status: this.filingStatusLabel().trim() || undefined,
+  }));
 
   readonly saveSubmitting = signal(false);
   readonly saveError = signal<unknown>(null);
@@ -201,6 +211,7 @@ export class Gstr1CdnrAddRecordPageComponent {
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((qm) => {
       this.filingStatusLabel.set((qm.get('filing_status') ?? '').trim());
       this.dueDateLabel.set((qm.get('due_date') ?? '').trim());
+      this.fromGstr1a.set((qm.get('gstr1a') ?? '').trim() === '1');
     });
 
     this.form.controls.ctin.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -326,6 +337,9 @@ export class Gstr1CdnrAddRecordPageComponent {
   }
 
   backUrl(): unknown[] {
+    if (this.fromGstr1a()) {
+      return ['/gstr1/workspace/gstr1a-cdnr', this.filerGstin(), this.retPeriod().trim()];
+    }
     return [
       '/gstr1/workspace/gstr1-download/section',
       this.apiName(),
@@ -338,6 +352,12 @@ export class Gstr1CdnrAddRecordPageComponent {
     const o: Record<string, string> = {};
     const fs = this.filingStatusLabel().trim();
     const dd = this.dueDateLabel().trim();
+    if (this.fromGstr1a()) {
+      if (fs) {
+        o['filing_status'] = fs;
+      }
+      return o;
+    }
     if (fs) {
       o['filing_status'] = fs;
     }
@@ -524,7 +544,11 @@ export class Gstr1CdnrAddRecordPageComponent {
     }
 
     try {
-      const res = await firstValueFrom(this.api.retsaveGstr1Return(payload));
+      const res = await firstValueFrom(
+        this.fromGstr1a()
+          ? this.api.retsaveGstr1aReturn(payload)
+          : this.api.retsaveGstr1Return(payload),
+      );
       this.saveSuccessPayload.set(res);
     } catch (err: unknown) {
       if (err instanceof HttpErrorResponse) {

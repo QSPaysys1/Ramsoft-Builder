@@ -433,6 +433,7 @@ function invoiceFromUnknown(inv: unknown, ctinFallback: string): Gstr1DownloadIn
     invoiceValue: deriveInvoiceFaceValue(invObj, items),
     pos: pickStr(invObj, ['pos']),
     reverseCharge: pickStr(invObj, ['rchrg', 'rev']),
+    noteType: pickStr(invObj, ['ntty', 'NTTY']),
     irn: pickStr(invObj, ['irn', 'etin']),
     items,
   };
@@ -590,7 +591,8 @@ export function filterGstr1DownloadHierarchy(
         includesQuery(inv.invoiceDate, q) ||
         includesQuery(inv.pos, q) ||
         includesQuery(inv.irn, q) ||
-        includesQuery(inv.reverseCharge, q);
+        includesQuery(inv.reverseCharge, q) ||
+        includesQuery(inv.noteType, q);
       if (invMatch) {
         invs.push(inv);
         continue;

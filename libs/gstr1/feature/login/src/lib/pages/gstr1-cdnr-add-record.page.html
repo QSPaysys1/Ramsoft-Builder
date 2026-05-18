@@ -10,7 +10,15 @@
       </li>
       <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
       <li class="inline-flex items-center gap-2">
-        <a [routerLink]="['/gstr1/workspace/gstr1-download']" class="text-[#1a56a7] hover:underline">GSTR-1/IFF</a>
+        @if (fromGstr1a()) {
+          <a
+            routerLink="/gstr1/workspace/gstr1a-view"
+            [queryParams]="gstr1aViewQueryParams()"
+            class="text-[#1a56a7] hover:underline"
+            >GSTR-1A</a>
+        } @else {
+          <a [routerLink]="['/gstr1/workspace/gstr1-download']" class="text-[#1a56a7] hover:underline">GSTR-1/IFF</a>
+        }
       </li>
       <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
       <li class="inline-flex items-center gap-2">
@@ -38,7 +46,13 @@
           ←
         </a>
         <div>
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-white/90">GSTR-1 · RETSAVE</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-white/90">
+            @if (fromGstr1a()) {
+              GSTR-1A · RETSAVE
+            } @else {
+              GSTR-1 · RETSAVE
+            }
+          </p>
           <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">Credit/Debit Notes (Registered) — Add Note</h1>
           <p class="mt-1 text-xs text-white/95 md:text-sm">
             <span class="font-mono">{{ filerGstin() }}</span> · Return period <span class="font-mono">{{ retPeriod() }}</span>

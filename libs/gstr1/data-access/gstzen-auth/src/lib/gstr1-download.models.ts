@@ -184,6 +184,8 @@ export interface Gstr1DownloadInvoiceGroup {
   readonly invoiceValue: number | null;
   readonly pos: string;
   readonly reverseCharge: string;
+  /** Credit/debit note type (`ntty`, e.g. C / D) when present on the source object. */
+  readonly noteType: string;
   readonly irn: string;
   readonly items: readonly Gstr1DownloadItemRow[];
 }
