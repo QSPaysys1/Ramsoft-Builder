@@ -85,6 +85,11 @@ export interface Gstr1GstzenAuthEnvironment {
    * Production: `https://my.gstzen.in/api/gstr2/b2b/`.
    */
   readonly gstr2B2bUrl: string;
+  /**
+   * GSTR-2A credit/debit notes — `POST` JSON (`gstin`, `ret_period`).
+   * Production: `https://my.gstzen.in/api/gstr2/cdn/`.
+   */
+  readonly gstr2CdnUrl: string;
 }
 
 export const GSTR1_GSTZEN_AUTH_CONFIG = new InjectionToken<Gstr1GstzenAuthEnvironment>(

@@ -20,3 +20,7 @@ export * from './lib/gstr1-gstn-session-ensure.service';
 export * from './lib/rettrack-payload.utils';
 export * from './lib/gstr2-b2b.models';
 export * from './lib/gstr2-b2b-payload.utils';
+export * from './lib/gstr2-cdn.models';
+export * from './lib/gstr2-cdn-payload.utils';
+export { findGstr2aCdnNote, parseGstr2CdnBundle } from './lib/gstr2-cdn-payload.utils';
+export * from './lib/gstr2-response.utils';

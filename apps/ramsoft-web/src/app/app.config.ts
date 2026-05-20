@@ -45,6 +45,7 @@ export const appConfig: ApplicationConfig = {
       gstr1RetsaveUrl: environment.gstr1.gstr1RetsaveUrl,
       gstr1aRetsaveUrl: environment.gstr1.gstr1aRetsaveUrl,
       gstr2B2bUrl: environment.gstr1.gstr2B2bUrl,
+      gstr2CdnUrl: environment.gstr1.gstr2CdnUrl,
     }),
     {
       provide: GSTZEN_EINVOICE_CONFIG,

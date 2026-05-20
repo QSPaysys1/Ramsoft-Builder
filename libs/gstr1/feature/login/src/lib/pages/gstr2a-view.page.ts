@@ -152,19 +152,22 @@ export class Gstr2aViewPageComponent {
   }
 
   selectTile(tile: Gstr2aSectionTile): void {
+    const gstin = this.gstin().trim().toUpperCase();
+    const ret_period = this.retPeriod().trim();
+    if (gstin.length !== 15 || !RETURN_PERIOD_REGEX.test(ret_period)) {
+      return;
+    }
+    const queryParams = {
+      gstin,
+      ret_period,
+      filing_status: this.filingLabel().trim() || undefined,
+    };
     if (tile.id === 'b2b') {
-      const gstin = this.gstin().trim().toUpperCase();
-      const ret_period = this.retPeriod().trim();
-      if (gstin.length !== 15 || !RETURN_PERIOD_REGEX.test(ret_period)) {
-        return;
-      }
-      void this.router.navigate(['/gstr1/workspace/gstr2a-b2b'], {
-        queryParams: {
-          gstin,
-          ret_period,
-          filing_status: this.filingLabel().trim() || undefined,
-        },
-      });
+      void this.router.navigate(['/gstr1/workspace/gstr2a-b2b'], { queryParams });
+      return;
+    }
+    if (tile.id === 'cdn') {
+      void this.router.navigate(['/gstr1/workspace/gstr2a-cdn'], { queryParams });
       return;
     }
     this.selectedTile.set(tile);

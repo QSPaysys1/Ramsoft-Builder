@@ -286,6 +286,23 @@ export const gstr1Routes: Routes = [
           import('./pages/gstr2a-b2b.page').then((m) => m.Gstr2aB2bPageComponent),
       },
       {
+        path: 'gstr2a-cdn',
+        loadComponent: () =>
+          import('./pages/gstr2a-cdn.page').then((m) => m.Gstr2aCdnPageComponent),
+      },
+      {
+        path: 'gstr2a-cdn-notes',
+        loadComponent: () =>
+          import('./pages/gstr2a-cdn-notes.page').then((m) => m.Gstr2aCdnNotesPageComponent),
+      },
+      {
+        path: 'gstr2a-cdn-note-detail',
+        loadComponent: () =>
+          import('./pages/gstr2a-cdn-note-detail.page').then(
+            (m) => m.Gstr2aCdnNoteDetailPageComponent,
+          ),
+      },
+      {
         path: 'session',
         loadComponent: () =>
           import('./pages/gstr1-workspace-session.page').then(
