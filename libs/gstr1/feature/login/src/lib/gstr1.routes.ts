@@ -293,6 +293,20 @@ export const gstr1Routes: Routes = [
           ),
       },
       {
+        path: 'gstr2a-eco',
+        loadComponent: () =>
+          import('./pages/gstr2a-eco.page').then(
+            (m) => m.Gstr2aEcoPageComponent,
+          ),
+      },
+      {
+        path: 'gstr2a-ecoa',
+        loadComponent: () =>
+          import('./pages/gstr2a-ecoa.page').then(
+            (m) => m.Gstr2aEcomaPageComponent,
+          ),
+      },
+      {
         path: 'gstr2a-cdna',
         loadComponent: () =>
           import('./pages/gstr2a-cdna.page').then(

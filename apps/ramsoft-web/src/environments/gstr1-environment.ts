@@ -37,5 +37,7 @@ export interface Gstr1Environment {
   /** `POST` GSTR-2A amendments to B2B — `gstin`, `ret_period` (Bearer). */
   readonly gstr2B2baUrl: string;
   readonly gstr2CdnaUrl: string;
+  readonly gstr2EcomUrl: string;
+  readonly gstr2EcomaUrl: string;
   readonly gstr2CdnUrl: string;
 }

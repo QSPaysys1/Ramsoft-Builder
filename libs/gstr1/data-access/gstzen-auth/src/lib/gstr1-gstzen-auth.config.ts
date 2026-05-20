@@ -96,6 +96,16 @@ export interface Gstr1GstzenAuthEnvironment {
    */
   readonly gstr2CdnaUrl: string;
   /**
+   * GSTR-2A ECO documents — `POST` JSON (`gstin`, `ret_period`).
+   * Production: `https://my.gstzen.in/api/gstr2/ecom/`.
+   */
+  readonly gstr2EcomUrl: string;
+  /**
+   * GSTR-2A amendments to ECO documents — `POST` JSON (`gstin`, `ret_period`).
+   * Production: `https://my.gstzen.in/api/gstr2/ecoma/`.
+   */
+  readonly gstr2EcomaUrl: string;
+  /**
    * GSTR-2A credit/debit notes — `POST` JSON (`gstin`, `ret_period`).
    * Production: `https://my.gstzen.in/api/gstr2/cdn/`.
    */

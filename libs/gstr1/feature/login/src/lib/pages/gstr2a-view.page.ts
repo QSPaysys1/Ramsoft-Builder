@@ -178,6 +178,14 @@ export class Gstr2aViewPageComponent {
       void this.router.navigate(['/gstr1/workspace/gstr2a-cdna'], { queryParams });
       return;
     }
+    if (tile.id === 'eco') {
+      void this.router.navigate(['/gstr1/workspace/gstr2a-eco'], { queryParams });
+      return;
+    }
+    if (tile.id === 'ecoa') {
+      void this.router.navigate(['/gstr1/workspace/gstr2a-ecoa'], { queryParams });
+      return;
+    }
     this.selectedTile.set(tile);
   }
 

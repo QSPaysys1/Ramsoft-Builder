@@ -19,6 +19,8 @@ import type {
 } from './gstr1-download.models';
 import type { Gstr2B2bRequestBody } from './gstr2-b2b.models';
 import type { Gstr2B2baRequestBody } from './gstr2-b2ba.models';
+import type { Gstr2EcomaRequestBody } from './gstr2-ecoma.models';
+import type { Gstr2EcomRequestBody } from './gstr2-ecom.models';
 import type { Gstr2CdnaRequestBody } from './gstr2-cdna.models';
 import type { Gstr2CdnRequestBody } from './gstr2-cdn.models';
 import { GSTR1_GSTZEN_AUTH_CONFIG } from './gstr1-gstzen-auth.config';
@@ -201,6 +203,34 @@ export class Gstr1GstnOtpApiService {
   fetchGstr2Cdna(body: Gstr2CdnaRequestBody): Observable<unknown> {
     return this.http.post<unknown>(
       this.config.gstr2CdnaUrl,
+      {
+        gstin: body.gstin.trim().toUpperCase(),
+        ret_period: body.ret_period.trim(),
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  }
+
+  /** `POST api/gstr2/ecoma/` — GSTR-2A amendments to ECO documents (Bearer). */
+  fetchGstr2Ecoma(body: Gstr2EcomaRequestBody): Observable<unknown> {
+    return this.http.post<unknown>(
+      this.config.gstr2EcomaUrl,
+      {
+        gstin: body.gstin.trim().toUpperCase(),
+        ret_period: body.ret_period.trim(),
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  }
+
+  /** `POST api/gstr2/ecom/` — GSTR-2A ECO documents (Bearer). */
+  fetchGstr2Ecom(body: Gstr2EcomRequestBody): Observable<unknown> {
+    return this.http.post<unknown>(
+      this.config.gstr2EcomUrl,
       {
         gstin: body.gstin.trim().toUpperCase(),
         ret_period: body.ret_period.trim(),
