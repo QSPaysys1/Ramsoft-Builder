@@ -80,6 +80,11 @@ export interface Gstr1GstzenAuthEnvironment {
    * Production: `https://my.gstzen.in/api/gstr1a/retsave/`.
    */
   readonly gstr1aRetsaveUrl: string;
+  /**
+   * GSTR-2A B2B supplier summary — `POST` JSON (`gstin`, `ret_period`).
+   * Production: `https://my.gstzen.in/api/gstr2/b2b/`.
+   */
+  readonly gstr2B2bUrl: string;
 }
 
 export const GSTR1_GSTZEN_AUTH_CONFIG = new InjectionToken<Gstr1GstzenAuthEnvironment>(

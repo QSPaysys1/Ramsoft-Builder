@@ -276,6 +276,16 @@ export const gstr1Routes: Routes = [
           import('./pages/gstr1a-view.page').then((m) => m.Gstr1aViewPageComponent),
       },
       {
+        path: 'gstr2a-view',
+        loadComponent: () =>
+          import('./pages/gstr2a-view.page').then((m) => m.Gstr2aViewPageComponent),
+      },
+      {
+        path: 'gstr2a-b2b',
+        loadComponent: () =>
+          import('./pages/gstr2a-b2b.page').then((m) => m.Gstr2aB2bPageComponent),
+      },
+      {
         path: 'session',
         loadComponent: () =>
           import('./pages/gstr1-workspace-session.page').then(

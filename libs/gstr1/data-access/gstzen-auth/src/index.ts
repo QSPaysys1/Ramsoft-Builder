@@ -18,3 +18,5 @@ export * from './lib/gstr1-download-record.utils';
 export * from './lib/gstr1-gstn-otp-api.service';
 export * from './lib/gstr1-gstn-session-ensure.service';
 export * from './lib/rettrack-payload.utils';
+export * from './lib/gstr2-b2b.models';
+export * from './lib/gstr2-b2b-payload.utils';

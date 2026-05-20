@@ -32,4 +32,6 @@ export interface Gstr1Environment {
   readonly gstr1RetsaveUrl: string;
   /** `POST` GSTR-1A retsave — section payload with `fp`, `gstin`, `gt`, `cur_gt` (Bearer). */
   readonly gstr1aRetsaveUrl: string;
+  /** `POST` GSTR-2A B2B suppliers — `gstin`, `ret_period` (Bearer). */
+  readonly gstr2B2bUrl: string;
 }

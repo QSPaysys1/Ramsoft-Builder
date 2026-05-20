@@ -17,6 +17,7 @@ import type {
   Gstr1ResetRequestBody,
   Gstr1DownloadRequestBody,
 } from './gstr1-download.models';
+import type { Gstr2B2bRequestBody } from './gstr2-b2b.models';
 import { GSTR1_GSTZEN_AUTH_CONFIG } from './gstr1-gstzen-auth.config';
 
 /**
@@ -163,5 +164,19 @@ export class Gstr1GstnOtpApiService {
     return this.http.post<unknown>(this.config.gstr1aRetsaveUrl, body, {
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+
+  /** `POST api/gstr2/b2b/` — GSTR-2A B2B supplier summary (Bearer). */
+  fetchGstr2B2b(body: Gstr2B2bRequestBody): Observable<unknown> {
+    return this.http.post<unknown>(
+      this.config.gstr2B2bUrl,
+      {
+        gstin: body.gstin.trim().toUpperCase(),
+        ret_period: body.ret_period.trim(),
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
   }
 }
