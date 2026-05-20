@@ -169,9 +169,13 @@ const ROW_PERIOD_KEYS = [
   'ret_prd',
   'retprd',
   'ret_period',
+  'retPeriod',
   'RetPrd',
   'retPrd',
   'RET_PRD',
+  'tax_period',
+  'taxprd',
+  'TaxPrd',
 ] as const;
 
 const ROW_GSTIN_KEYS = ['gstin', 'GSTIN', 'Gstin', 'ctin', 'CTIN', 'd_gst'] as const;
@@ -205,7 +209,12 @@ export function rowMatchesCalendarColumn(
 
 export function normalizeRtnType(row: Record<string, unknown>): string {
   const t =
-    row['rtntype'] ?? row['rtn_type'] ?? row['Rtn_Type'] ?? row['Rtntype'];
+    row['rtntype'] ??
+    row['rtn_type'] ??
+    row['Rtn_Type'] ??
+    row['Rtntype'] ??
+    row['return_type'] ??
+    row['ReturnType'];
   return String(t ?? '')
     .trim()
     .toUpperCase()
@@ -227,7 +236,12 @@ export function isGstr3bFamily(t: string): boolean {
 
 /** GSTR-1A / amendment outward — normalized type string. */
 export function isGstr1aFamily(t: string): boolean {
-  return t.includes('GSTR1A') || /\b1A\b/.test(t);
+  return (
+    t.includes('GSTR1A') ||
+    t.includes('GSTR1_A') ||
+    /\b1A\b/.test(t) ||
+    (t.includes('GSTR1') && /AMEND|AMD|1A/i.test(t))
+  );
 }
 
 /** GSTR-2A auto drafted (view). */
@@ -321,10 +335,30 @@ function rowLooksNotFiled(row: Record<string, unknown>): boolean {
   return false;
 }
 
+/** ARN or date-of-filing on a Rettrack row — strong filed signal. */
+export function rowHasFilingEvidence(
+  row: Record<string, unknown> | undefined,
+): boolean {
+  if (!row) {
+    return false;
+  }
+  if (rowArn(row).length >= 4) {
+    return true;
+  }
+  const dof = rowFilingDateLabel(row);
+  if (dof.length >= 6 && dof !== '—') {
+    return true;
+  }
+  return false;
+}
+
 function rowLooksFiled(row: Record<string, unknown>): boolean {
   const u = collectStatusLikeText(row);
   if (u.includes('NOT FILED') || u.includes('NOTFILED')) {
     return false;
+  }
+  if (rowHasFilingEvidence(row)) {
+    return true;
   }
   const status = String(row['status'] ?? row['_Status'] ?? '')
     .trim()
@@ -332,7 +366,18 @@ function rowLooksFiled(row: Record<string, unknown>): boolean {
   if (status.includes('FILED') || u.includes('FILED')) {
     return true;
   }
-  if (status.includes('ACCEPT') || status.includes('PROCEED')) {
+  if (
+    status.includes('ACCEPT') ||
+    status.includes('PROCEED') ||
+    status.includes('SUBMIT') ||
+    status.includes('SUCCESS') ||
+    status.includes('COMPLET')
+  ) {
+    return true;
+  }
+  if (
+    /\bE-?FILED\b|\bEFILED\b|\bFILED\s+SUCCESS/i.test(u)
+  ) {
     return true;
   }
   const v = String(row['valid'] ?? row['Validity'] ?? '')
@@ -342,7 +387,7 @@ function rowLooksFiled(row: Record<string, unknown>): boolean {
     return true;
   }
   const arn = String(row['arn'] ?? row['ARN'] ?? '').trim();
-  if (arn.length > 8) {
+  if (arn.length >= 4) {
     return true;
   }
   return false;
@@ -400,7 +445,8 @@ export function deriveFamilyStatus(
   if (subset.some((row) => rowLooksNotFiled(row))) {
     return 'notFiled';
   }
-  return 'pending';
+  // Rows in EFiledlist for this return family and period are e-filed unless marked otherwise.
+  return 'filed';
 }
 
 export function rettrackCacheKey(gstin: string, retPeriod: string): string {
@@ -436,6 +482,12 @@ export function pickRepresentativeRow(
   const filed = subset.find((r) => rowLooksFiled(r) && !rowLooksExplicitError(r));
   if (filed) {
     return filed;
+  }
+  const withEvidence = subset.find(
+    (r) => rowHasFilingEvidence(r) && !rowLooksExplicitError(r),
+  );
+  if (withEvidence) {
+    return withEvidence;
   }
   return subset[0];
 }

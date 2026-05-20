@@ -389,15 +389,18 @@ export class ReturnsDashboardPageComponent {
     }
     this.selectedFyStart.set(y);
     this.syncPeriodWithinQuarter();
+    this.resetResponse();
   }
 
   onQuarterChange(value: string): void {
     this.selectedQuarter.set(value as QuarterId);
     this.syncPeriodWithinQuarter();
+    this.resetResponse();
   }
 
   onPeriodChange(value: string): void {
     this.selectedRetPeriod.set(value);
+    this.resetResponse();
   }
 
   private syncPeriodWithinQuarter(): void {
