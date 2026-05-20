@@ -116,6 +116,16 @@ export interface Gstr1GstzenAuthEnvironment {
    */
   readonly gstr2TdstcsUrl: string;
   /**
+   * GSTR-2A imports on bill of entry (overseas) — `POST` JSON (`gstin`, `ret_period`).
+   * Production: `https://my.gstzen.in/api/gstr2/impg/`.
+   */
+  readonly gstr2ImpgUrl: string;
+  /**
+   * GSTR-2A SEZ imports on bill of entry — `POST` JSON (`gstin`, `ret_period`).
+   * Production: `https://my.gstzen.in/api/gstr2/impgsez/`.
+   */
+  readonly gstr2ImpgsezUrl: string;
+  /**
    * GSTR-2A credit/debit notes — `POST` JSON (`gstin`, `ret_period`).
    * Production: `https://my.gstzen.in/api/gstr2/cdn/`.
    */

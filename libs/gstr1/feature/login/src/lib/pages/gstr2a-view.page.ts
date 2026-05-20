@@ -202,6 +202,14 @@ export class Gstr2aViewPageComponent {
       void this.router.navigate(['/gstr1/workspace/gstr2a-tcs'], { queryParams });
       return;
     }
+    if (tile.id === 'imp-goods') {
+      void this.router.navigate(['/gstr1/workspace/gstr2a-impg'], { queryParams });
+      return;
+    }
+    if (tile.id === 'imp-sez') {
+      void this.router.navigate(['/gstr1/workspace/gstr2a-impgsez'], { queryParams });
+      return;
+    }
     this.selectedTile.set(tile);
   }
 

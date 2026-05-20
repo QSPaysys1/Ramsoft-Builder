@@ -51,6 +51,8 @@ export const appConfig: ApplicationConfig = {
       gstr2EcomaUrl: environment.gstr1.gstr2EcomaUrl,
       gstr2IsdUrl: environment.gstr1.gstr2IsdUrl,
       gstr2TdstcsUrl: environment.gstr1.gstr2TdstcsUrl,
+      gstr2ImpgUrl: environment.gstr1.gstr2ImpgUrl,
+      gstr2ImpgsezUrl: environment.gstr1.gstr2ImpgsezUrl,
       gstr2CdnUrl: environment.gstr1.gstr2CdnUrl,
     }),
     {

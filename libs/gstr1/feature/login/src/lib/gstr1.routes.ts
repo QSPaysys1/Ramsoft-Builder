@@ -330,6 +330,16 @@ export const gstr1Routes: Routes = [
         data: { tdsTcsSection: 'tcs' },
       },
       {
+        path: 'gstr2a-impg',
+        loadComponent: () =>
+          import('./pages/gstr2a-impg.page').then((m) => m.Gstr2aImpgPageComponent),
+      },
+      {
+        path: 'gstr2a-impgsez',
+        loadComponent: () =>
+          import('./pages/gstr2a-impgsez.page').then((m) => m.Gstr2aImpgsezPageComponent),
+      },
+      {
         path: 'gstr2a-cdna',
         loadComponent: () =>
           import('./pages/gstr2a-cdna.page').then(
