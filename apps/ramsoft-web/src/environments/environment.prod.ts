@@ -58,6 +58,7 @@ export const environment = {
     gstr2CdnaUrl: 'https://my.gstzen.in/api/gstr2/cdna/',
     gstr2EcomUrl: 'https://my.gstzen.in/api/gstr2/ecom/',
     gstr2EcomaUrl: 'https://my.gstzen.in/api/gstr2/ecoma/',
+    gstr2IsdUrl: 'https://my.gstzen.in/api/gstr2/isd/',
     gstr2CdnUrl: 'https://my.gstzen.in/api/gstr2/cdn/',
   } satisfies Gstr1Environment,
 };

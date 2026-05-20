@@ -186,6 +186,10 @@ export class Gstr2aViewPageComponent {
       void this.router.navigate(['/gstr1/workspace/gstr2a-ecoa'], { queryParams });
       return;
     }
+    if (tile.id === 'isd') {
+      void this.router.navigate(['/gstr1/workspace/gstr2a-isd'], { queryParams });
+      return;
+    }
     this.selectedTile.set(tile);
   }
 

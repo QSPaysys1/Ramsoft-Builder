@@ -307,6 +307,11 @@ export const gstr1Routes: Routes = [
           ),
       },
       {
+        path: 'gstr2a-isd',
+        loadComponent: () =>
+          import('./pages/gstr2a-isd.page').then((m) => m.Gstr2aIsdPageComponent),
+      },
+      {
         path: 'gstr2a-cdna',
         loadComponent: () =>
           import('./pages/gstr2a-cdna.page').then(
