@@ -34,5 +34,7 @@ export interface Gstr1Environment {
   readonly gstr1aRetsaveUrl: string;
   /** `POST` GSTR-2A B2B suppliers — `gstin`, `ret_period` (Bearer). */
   readonly gstr2B2bUrl: string;
+  /** `POST` GSTR-2A amendments to B2B — `gstin`, `ret_period` (Bearer). */
+  readonly gstr2B2baUrl: string;
   readonly gstr2CdnUrl: string;
 }

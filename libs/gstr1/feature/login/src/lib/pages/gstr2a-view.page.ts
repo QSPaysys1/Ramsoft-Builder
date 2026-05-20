@@ -170,6 +170,10 @@ export class Gstr2aViewPageComponent {
       void this.router.navigate(['/gstr1/workspace/gstr2a-cdn'], { queryParams });
       return;
     }
+    if (tile.id === 'b2ba') {
+      void this.router.navigate(['/gstr1/workspace/gstr2a-b2ba'], { queryParams });
+      return;
+    }
     this.selectedTile.set(tile);
   }
 
