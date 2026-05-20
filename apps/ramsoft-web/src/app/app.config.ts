@@ -46,6 +46,7 @@ export const appConfig: ApplicationConfig = {
       gstr1aRetsaveUrl: environment.gstr1.gstr1aRetsaveUrl,
       gstr2B2bUrl: environment.gstr1.gstr2B2bUrl,
       gstr2B2baUrl: environment.gstr1.gstr2B2baUrl,
+      gstr2CdnaUrl: environment.gstr1.gstr2CdnaUrl,
       gstr2CdnUrl: environment.gstr1.gstr2CdnUrl,
     }),
     {

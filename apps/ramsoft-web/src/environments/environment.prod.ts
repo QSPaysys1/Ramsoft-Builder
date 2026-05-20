@@ -55,6 +55,7 @@ export const environment = {
     gstr1aRetsaveUrl: 'https://my.gstzen.in/api/gstr1a/retsave/',
     gstr2B2bUrl: 'https://my.gstzen.in/api/gstr2/b2b/',
     gstr2B2baUrl: 'https://my.gstzen.in/api/gstr2/b2ba/',
+    gstr2CdnaUrl: 'https://my.gstzen.in/api/gstr2/cdna/',
     gstr2CdnUrl: 'https://my.gstzen.in/api/gstr2/cdn/',
   } satisfies Gstr1Environment,
 };

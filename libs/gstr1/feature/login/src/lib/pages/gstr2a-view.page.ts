@@ -174,6 +174,10 @@ export class Gstr2aViewPageComponent {
       void this.router.navigate(['/gstr1/workspace/gstr2a-b2ba'], { queryParams });
       return;
     }
+    if (tile.id === 'cdna') {
+      void this.router.navigate(['/gstr1/workspace/gstr2a-cdna'], { queryParams });
+      return;
+    }
     this.selectedTile.set(tile);
   }
 

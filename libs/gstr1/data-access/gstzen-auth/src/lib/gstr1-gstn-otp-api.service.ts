@@ -19,6 +19,7 @@ import type {
 } from './gstr1-download.models';
 import type { Gstr2B2bRequestBody } from './gstr2-b2b.models';
 import type { Gstr2B2baRequestBody } from './gstr2-b2ba.models';
+import type { Gstr2CdnaRequestBody } from './gstr2-cdna.models';
 import type { Gstr2CdnRequestBody } from './gstr2-cdn.models';
 import { GSTR1_GSTZEN_AUTH_CONFIG } from './gstr1-gstzen-auth.config';
 
@@ -186,6 +187,20 @@ export class Gstr1GstnOtpApiService {
   fetchGstr2B2ba(body: Gstr2B2baRequestBody): Observable<unknown> {
     return this.http.post<unknown>(
       this.config.gstr2B2baUrl,
+      {
+        gstin: body.gstin.trim().toUpperCase(),
+        ret_period: body.ret_period.trim(),
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  }
+
+  /** `POST api/gstr2/cdna/` — GSTR-2A amendments to CDN supplier summary (Bearer). */
+  fetchGstr2Cdna(body: Gstr2CdnaRequestBody): Observable<unknown> {
+    return this.http.post<unknown>(
+      this.config.gstr2CdnaUrl,
       {
         gstin: body.gstin.trim().toUpperCase(),
         ret_period: body.ret_period.trim(),

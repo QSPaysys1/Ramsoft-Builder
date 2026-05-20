@@ -91,6 +91,11 @@ export interface Gstr1GstzenAuthEnvironment {
    */
   readonly gstr2B2baUrl: string;
   /**
+   * GSTR-2A amendments to credit/debit notes — `POST` JSON (`gstin`, `ret_period`).
+   * Production: `https://my.gstzen.in/api/gstr2/cdna/`.
+   */
+  readonly gstr2CdnaUrl: string;
+  /**
    * GSTR-2A credit/debit notes — `POST` JSON (`gstin`, `ret_period`).
    * Production: `https://my.gstzen.in/api/gstr2/cdn/`.
    */

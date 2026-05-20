@@ -58,6 +58,7 @@ export const environment = {
     gstr1aRetsaveUrl: `${GSTZEN_DEV}/api/gstr1a/retsave/`,
     gstr2B2bUrl: `${GSTZEN_DEV}/api/gstr2/b2b/`,
     gstr2B2baUrl: `${GSTZEN_DEV}/api/gstr2/b2ba/`,
+    gstr2CdnaUrl: `${GSTZEN_DEV}/api/gstr2/cdna/`,
     gstr2CdnUrl: `${GSTZEN_DEV}/api/gstr2/cdn/`,
   } satisfies Gstr1Environment,
 };

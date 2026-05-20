@@ -293,6 +293,13 @@ export const gstr1Routes: Routes = [
           ),
       },
       {
+        path: 'gstr2a-cdna',
+        loadComponent: () =>
+          import('./pages/gstr2a-cdna.page').then(
+            (m) => m.Gstr2aCdnaPageComponent,
+          ),
+      },
+      {
         path: 'gstr2a-cdn',
         loadComponent: () =>
           import('./pages/gstr2a-cdn.page').then((m) => m.Gstr2aCdnPageComponent),
