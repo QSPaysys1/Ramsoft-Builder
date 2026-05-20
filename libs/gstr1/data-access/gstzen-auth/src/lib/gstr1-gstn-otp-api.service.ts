@@ -19,6 +19,7 @@ import type {
 } from './gstr1-download.models';
 import type { Gstr2B2bRequestBody } from './gstr2-b2b.models';
 import type { Gstr2B2baRequestBody } from './gstr2-b2ba.models';
+import type { Gstr2TdstcsRequestBody } from './gstr2-tdstcs.models';
 import type { Gstr2IsdRequestBody } from './gstr2-isd.models';
 import type { Gstr2EcomaRequestBody } from './gstr2-ecoma.models';
 import type { Gstr2EcomRequestBody } from './gstr2-ecom.models';
@@ -246,6 +247,20 @@ export class Gstr1GstnOtpApiService {
   fetchGstr2Isd(body: Gstr2IsdRequestBody): Observable<unknown> {
     return this.http.post<unknown>(
       this.config.gstr2IsdUrl,
+      {
+        gstin: body.gstin.trim().toUpperCase(),
+        ret_period: body.ret_period.trim(),
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  }
+
+  /** `POST api/gstr2/tdstcs/` — GSTR-2A TDS / TDSA / TCS credits (Bearer). */
+  fetchGstr2Tdstcs(body: Gstr2TdstcsRequestBody): Observable<unknown> {
+    return this.http.post<unknown>(
+      this.config.gstr2TdstcsUrl,
       {
         gstin: body.gstin.trim().toUpperCase(),
         ret_period: body.ret_period.trim(),

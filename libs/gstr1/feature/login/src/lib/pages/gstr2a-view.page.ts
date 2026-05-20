@@ -190,6 +190,18 @@ export class Gstr2aViewPageComponent {
       void this.router.navigate(['/gstr1/workspace/gstr2a-isd'], { queryParams });
       return;
     }
+    if (tile.id === 'tds') {
+      void this.router.navigate(['/gstr1/workspace/gstr2a-tds'], { queryParams });
+      return;
+    }
+    if (tile.id === 'tdsa') {
+      void this.router.navigate(['/gstr1/workspace/gstr2a-tdsa'], { queryParams });
+      return;
+    }
+    if (tile.id === 'tcs') {
+      void this.router.navigate(['/gstr1/workspace/gstr2a-tcs'], { queryParams });
+      return;
+    }
     this.selectedTile.set(tile);
   }
 

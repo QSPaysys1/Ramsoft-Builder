@@ -62,6 +62,7 @@ export const environment = {
     gstr2EcomUrl: `${GSTZEN_DEV}/api/gstr2/ecom/`,
     gstr2EcomaUrl: `${GSTZEN_DEV}/api/gstr2/ecoma/`,
     gstr2IsdUrl: `${GSTZEN_DEV}/api/gstr2/isd/`,
+    gstr2TdstcsUrl: `${GSTZEN_DEV}/api/gstr2/tdstcs/`,
     gstr2CdnUrl: `${GSTZEN_DEV}/api/gstr2/cdn/`,
   } satisfies Gstr1Environment,
 };

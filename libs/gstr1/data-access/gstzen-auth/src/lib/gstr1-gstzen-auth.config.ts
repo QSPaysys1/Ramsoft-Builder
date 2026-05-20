@@ -111,6 +111,11 @@ export interface Gstr1GstzenAuthEnvironment {
    */
   readonly gstr2IsdUrl: string;
   /**
+   * GSTR-2A TDS / TDS amendments / TCS — `POST` JSON (`gstin`, `ret_period`).
+   * Production: `https://my.gstzen.in/api/gstr2/tdstcs/`.
+   */
+  readonly gstr2TdstcsUrl: string;
+  /**
    * GSTR-2A credit/debit notes — `POST` JSON (`gstin`, `ret_period`).
    * Production: `https://my.gstzen.in/api/gstr2/cdn/`.
    */

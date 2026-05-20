@@ -40,5 +40,6 @@ export interface Gstr1Environment {
   readonly gstr2EcomUrl: string;
   readonly gstr2EcomaUrl: string;
   readonly gstr2IsdUrl: string;
+  readonly gstr2TdstcsUrl: string;
   readonly gstr2CdnUrl: string;
 }

@@ -312,6 +312,24 @@ export const gstr1Routes: Routes = [
           import('./pages/gstr2a-isd.page').then((m) => m.Gstr2aIsdPageComponent),
       },
       {
+        path: 'gstr2a-tds',
+        loadComponent: () =>
+          import('./pages/gstr2a-tds-tcs.page').then((m) => m.Gstr2aTdsTcsPageComponent),
+        data: { tdsTcsSection: 'tds' },
+      },
+      {
+        path: 'gstr2a-tdsa',
+        loadComponent: () =>
+          import('./pages/gstr2a-tds-tcs.page').then((m) => m.Gstr2aTdsTcsPageComponent),
+        data: { tdsTcsSection: 'tdsa' },
+      },
+      {
+        path: 'gstr2a-tcs',
+        loadComponent: () =>
+          import('./pages/gstr2a-tds-tcs.page').then((m) => m.Gstr2aTdsTcsPageComponent),
+        data: { tdsTcsSection: 'tcs' },
+      },
+      {
         path: 'gstr2a-cdna',
         loadComponent: () =>
           import('./pages/gstr2a-cdna.page').then(
