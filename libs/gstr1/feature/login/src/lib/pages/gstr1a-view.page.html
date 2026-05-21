@@ -104,92 +104,94 @@
       </p>
     </div>
 
-    <div class="border-t border-slate-100 pt-4">
-      <div class="grid gap-4 lg:grid-cols-12 lg:items-end">
-        <div class="flex flex-col gap-1.5 lg:col-span-3">
-          <label class="text-sm font-semibold text-slate-700" for="g1a-gstin">GSTIN <span class="text-red-600">*</span></label>
-          <input
-            id="g1a-gstin"
-            maxlength="15"
-            autocomplete="off"
-            class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm uppercase tracking-wide text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
-            [value]="gstin()"
-            (input)="updateGstin($any($event.target).value)"
-          />
-        </div>
-        <div class="flex flex-col gap-1.5 lg:col-span-2">
-          <label class="text-sm font-semibold text-slate-700" for="g1a-period">Return period <span class="text-red-600">*</span></label>
-          <input
-            id="g1a-period"
-            maxlength="6"
-            autocomplete="off"
-            placeholder="MMYYYY"
-            class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
-            [value]="retPeriod()"
-            (input)="updateRetPeriod($any($event.target).value)"
-          />
-        </div>
-        <div class="flex flex-col gap-1.5 lg:col-span-3">
-          <label class="text-sm font-semibold text-slate-700" for="g1a-api">API name</label>
-          <select
-            id="g1a-api"
-            class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
-            [value]="apiName()"
-            (change)="updateApiName($any($event.target).value)"
-            [attr.title]="selectedApiHint()"
-          >
-            @for (opt of apiOptions; track opt.value) {
-              <option [value]="opt.value">{{ opt.label }}</option>
+    <div>
+      @if(false) {
+        <div class="grid gap-4 lg:grid-cols-12 lg:items-end">
+          <div class="flex flex-col gap-1.5 lg:col-span-3">
+            <label class="text-sm font-semibold text-slate-700" for="g1a-gstin">GSTIN <span class="text-red-600">*</span></label>
+            <input
+              id="g1a-gstin"
+              maxlength="15"
+              autocomplete="off"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm uppercase tracking-wide text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+              [value]="gstin()"
+              (input)="updateGstin($any($event.target).value)"
+            />
+          </div>
+          <div class="flex flex-col gap-1.5 lg:col-span-2">
+            <label class="text-sm font-semibold text-slate-700" for="g1a-period">Return period <span class="text-red-600">*</span></label>
+            <input
+              id="g1a-period"
+              maxlength="6"
+              autocomplete="off"
+              placeholder="MMYYYY"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+              [value]="retPeriod()"
+              (input)="updateRetPeriod($any($event.target).value)"
+            />
+          </div>
+          <div class="flex flex-col gap-1.5 lg:col-span-3">
+            <label class="text-sm font-semibold text-slate-700" for="g1a-api">API name</label>
+            <select
+              id="g1a-api"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+              [value]="apiName()"
+              (change)="updateApiName($any($event.target).value)"
+              [attr.title]="selectedApiHint()"
+            >
+              @for (opt of apiOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+            @if (selectedApiHint().length) {
+              <p class="text-[11px] leading-snug text-slate-500">{{ selectedApiHint() }}</p>
             }
-          </select>
-          @if (selectedApiHint().length) {
-            <p class="text-[11px] leading-snug text-slate-500">{{ selectedApiHint() }}</p>
-          }
+          </div>
+          <div class="flex flex-wrap gap-2 lg:col-span-4 lg:justify-end">
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-5 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#154a8f] disabled:cursor-not-allowed disabled:opacity-55 lg:flex-none lg:min-w-[140px]"
+              [disabled]="retsumLoading() || loading()"
+              (click)="loadRetsumAndSection()"
+            >
+              @if (retsumLoading() || loading()) {
+                <span>Loading…</span>
+              } @else {
+                <span>Load data</span>
+              }
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-teal-800/40 bg-white/95 px-4 text-xs font-bold uppercase tracking-wide text-[#0f2744] shadow-sm hover:bg-white disabled:opacity-45"
+              [disabled]="!canSubmitGstr1aRetsave() || retsaveSubmitting()"
+              (click)="submitGstr1aRetsave()"
+              title="POST downloaded section to GSTZen GSTR-1A retsave (portal SAVE equivalent)"
+            >
+              @if (retsaveSubmitting()) {
+                <span>Saving…</span>
+              } @else {
+                <span>Submit retsave</span>
+              }
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-45"
+              [disabled]="rawResponse() === null"
+              (click)="copyJson()"
+            >
+              Copy JSON
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-45"
+              [disabled]="rawResponse() === null"
+              (click)="downloadJson()"
+            >
+              Download JSON
+            </button>
+          </div>
         </div>
-        <div class="flex flex-wrap gap-2 lg:col-span-4 lg:justify-end">
-          <button
-            type="button"
-            class="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-5 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#154a8f] disabled:cursor-not-allowed disabled:opacity-55 lg:flex-none lg:min-w-[140px]"
-            [disabled]="retsumLoading() || loading()"
-            (click)="loadRetsumAndSection()"
-          >
-            @if (retsumLoading() || loading()) {
-              <span>Loading…</span>
-            } @else {
-              <span>Load data</span>
-            }
-          </button>
-          <button
-            type="button"
-            class="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-teal-800/40 bg-white/95 px-4 text-xs font-bold uppercase tracking-wide text-[#0f2744] shadow-sm hover:bg-white disabled:opacity-45"
-            [disabled]="!canSubmitGstr1aRetsave() || retsaveSubmitting()"
-            (click)="submitGstr1aRetsave()"
-            title="POST downloaded section to GSTZen GSTR-1A retsave (portal SAVE equivalent)"
-          >
-            @if (retsaveSubmitting()) {
-              <span>Saving…</span>
-            } @else {
-              <span>Submit retsave</span>
-            }
-          </button>
-          <button
-            type="button"
-            class="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-45"
-            [disabled]="rawResponse() === null"
-            (click)="copyJson()"
-          >
-            Copy JSON
-          </button>
-          <button
-            type="button"
-            class="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-45"
-            [disabled]="rawResponse() === null"
-            (click)="downloadJson()"
-          >
-            Download JSON
-          </button>
-        </div>
-      </div>
+      }
       @if (!paramsValid()) {
         <p class="mt-3 text-xs font-medium text-amber-800">
           Enter a valid GSTIN (15 chars) and return period (<span class="font-mono">MMYYYY</span>) before loading.

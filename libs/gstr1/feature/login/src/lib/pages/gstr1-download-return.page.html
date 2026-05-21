@@ -70,7 +70,7 @@
   </header>
 
   <section class="mb-0 rounded-b-xl border border-t-0 border-slate-200 bg-white px-4 py-4 shadow-md md:px-6 md:py-5">
-    <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">     
       <div class="grid flex-1 gap-3 sm:grid-cols-3">
         <div>
           <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">GSTIN</p>
@@ -102,7 +102,7 @@
             }
           </p>
         </div>
-      </div>
+      </div>      
       <div class="flex flex-col items-end gap-1 text-right lg:min-w-[9rem]">
         <p class="text-[11px] font-medium text-slate-500">
           <span class="text-red-600">*</span> Indicates mandatory fields
@@ -112,73 +112,75 @@
       </div>
     </div>
 
-    <div class="border-t border-slate-100 pt-4">
-      <div class="grid gap-4 lg:grid-cols-12 lg:items-end">
-        <div class="flex flex-col gap-1.5 lg:col-span-4">
-          <label class="text-sm font-semibold text-slate-700" for="gd-gstin">GSTIN <span class="text-red-600">*</span></label>
-          <input
-            id="gd-gstin"
-            maxlength="15"
-            autocomplete="off"
-            class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm uppercase tracking-wide text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
-            [value]="gstin()"
-            (input)="updateGstin($any($event.target).value)"
-          />
+    @if(false)  {
+      <div class="border-t border-slate-100 pt-4">
+        <div class="grid gap-4 lg:grid-cols-12 lg:items-end">
+          <div class="flex flex-col gap-1.5 lg:col-span-4">
+            <label class="text-sm font-semibold text-slate-700" for="gd-gstin">GSTIN <span class="text-red-600">*</span></label>
+            <input
+              id="gd-gstin"
+              maxlength="15"
+              autocomplete="off"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm uppercase tracking-wide text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+              [value]="gstin()"
+              (input)="updateGstin($any($event.target).value)"
+            />
+          </div>
+          <div class="flex flex-col gap-1.5 lg:col-span-2">
+            <label class="text-sm font-semibold text-slate-700" for="gd-period">Return period <span class="text-red-600">*</span></label>
+            <input
+              id="gd-period"
+              maxlength="6"
+              autocomplete="off"
+              placeholder="MMYYYY"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+              [value]="retPeriod()"
+              (input)="updateRetPeriod($any($event.target).value)"
+            />
+          </div>
+          <div class="flex flex-wrap gap-2 lg:col-span-6 lg:justify-end">
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-5 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#154a8f] disabled:cursor-not-allowed disabled:opacity-55 lg:flex-none lg:min-w-[140px]"
+              [disabled]="retsumLoading() || fileNilGstr1()"
+              (click)="fetchRetsumSummary()"
+            >
+              @if (retsumLoading()) {
+                <span>Loading…</span>
+              } @else {
+                <span>View</span>
+              }
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45 lg:flex-none lg:min-w-[120px]"
+              [disabled]="rawResponse() === null"
+              (click)="copyJson()"
+            >
+              Copy JSON
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45 lg:flex-none lg:min-w-[120px]"
+              [disabled]="rawResponse() === null"
+              (click)="downloadJson()"
+            >
+              Download JSON
+            </button>
+          </div>
         </div>
-        <div class="flex flex-col gap-1.5 lg:col-span-2">
-          <label class="text-sm font-semibold text-slate-700" for="gd-period">Return period <span class="text-red-600">*</span></label>
-          <input
-            id="gd-period"
-            maxlength="6"
-            autocomplete="off"
-            placeholder="MMYYYY"
-            class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
-            [value]="retPeriod()"
-            (input)="updateRetPeriod($any($event.target).value)"
-          />
-        </div>
-        <div class="flex flex-wrap gap-2 lg:col-span-6 lg:justify-end">
-          <button
-            type="button"
-            class="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-5 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#154a8f] disabled:cursor-not-allowed disabled:opacity-55 lg:flex-none lg:min-w-[140px]"
-            [disabled]="retsumLoading() || fileNilGstr1()"
-            (click)="fetchRetsumSummary()"
-          >
-            @if (retsumLoading()) {
-              <span>Loading…</span>
-            } @else {
-              <span>View</span>
-            }
-          </button>
-          <button
-            type="button"
-            class="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45 lg:flex-none lg:min-w-[120px]"
-            [disabled]="rawResponse() === null"
-            (click)="copyJson()"
-          >
-            Copy JSON
-          </button>
-          <button
-            type="button"
-            class="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45 lg:flex-none lg:min-w-[120px]"
-            [disabled]="rawResponse() === null"
-            (click)="downloadJson()"
-          >
-            Download JSON
-          </button>
-        </div>
+        @if (!paramsValid()) {
+          <p class="mt-3 text-xs font-medium text-amber-800">
+            Enter a valid GSTIN (15 chars) and return period (<span class="font-mono">MMYYYY</span>) before calling View to load RETSUM.
+          </p>
+        }
+        @if (fileNilGstr1()) {
+          <p class="mt-2 text-xs font-medium text-slate-600">
+            Uncheck <span class="font-semibold">File Nil GSTR-1</span> below to load RETSUM and section downloads.
+          </p>
+        }
       </div>
-      @if (!paramsValid()) {
-        <p class="mt-3 text-xs font-medium text-amber-800">
-          Enter a valid GSTIN (15 chars) and return period (<span class="font-mono">MMYYYY</span>) before calling View to load RETSUM.
-        </p>
-      }
-      @if (fileNilGstr1()) {
-        <p class="mt-2 text-xs font-medium text-slate-600">
-          Uncheck <span class="font-semibold">File Nil GSTR-1</span> below to load RETSUM and section downloads.
-        </p>
-      }
-    </div>
+    }
   </section>
 
   @if (!retsumLoading() && logicalErrorText()) {
