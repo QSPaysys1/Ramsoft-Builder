@@ -109,7 +109,11 @@
               </div>
             </a>
 
-            <article class="gstr3b-card">
+            <a
+              routerLink="/gstr1/workspace/gstr3b-eco-details"
+              [queryParams]="gstr3bSectionQueryParams()"
+              class="gstr3b-card gstr3b-card--link"
+            >
               <header class="gstr3b-card__header">
                 <h2 class="gstr3b-card__title">3.1.1 Supplies notified under section 9(5) of the CGST Act, 2017</h2>
               </header>
@@ -120,8 +124,9 @@
                   <div class="gstr3b-field"><dt>State/UT Tax (₹)</dt><dd>{{ taxField(table311(), 'sgst') }}</dd></div>
                   <div class="gstr3b-field"><dt>CESS (₹)</dt><dd>{{ taxField(table311(), 'cess') }}</dd></div>
                 </dl>
+                <span class="gstr3b-card__cta">Open table →</span>
               </div>
-            </article>
+            </a>
 
             <article class="gstr3b-card">
               <header class="gstr3b-card__header">

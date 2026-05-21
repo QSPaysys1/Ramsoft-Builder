@@ -298,6 +298,13 @@ export const gstr1Routes: Routes = [
           ),
       },
       {
+        path: 'gstr3b-eco-details',
+        loadComponent: () =>
+          import('./pages/gstr3b-eco-details.page').then(
+            (m) => m.Gstr3bEcoDetailsPageComponent,
+          ),
+      },
+      {
         path: 'gstr2a-b2b',
         loadComponent: () =>
           import('./pages/gstr2a-b2b.page').then((m) => m.Gstr2aB2bPageComponent),

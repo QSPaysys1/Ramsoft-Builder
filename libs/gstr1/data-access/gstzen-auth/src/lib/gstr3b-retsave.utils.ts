@@ -9,6 +9,7 @@ import type {
   Gstr3bRetsaveTxvalLine,
   Gstr3bRetsaveZeroRatedLine,
   Gstr3bSupDetails,
+  Gstr3bEcoDetails,
 } from './gstr3b.models';
 import {
   gstr2AsRecord,
@@ -177,8 +178,7 @@ export function emptyGstr3bSupDetails(): Gstr3bSupDetails {
   };
 }
 
-export function emptyGstr3bRetsaveFormState(): Gstr3bRetsaveFormState {
-  const zeroItc: Gstr3bRetsaveItcTaxOnly = { iamt: 0, camt: 0, samt: 0, csamt: 0 };
+export function emptyGstr3bEcoDetails(): Gstr3bEcoDetails {
   const zeroFull: Gstr3bRetsaveFullTaxLine = {
     txval: 0,
     iamt: 0,
@@ -186,11 +186,19 @@ export function emptyGstr3bRetsaveFormState(): Gstr3bRetsaveFormState {
     samt: 0,
     csamt: 0,
   };
+  return {
+    eco_sup: { ...zeroFull },
+    eco_reg_sup: { txval: 0 },
+  };
+}
+
+export function emptyGstr3bRetsaveFormState(): Gstr3bRetsaveFormState {
+  const zeroItc: Gstr3bRetsaveItcTaxOnly = { iamt: 0, camt: 0, samt: 0, csamt: 0 };
 
   return {
     sup_details: emptyGstr3bSupDetails(),
     inter_sup: { unreg_details: [], comp_details: [], uin_details: [] },
-    eco_dtls: { eco_sup: { ...zeroFull }, eco_reg_sup: { txval: 0 } },
+    eco_dtls: emptyGstr3bEcoDetails(),
     itc_elg: {
       itc_avl: ['IMPG', 'IMPS', 'ISRC', 'ISD', 'OTH'].map((ty) => ({ ty, ...zeroItc })),
       itc_rev: ['RUL', 'OTH'].map((ty) => ({ ty, ...zeroItc })),

@@ -108,6 +108,11 @@ export interface Gstr3bSupDetails {
   osup_nongst: Gstr3bRetsaveTxvalLine;
 }
 
+export interface Gstr3bEcoDetails {
+  eco_sup: Gstr3bRetsaveFullTaxLine;
+  eco_reg_sup: Gstr3bRetsaveTxvalLine;
+}
+
 export interface Gstr3bRetsaveFormState {
   sup_details: Gstr3bSupDetails;
   inter_sup: {
@@ -115,10 +120,7 @@ export interface Gstr3bRetsaveFormState {
     comp_details: Gstr3bRetsaveInterSupRow[];
     uin_details: Gstr3bRetsaveInterSupRow[];
   };
-  eco_dtls: {
-    eco_sup: Gstr3bRetsaveFullTaxLine;
-    eco_reg_sup: Gstr3bRetsaveTxvalLine;
-  };
+  eco_dtls: Gstr3bEcoDetails;
   itc_elg: {
     itc_avl: Gstr3bRetsaveItcRow[];
     itc_rev: Gstr3bRetsaveItcRow[];
