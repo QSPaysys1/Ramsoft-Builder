@@ -3,8 +3,8 @@
     <div>
       <h1 class="text-2xl font-bold tracking-tight text-[#222f3f] md:text-3xl">File Returns</h1>
       <p class="mt-1 text-sm text-slate-600">
-        Use Financial Year, Quarter, and Period to build the return period (<span class="font-mono text-xs">MMYYYY</span>) sent to
-        Rettrack with your GSTIN.
+        Choose Financial Year, Quarter, and Return Period, then press
+        <span class="font-semibold">Search</span>. Rettrack uses the GSTIN from your Ramsoft profile.
       </p>
     </div>
     <a
@@ -15,13 +15,7 @@
   </div>
 
   <div class="sticky top-0 z-20 -mx-4 mb-6 border-b border-slate-200/90 bg-slate-100/95 px-4 pb-4 pt-2 backdrop-blur-md md:static md:mx-0 md:rounded-xl md:border md:border-slate-200 md:bg-white md:p-5 md:shadow-md">
-    <div class="mb-3 flex justify-end">
-      <p class="text-[11px] font-medium text-slate-500"><span class="text-red-600">*</span> Indicates mandatory fields</p>
-    </div>
-    <div
-      [formGroup]="form"
-      class="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end"
-    >
+    <div class="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
       <div class="flex min-w-[160px] flex-1 flex-col gap-1.5">
         <label class="text-sm font-semibold text-slate-700" for="rd-fy"
           >Financial Year <span class="text-red-600">*</span></label
@@ -29,8 +23,8 @@
         <select
           id="rd-fy"
           class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
-          [value]="selectedFyStart().toString()"
-          (change)="onFyChange($any($event.target).value)"
+          [ngModel]="selectedFyStart().toString()"
+          (ngModelChange)="onFyChange($event)"
         >
           @for (fy of fyOptions(); track fy.startYear) {
             <option [value]="fy.startYear">{{ fy.label }}</option>
@@ -44,8 +38,8 @@
         <select
           id="rd-q"
           class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
-          [value]="selectedQuarter()"
-          (change)="onQuarterChange($any($event.target).value)"
+          [ngModel]="selectedQuarter()"
+          (ngModelChange)="onQuarterChange($event)"
         >
           @for (q of quarterOptions; track q.id) {
             <option [value]="q.id">{{ q.label }}</option>
@@ -59,38 +53,19 @@
         <select
           id="rd-p"
           class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
-          [value]="selectedRetPeriod()"
-          (change)="onPeriodChange($any($event.target).value)"
+          [ngModel]="selectedRetPeriod()"
+          (ngModelChange)="onPeriodChange($event)"
         >
           @for (p of periodOptions(); track p.retPeriod) {
             <option [value]="p.retPeriod">{{ p.label }}</option>
           }
         </select>
       </div>
-      <div class="flex min-w-[220px] flex-[2] flex-col gap-1.5">
-        <label class="text-sm font-semibold text-slate-700" for="rd-gstin"
-          >GSTIN <span class="text-red-600">*</span></label
-        >
-        <input
-          id="rd-gstin"
-          type="text"
-          formControlName="gstin"
-          maxlength="15"
-          autocomplete="off"
-          class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm uppercase tracking-wide text-slate-900 shadow-sm placeholder:normal-case placeholder:tracking-normal focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
-          placeholder="15-character GSTIN"
-        />
-        @if (form.controls.gstin.touched && form.controls.gstin.hasError('required')) {
-          <p class="text-xs font-medium text-red-600">GSTIN is required.</p>
-        } @else if (form.controls.gstin.touched && form.controls.gstin.hasError('gstinPattern')) {
-          <p class="text-xs font-medium text-red-600">Enter a valid 15-character GSTIN.</p>
-        }
-      </div>
       <div class="flex flex-wrap gap-2 lg:ml-auto">
         <button
           type="button"
           class="inline-flex min-h-[42px] min-w-[120px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-5 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#154a8f] disabled:cursor-not-allowed disabled:opacity-55 lg:flex-none"
-          [disabled]="loading()"
+          [disabled]="loading() || !canSearch()"
           (click)="search()"
         >
           @if (loading()) {
@@ -102,7 +77,7 @@
         <button
           type="button"
           class="inline-flex min-h-[42px] min-w-[100px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-          [disabled]="loading() || form.invalid"
+          [disabled]="loading() || !canSearch()"
           (click)="refresh()"
           title="Repeat the last search"
         >
@@ -231,12 +206,12 @@
               }
               <div class="mt-auto flex flex-wrap justify-center gap-2 pt-2">
                 @if (c.spec.id === 'gstr1') {
-                  @if (form.valid) {
+                  @if (hasValidGstin()) {
                     <a
                       class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-3 text-center text-xs font-bold uppercase tracking-wide text-white hover:bg-[#154a8f] sm:flex-none"
                       routerLink="/gstr1/workspace/gstr1-download"
                       [queryParams]="{
-                        gstin: gstinSnap().trim().toUpperCase(),
+                        gstin: profileGstin(),
                         ret_period: selectedRetPeriod(),
                         api_name: 'b2b',
                         filing_status: statusLabel(c.kind),
@@ -250,18 +225,18 @@
                       type="button"
                       disabled
                       class="inline-flex min-h-[38px] min-w-[100px] flex-1 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-3 text-center text-xs font-bold uppercase tracking-wide text-white opacity-70 sm:flex-none"
-                      title="Enter a valid 15-character GSTIN to enable View."
+                      title="Add a GSTIN to your Ramsoft profile to enable View."
                     >
                       View
                     </button>
                   }
                 } @else if (c.spec.id === 'gstr1a') {
-                  @if (form.valid) {
+                  @if (hasValidGstin()) {
                     <a
                       class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-3 text-center text-xs font-bold uppercase tracking-wide text-white hover:bg-[#154a8f] sm:flex-none"
                       routerLink="/gstr1/workspace/gstr1a-view"
                       [queryParams]="{
-                        gstin: gstinSnap().trim().toUpperCase(),
+                        gstin: profileGstin(),
                         ret_period: selectedRetPeriod(),
                         api_name: 'b2b',
                         filing_status: statusLabel(c.kind),
@@ -274,7 +249,7 @@
                       type="button"
                       disabled
                       class="inline-flex min-h-[38px] min-w-[100px] flex-1 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-3 text-center text-xs font-bold uppercase tracking-wide text-white opacity-70 sm:flex-none"
-                      title="Enter a valid 15-character GSTIN to open Prepare online."
+                      title="Add a GSTIN to your Ramsoft profile to open Prepare online."
                     >
                       Prepare online
                     </button>
@@ -406,7 +381,7 @@
               }
               <div class="mt-auto flex flex-wrap justify-center gap-2 pt-2">
                 @if (c.spec.id === 'gstr2a' || c.spec.id === 'gstr2b' || c.spec.id === 'gstr3b') {
-                  @if (form.valid) {
+                  @if (hasValidGstin()) {
                     <a
                       class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-3 text-center text-xs font-bold uppercase tracking-wide text-white hover:bg-[#154a8f] sm:flex-none"
                       [routerLink]="
@@ -417,7 +392,7 @@
                             : '/gstr1/workspace/gstr2a-view'
                       "
                       [queryParams]="{
-                        gstin: gstinSnap().trim().toUpperCase(),
+                        gstin: profileGstin(),
                         ret_period: selectedRetPeriod(),
                         filing_status: statusLabel(c.kind),
                       }"
@@ -431,10 +406,10 @@
                       class="inline-flex min-h-[38px] min-w-[100px] flex-1 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-3 text-center text-xs font-bold uppercase tracking-wide text-white opacity-70 sm:flex-none"
                       [title]="
                         c.spec.id === 'gstr2b'
-                          ? 'Enter a valid 15-character GSTIN to open GSTR-2B.'
+                          ? 'Add a GSTIN to your Ramsoft profile to open GSTR-2B.'
                           : c.spec.id === 'gstr3b'
-                            ? 'Enter a valid 15-character GSTIN to open GSTR-3B.'
-                            : 'Enter a valid 15-character GSTIN to open GSTR-2A.'
+                            ? 'Add a GSTIN to your Ramsoft profile to open GSTR-3B.'
+                            : 'Add a GSTIN to your Ramsoft profile to open GSTR-2A.'
                       "
                     >
                       {{ c.spec.id === 'gstr3b' ? 'View' : 'Open' }}
@@ -526,8 +501,11 @@
     >
       <p class="text-base font-medium text-slate-800">Ready to search</p>
       <p class="mt-2 max-w-lg text-sm text-slate-600">
-        Choose FY, quarter, return period, enter GSTIN, and press <span class="font-semibold">Search</span> to load Rettrack data.
-        Filters are remembered until you clear browser storage for this site.
+        Financial year, quarter, and return period are pre-selected for the current month.
+        Press <span class="font-semibold">Search</span> to load Rettrack data using your profile GSTIN.
+        @if (!hasValidGstin()) {
+          <span class="mt-2 block text-amber-800">No GSTIN on your profile — add one in Ramsoft settings before searching.</span>
+        }
       </p>
     </div>
   }

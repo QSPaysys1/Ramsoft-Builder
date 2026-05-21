@@ -11,12 +11,8 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
-import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthStore } from '@ramsoft-builder/auth/data-access/auth';
 import { UserProfileRepository } from '@ramsoft-builder/e-invoices/data-access/einvoice';
@@ -39,7 +35,6 @@ import {
   topLevelPayloadError,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
 import { catchError, firstValueFrom, of, switchMap } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
 import {
   GST_QUARTERS,
   type IndianFySelection,
@@ -49,9 +44,16 @@ import {
   listIndianFinancialYears,
   periodMonthsForQuarter,
 } from '../utils/indian-fy-return-period';
-import { indianGstinValidator } from '../validators/indian-gstin.validator';
 
-const FILTER_STORAGE_KEY = 'gstr1-returns-dashboard-filters-v1';
+const FILTER_STORAGE_KEY = 'gstr1-returns-dashboard-filters-v2';
+
+const GSTIN_PROFILE_KEYS = [
+  'GSTIN',
+  'gstin',
+  'tinGstNo',
+  'organizationGstin',
+  'Gstin',
+] as const;
 
 type AggregateStatus = 'filed' | 'pending' | 'notFiled' | 'error';
 
@@ -59,7 +61,6 @@ interface StoredFilters {
   readonly fyStartYear: number;
   readonly quarter: QuarterId;
   readonly retPeriod: string;
-  readonly gstin: string;
 }
 
 interface ReturnSectionSpec {
@@ -104,17 +105,14 @@ const RETURN_SECTIONS: readonly ReturnSectionSpec[] = [
   },
 ];
 
-function pickProfileString(
-  obj: Record<string, unknown> | undefined,
-  keys: string[],
-): string {
+function pickProfileGstin(obj: Record<string, unknown> | undefined): string {
   if (!obj) {
     return '';
   }
-  for (const k of keys) {
+  for (const k of GSTIN_PROFILE_KEYS) {
     const v = obj[k];
     if (typeof v === 'string' && v.trim()) {
-      return v.trim();
+      return v.trim().toUpperCase();
     }
   }
   return '';
@@ -176,6 +174,15 @@ function normalizeErrorEnvelope(err: unknown): unknown {
   return { message: String(err) };
 }
 
+function defaultFilters(now = new Date()): StoredFilters {
+  const d = defaultSelectionForDate(now);
+  return {
+    fyStartYear: d.fy.startYear,
+    quarter: d.quarter,
+    retPeriod: d.retPeriod,
+  };
+}
+
 export interface ReturnCardVm {
   readonly spec: ReturnSectionSpec;
   readonly kind: Exclude<MonthReturnKind, 'idle'>;
@@ -189,13 +196,7 @@ export interface ReturnCardVm {
 @Component({
   selector: 'lib-returns-dashboard-page',
   standalone: true,
-  imports: [
-    JsonPipe,
-    NgClass,
-    TitleCasePipe,
-    ReactiveFormsModule,
-    RouterLink,
-  ],
+  imports: [JsonPipe, NgClass, TitleCasePipe, RouterLink, FormsModule],
   templateUrl: './returns-dashboard.page.html',
   styleUrl: './returns-dashboard.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -205,40 +206,29 @@ export interface ReturnCardVm {
 })
 export class ReturnsDashboardPageComponent {
   private readonly platformId = inject(PLATFORM_ID);
-  private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly gstnApi = inject(Gstr1GstnOtpApiService);
   private readonly authStore = inject(AuthStore);
   private readonly userProfile = inject(UserProfileRepository);
 
-  readonly fyOptions = signal<IndianFySelection[]>(
-    listIndianFinancialYears(new Date()),
-  );
+  readonly fyOptions = signal<IndianFySelection[]>([]);
 
-  readonly selectedFyStart = signal<number>(
-    defaultSelectionForDate(new Date()).fy.startYear,
-  );
-  readonly selectedQuarter = signal<QuarterId>(
-    defaultSelectionForDate(new Date()).quarter,
-  );
-  readonly selectedRetPeriod = signal<string>(
-    defaultSelectionForDate(new Date()).retPeriod,
-  );
+  readonly selectedFyStart = signal<number>(defaultFilters(new Date()).fyStartYear);
+  readonly selectedQuarter = signal<QuarterId>(defaultFilters(new Date()).quarter);
+  readonly selectedRetPeriod = signal<string>(defaultFilters(new Date()).retPeriod);
+
+  readonly profileGstin = signal('');
 
   readonly periodOptions = computed((): PeriodMonthOption[] =>
     periodMonthsForQuarter(this.selectedFyStart(), this.selectedQuarter()),
   );
 
-  readonly form = this.fb.nonNullable.group({
-    gstin: ['', [Validators.required, indianGstinValidator]],
-  });
+  readonly hasValidGstin = computed(() => this.profileGstin().length === 15);
 
-  readonly gstinSnap = toSignal(
-    this.form.valueChanges.pipe(
-      startWith(this.form.getRawValue()),
-      map(() => this.form.getRawValue().gstin ?? ''),
-    ),
-    { initialValue: this.form.getRawValue().gstin ?? '' },
+  readonly canSearch = computed(
+    () =>
+      this.hasValidGstin() &&
+      RETURN_PERIOD_REGEX.test(this.selectedRetPeriod().trim()),
   );
 
   readonly loading = signal(false);
@@ -255,7 +245,7 @@ export class ReturnsDashboardPageComponent {
 
   readonly returnCards = computed((): ReturnCardVm[] => {
     const rows = this.filedRows();
-    const gstin = this.form.controls.gstin.getRawValue()?.trim().toUpperCase() ?? '';
+    const gstin = this.profileGstin();
     const ret = this.selectedRetPeriod().trim();
     if (!gstin || !RETURN_PERIOD_REGEX.test(ret)) {
       return [];
@@ -279,7 +269,6 @@ export class ReturnsDashboardPageComponent {
     });
   });
 
-  /** GSTR-1 and GSTR-1A — primary filing surfaces after Search. */
   readonly primaryReturnCards = computed((): ReturnCardVm[] => {
     const cards = this.returnCards();
     const g1 = cards.find((c) => c.spec.id === 'gstr1');
@@ -328,20 +317,17 @@ export class ReturnsDashboardPageComponent {
       if (!isPlatformBrowser(this.platformId)) {
         return;
       }
-      this.fyOptions.set(listIndianFinancialYears(new Date()));
-      this.restoreFiltersFromStorage();
+      this.initializeFilters();
     });
 
     effect(() => {
       if (!isPlatformBrowser(this.platformId)) {
         return;
       }
-      const gstin = this.gstinSnap().trim();
       const snap: StoredFilters = {
         fyStartYear: this.selectedFyStart(),
         quarter: this.selectedQuarter(),
         retPeriod: this.selectedRetPeriod(),
-        gstin: gstin.toUpperCase(),
       };
       sessionStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(snap));
     });
@@ -359,26 +345,8 @@ export class ReturnsDashboardPageComponent {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((prof) => {
-        const p = prof as Record<string, unknown> | undefined;
-        const gstin = pickProfileString(p, [
-          'GSTIN',
-          'gstin',
-          'tinGstNo',
-          'organizationGstin',
-          'Gstin',
-        ]);
-        if (gstin && !this.form.controls.gstin.getRawValue()?.trim()) {
-          this.form.patchValue(
-            { gstin: gstin.toUpperCase() },
-            { emitEvent: false },
-          );
-        }
-      });
-
-    this.form.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this.resetResponse();
+        const gstin = pickProfileGstin(prof as Record<string, unknown> | undefined);
+        this.profileGstin.set(gstin);
       });
   }
 
@@ -388,53 +356,95 @@ export class ReturnsDashboardPageComponent {
       return;
     }
     this.selectedFyStart.set(y);
-    this.syncPeriodWithinQuarter();
-    this.resetResponse();
+    this.ensureFiltersCoherent();
   }
 
   onQuarterChange(value: string): void {
     this.selectedQuarter.set(value as QuarterId);
-    this.syncPeriodWithinQuarter();
-    this.resetResponse();
+    this.ensureFiltersCoherent();
   }
 
   onPeriodChange(value: string): void {
+    if (!RETURN_PERIOD_REGEX.test(value)) {
+      return;
+    }
     this.selectedRetPeriod.set(value);
-    this.resetResponse();
   }
 
-  private syncPeriodWithinQuarter(): void {
+  private initializeFilters(): void {
+    this.fyOptions.set(listIndianFinancialYears(new Date()));
+    if (!this.restoreFiltersFromStorage()) {
+      this.applyFilterState(defaultFilters(new Date()));
+    }
+    this.ensureFiltersCoherent();
+  }
+
+  private applyFilterState(state: StoredFilters): void {
+    this.selectedFyStart.set(state.fyStartYear);
+    this.selectedQuarter.set(state.quarter);
+    this.selectedRetPeriod.set(state.retPeriod);
+  }
+
+  /** Keep ret_period aligned with FY/quarter options and the current month when applicable. */
+  private ensureFiltersCoherent(now = new Date()): void {
     const opts = this.periodOptions();
+    if (opts.length === 0) {
+      return;
+    }
     const cur = this.selectedRetPeriod();
     if (opts.some((o) => o.retPeriod === cur)) {
       return;
     }
-    this.selectedRetPeriod.set(opts[0]?.retPeriod ?? cur);
+    this.selectedRetPeriod.set(
+      this.preferredPeriodForQuarter(this.selectedFyStart(), this.selectedQuarter(), now),
+    );
   }
 
-  private restoreFiltersFromStorage(): void {
+  private preferredPeriodForQuarter(
+    fyStart: number,
+    quarter: QuarterId,
+    now = new Date(),
+  ): string {
+    const opts = periodMonthsForQuarter(fyStart, quarter);
+    if (opts.length === 0) {
+      return this.selectedRetPeriod();
+    }
+    const today = defaultSelectionForDate(now);
+    if (today.fy.startYear === fyStart && today.quarter === quarter) {
+      return today.retPeriod;
+    }
+    return opts[opts.length - 1]?.retPeriod ?? opts[0].retPeriod;
+  }
+
+  private restoreFiltersFromStorage(): boolean {
     try {
       const raw = sessionStorage.getItem(FILTER_STORAGE_KEY);
       if (!raw) {
-        return;
+        return false;
       }
       const o = JSON.parse(raw) as Partial<StoredFilters>;
       const fys = this.fyOptions().map((x) => x.startYear);
-      if (typeof o.fyStartYear === 'number' && fys.includes(o.fyStartYear)) {
-        this.selectedFyStart.set(o.fyStartYear);
+      if (typeof o.fyStartYear !== 'number' || !fys.includes(o.fyStartYear)) {
+        return false;
       }
-      if (o.quarter === 'q1' || o.quarter === 'q2' || o.quarter === 'q3' || o.quarter === 'q4') {
-        this.selectedQuarter.set(o.quarter);
+      if (o.quarter !== 'q1' && o.quarter !== 'q2' && o.quarter !== 'q3' && o.quarter !== 'q4') {
+        return false;
       }
-      if (typeof o.retPeriod === 'string' && RETURN_PERIOD_REGEX.test(o.retPeriod)) {
-        this.selectedRetPeriod.set(o.retPeriod);
-        this.syncPeriodWithinQuarter();
+      if (typeof o.retPeriod !== 'string' || !RETURN_PERIOD_REGEX.test(o.retPeriod)) {
+        return false;
       }
-      if (typeof o.gstin === 'string' && o.gstin.trim().length === 15) {
-        this.form.patchValue({ gstin: o.gstin.trim().toUpperCase() }, { emitEvent: false });
+      const opts = periodMonthsForQuarter(o.fyStartYear, o.quarter);
+      if (!opts.some((p) => p.retPeriod === o.retPeriod)) {
+        return false;
       }
+      this.applyFilterState({
+        fyStartYear: o.fyStartYear,
+        quarter: o.quarter,
+        retPeriod: o.retPeriod,
+      });
+      return true;
     } catch {
-      /* ignore */
+      return false;
     }
   }
 
@@ -445,18 +455,12 @@ export class ReturnsDashboardPageComponent {
   }
 
   async search(): Promise<void> {
-    if (this.loading()) {
+    if (this.loading() || !this.canSearch()) {
       return;
     }
-    this.form.markAllAsTouched();
-    if (this.form.invalid) {
-      return;
-    }
-    const gstin = this.form.controls.gstin.getRawValue().trim().toUpperCase();
+    this.ensureFiltersCoherent();
+    const gstin = this.profileGstin();
     const ret_period = this.selectedRetPeriod().trim();
-    if (!RETURN_PERIOD_REGEX.test(ret_period)) {
-      return;
-    }
 
     this.loading.set(true);
     this.resetResponse();
