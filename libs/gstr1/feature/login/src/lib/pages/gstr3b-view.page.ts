@@ -19,7 +19,9 @@ import {
   gstr3bAutoliabLogicalError,
   gstr3bDueDateFromRetPeriod,
   gstr3bFormatAmount,
+  gstr3bRetsumLogicalError,
   parseGstr3bAutoliabBundle,
+  parseGstr3bBundleFromRetsum,
   RETURN_PERIOD_REGEX,
   type Gstr3bAutoliabBundle,
   type Gstr3bExemptAmounts,
@@ -98,6 +100,12 @@ export class Gstr3bViewPageComponent {
   });
 
   readonly backToDashboardQueryParams = computed(() => ({
+    gstin: this.gstin().trim().toUpperCase(),
+    ret_period: this.retPeriod().trim(),
+    filing_status: this.filingLabel().trim() || undefined,
+  }));
+
+  readonly gstr3bSectionQueryParams = computed(() => ({
     gstin: this.gstin().trim().toUpperCase(),
     ret_period: this.retPeriod().trim(),
     filing_status: this.filingLabel().trim() || undefined,
@@ -213,18 +221,31 @@ export class Gstr3bViewPageComponent {
     this.bundle.set(null);
 
     try {
-      const payload = await firstValueFrom(
+      const retsumPayload = await firstValueFrom(
+        this.api.fetchGstr3bRetsum({ gstin, ret_period }),
+      );
+      const retsumErr = gstr3bRetsumLogicalError(retsumPayload);
+      if (!retsumErr) {
+        const fromRetsum = parseGstr3bBundleFromRetsum(retsumPayload);
+        if (fromRetsum) {
+          this.bundle.set(fromRetsum);
+          this.viewState.set('success');
+          return;
+        }
+      }
+
+      const autoliabPayload = await firstValueFrom(
         this.api.fetchGstr3bAutoliab({ gstin, ret_period }),
       );
-      const topErr = gstr3bAutoliabLogicalError(payload);
-      if (topErr) {
-        this.logicalError.set(topErr);
+      const autoliabErr = gstr3bAutoliabLogicalError(autoliabPayload);
+      if (autoliabErr) {
+        this.logicalError.set(retsumErr ?? autoliabErr);
         this.viewState.set('error');
         return;
       }
-      const parsed = parseGstr3bAutoliabBundle(payload);
+      const parsed = parseGstr3bAutoliabBundle(autoliabPayload);
       if (!parsed) {
-        this.logicalError.set('Unexpected response from GSTR-3B auto-liability.');
+        this.logicalError.set(retsumErr ?? 'Unexpected response from GSTR-3B.');
         this.viewState.set('error');
         return;
       }

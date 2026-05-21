@@ -107,7 +107,7 @@ function elgItcTotals(elgitc: Record<string, unknown> | undefined): Gstr3bTaxAmo
   return sumTaxRecords(subtotals);
 }
 
-function extractLiabitc(payload: unknown): Record<string, unknown> | undefined {
+export function extractLiabitc(payload: unknown): Record<string, unknown> | undefined {
   const root = gstr2CoercePayloadRoot(payload);
   if (!root) {
     return undefined;

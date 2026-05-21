@@ -61,7 +61,9 @@
       </div>
 
       @if (viewState() === 'loading') {
-        <div class="px-4 py-16 text-center text-sm text-slate-600">Loading GSTR-3B auto-liability…</div>
+        <div class="px-4 py-16 text-center text-sm text-slate-600">
+          Loading GSTR-3B via <span class="font-mono text-xs">POST /api/gstr3b/retsum/</span>…
+        </div>
       } @else if (viewState() === 'error') {
         <div class="space-y-4 px-4 py-8 md:px-6">
           @if (logicalError()) {
@@ -88,7 +90,11 @@
 
         <div class="gstr3b-cards px-4 pb-6 md:px-6">
           <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <article class="gstr3b-card">
+            <a
+              routerLink="/gstr1/workspace/gstr3b-sup-details"
+              [queryParams]="gstr3bSectionQueryParams()"
+              class="gstr3b-card gstr3b-card--link"
+            >
               <header class="gstr3b-card__header">
                 <h2 class="gstr3b-card__title">3.1 Tax on outward and reverse charge inward supplies</h2>
               </header>
@@ -99,8 +105,9 @@
                   <div class="gstr3b-field"><dt>State/UT Tax (₹)</dt><dd>{{ taxField(table31(), 'sgst') }}</dd></div>
                   <div class="gstr3b-field"><dt>CESS (₹)</dt><dd>{{ taxField(table31(), 'cess') }}</dd></div>
                 </dl>
+                <span class="gstr3b-card__cta">Open table →</span>
               </div>
-            </article>
+            </a>
 
             <article class="gstr3b-card">
               <header class="gstr3b-card__header">

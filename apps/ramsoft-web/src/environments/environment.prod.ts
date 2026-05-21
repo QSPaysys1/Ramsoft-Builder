@@ -65,5 +65,7 @@ export const environment = {
     gstr22bUrl: 'https://my.gstzen.in/api/gstr2/2b/',
     gstr2CdnUrl: 'https://my.gstzen.in/api/gstr2/cdn/',
     gstr3bAutoliabUrl: 'https://my.gstzen.in/api/gstr3b/autoliab/',
+    gstr3bRetsaveUrl: 'https://my.gstzen.in/api/gstr3b/retsave/',
+    gstr3bRetsumUrl: 'https://my.gstzen.in/api/gstr3b/retsum/',
   } satisfies Gstr1Environment,
 };

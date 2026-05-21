@@ -46,4 +46,8 @@ export interface Gstr1Environment {
   readonly gstr22bUrl: string;
   readonly gstr2CdnUrl: string;
   readonly gstr3bAutoliabUrl: string;
+  /** `POST` GSTR-3B retsave — full return JSON payload (Bearer). */
+  readonly gstr3bRetsaveUrl: string;
+  /** `POST` GSTR-3B retsum — saved return summary (Bearer). */
+  readonly gstr3bRetsumUrl: string;
 }

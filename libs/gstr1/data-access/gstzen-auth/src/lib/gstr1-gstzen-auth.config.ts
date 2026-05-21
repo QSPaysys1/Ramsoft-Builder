@@ -140,6 +140,16 @@ export interface Gstr1GstzenAuthEnvironment {
    * Production: `https://my.gstzen.in/api/gstr3b/autoliab/`.
    */
   readonly gstr3bAutoliabUrl: string;
+  /**
+   * GSTR-3B return save — `POST` JSON (`gstin`, `ret_period`, section payloads).
+   * Production: `https://my.gstzen.in/api/gstr3b/retsave/`.
+   */
+  readonly gstr3bRetsaveUrl: string;
+  /**
+   * GSTR-3B return summary — `POST` JSON (`gstin`, `ret_period`).
+   * Production: `https://my.gstzen.in/api/gstr3b/retsum/`.
+   */
+  readonly gstr3bRetsumUrl: string;
 }
 
 export const GSTR1_GSTZEN_AUTH_CONFIG = new InjectionToken<Gstr1GstzenAuthEnvironment>(

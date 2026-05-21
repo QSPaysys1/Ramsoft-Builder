@@ -21,7 +21,11 @@ import type { Gstr2B2bRequestBody } from './gstr2-b2b.models';
 import type { Gstr2B2baRequestBody } from './gstr2-b2ba.models';
 import type { Gstr2ImpgRequestBody } from './gstr2-impg.models';
 import type { Gstr22bRequestBody } from './gstr2-2b.models';
-import type { Gstr3bAutoliabRequestBody } from './gstr3b.models';
+import type {
+  Gstr3bAutoliabRequestBody,
+  Gstr3bRetsaveRequestBody,
+  Gstr3bRetsumRequestBody,
+} from './gstr3b.models';
 import type { Gstr2ImpgsezRequestBody } from './gstr2-impgsez.models';
 import type { Gstr2TdstcsRequestBody } from './gstr2-tdstcs.models';
 import type { Gstr2IsdRequestBody } from './gstr2-isd.models';
@@ -335,6 +339,27 @@ export class Gstr1GstnOtpApiService {
   fetchGstr3bAutoliab(body: Gstr3bAutoliabRequestBody): Observable<unknown> {
     return this.http.post<unknown>(
       this.config.gstr3bAutoliabUrl,
+      {
+        gstin: body.gstin.trim().toUpperCase(),
+        ret_period: body.ret_period.trim(),
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  }
+
+  /** `POST api/gstr3b/retsave/` — persist GSTR-3B return data (Bearer). */
+  retsaveGstr3bReturn(body: Gstr3bRetsaveRequestBody): Observable<unknown> {
+    return this.http.post<unknown>(this.config.gstr3bRetsaveUrl, body, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  /** `POST api/gstr3b/retsum/` — fetch saved GSTR-3B return summary (Bearer). */
+  fetchGstr3bRetsum(body: Gstr3bRetsumRequestBody): Observable<unknown> {
+    return this.http.post<unknown>(
+      this.config.gstr3bRetsumUrl,
       {
         gstin: body.gstin.trim().toUpperCase(),
         ret_period: body.ret_period.trim(),
