@@ -130,15 +130,18 @@ export interface Gstr3bInwardSup {
   isup_details: Gstr3bRetsaveInwardSupRow[];
 }
 
+export interface Gstr3bIntrLtfee {
+  intr_details: Gstr3bRetsaveItcTaxOnly;
+  ltfee_details: Gstr3bRetsaveItcTaxOnly;
+}
+
 export interface Gstr3bRetsaveFormState {
   sup_details: Gstr3bSupDetails;
   inter_sup: Gstr3bInterSup;
   eco_dtls: Gstr3bEcoDetails;
   itc_elg: Gstr3bItcElg;
   inward_sup: Gstr3bInwardSup;
-  intr_ltfee: {
-    intr_details: Gstr3bRetsaveItcTaxOnly;
-  };
+  intr_ltfee: Gstr3bIntrLtfee;
 }
 
 export interface Gstr3bRetsaveRequestBody extends Gstr3bRetsaveFormState {

@@ -22,6 +22,7 @@ import {
   fullTaxLine,
   interRows,
   parseGstr3bInwardSupFromData,
+  parseGstr3bIntrLtfeeFromData,
   itcRowsFromAutoliab,
   itcTaxOnly,
   normalizeGstr3bItcElg,
@@ -185,9 +186,7 @@ export function parseGstr3bRetsaveFromRetsumData(
     },
     itc_elg: parseItcElgFromRetsum(itc),
     inward_sup: parseGstr3bInwardSupFromData(inward),
-    intr_ltfee: {
-      intr_details: itcTaxOnly(gstr2AsRecord(intr?.['intr_details'])),
-    },
+    intr_ltfee: parseGstr3bIntrLtfeeFromData(intr),
   });
 }
 
@@ -249,10 +248,10 @@ export function parseGstr3bBundleFromRetsum(payload: unknown): Gstr3bAutoliabBun
     ),
     table5,
     table51: taxAmounts(
-      form.intr_ltfee.intr_details.iamt,
-      form.intr_ltfee.intr_details.camt,
-      form.intr_ltfee.intr_details.samt,
-      form.intr_ltfee.intr_details.csamt,
+      form.intr_ltfee.intr_details.iamt + form.intr_ltfee.ltfee_details.iamt,
+      form.intr_ltfee.intr_details.camt + form.intr_ltfee.ltfee_details.camt,
+      form.intr_ltfee.intr_details.samt + form.intr_ltfee.ltfee_details.samt,
+      form.intr_ltfee.intr_details.csamt + form.intr_ltfee.ltfee_details.csamt,
     ),
     table61: paymentFromRetsum(gstr2AsRecord(data['tx_pmt'])),
   };

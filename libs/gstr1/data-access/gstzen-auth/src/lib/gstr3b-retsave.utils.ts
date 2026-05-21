@@ -11,6 +11,7 @@ import type {
   Gstr3bSupDetails,
   Gstr3bEcoDetails,
   Gstr3bInterSup,
+  Gstr3bIntrLtfee,
   Gstr3bInwardSup,
   Gstr3bItcElg,
 } from './gstr3b.models';
@@ -210,6 +211,35 @@ export function parseGstr3bInwardSupFromData(
   });
 }
 
+export function emptyGstr3bIntrLtfee(): Gstr3bIntrLtfee {
+  const zeroItc: Gstr3bRetsaveItcTaxOnly = { iamt: 0, camt: 0, samt: 0, csamt: 0 };
+  return {
+    intr_details: { ...zeroItc },
+    ltfee_details: { ...zeroItc },
+  };
+}
+
+export function parseGstr3bIntrLtfeeFromData(
+  intr: Record<string, unknown> | undefined,
+): Gstr3bIntrLtfee {
+  if (!intr) {
+    return emptyGstr3bIntrLtfee();
+  }
+  const ltfee = gstr2AsRecord(intr['ltfee_details'] ?? intr['ltfee']);
+  return {
+    intr_details: itcTaxOnly(
+      unwrapAutoliabSection(intr['intr_details'] ?? intr['intr']) ??
+        gstr2AsRecord(intr['intr_details']),
+    ),
+    ltfee_details: {
+      iamt: 0,
+      camt: num(ltfee?.['camt'] ?? ltfee?.['cgst']),
+      samt: num(ltfee?.['samt'] ?? ltfee?.['sgst']),
+      csamt: 0,
+    },
+  };
+}
+
 export function interRows(raw: unknown): Gstr3bRetsaveInterSupRow[] {
   if (!Array.isArray(raw)) {
     return [];
@@ -328,7 +358,7 @@ export function emptyGstr3bRetsaveFormState(): Gstr3bRetsaveFormState {
     eco_dtls: emptyGstr3bEcoDetails(),
     itc_elg: emptyGstr3bItcElg(),
     inward_sup: emptyGstr3bInwardSup(),
-    intr_ltfee: { intr_details: { ...zeroItc } },
+    intr_ltfee: emptyGstr3bIntrLtfee(),
   };
 }
 
@@ -414,9 +444,7 @@ export function parseGstr3bRetsaveFromAutoliab(payload: unknown): Gstr3bRetsaveF
     },
     itc_elg: parseItcElgFromAutoliab(liabitc),
     inward_sup: parseGstr3bInwardSupFromData(inward),
-    intr_ltfee: {
-      intr_details: itcTaxOnly(unwrapAutoliabSection(intr?.['intr_details'] ?? intr?.['intr'])),
-    },
+    intr_ltfee: parseGstr3bIntrLtfeeFromData(intr),
   });
 }
 
