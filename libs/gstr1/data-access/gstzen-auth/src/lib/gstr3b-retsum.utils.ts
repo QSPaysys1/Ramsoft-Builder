@@ -21,7 +21,7 @@ import {
   emptyGstr3bRetsaveFormState,
   fullTaxLine,
   interRows,
-  inwardRow,
+  parseGstr3bInwardSupFromData,
   itcRowsFromAutoliab,
   itcTaxOnly,
   normalizeGstr3bItcElg,
@@ -184,14 +184,7 @@ export function parseGstr3bRetsaveFromRetsumData(
       eco_reg_sup: txvalLine(gstr2AsRecord(eco?.['eco_reg_sup'])),
     },
     itc_elg: parseItcElgFromRetsum(itc),
-    inward_sup: {
-      isup_details: Array.isArray(inward?.['isup_details'])
-        ? (inward['isup_details'] as unknown[])
-            .map((r) => gstr2AsRecord(r))
-            .filter((r): r is Record<string, unknown> => !!r)
-            .map((r) => inwardRow(r, String(r['ty'] ?? '').trim().toUpperCase()))
-        : emptyGstr3bRetsaveFormState().inward_sup.isup_details,
-    },
+    inward_sup: parseGstr3bInwardSupFromData(inward),
     intr_ltfee: {
       intr_details: itcTaxOnly(gstr2AsRecord(intr?.['intr_details'])),
     },

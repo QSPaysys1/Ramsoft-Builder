@@ -319,6 +319,13 @@ export const gstr1Routes: Routes = [
           ),
       },
       {
+        path: 'gstr3b-inward-sup-details',
+        loadComponent: () =>
+          import('./pages/gstr3b-inward-sup-details.page').then(
+            (m) => m.Gstr3bInwardSupDetailsPageComponent,
+          ),
+      },
+      {
         path: 'gstr2a-b2b',
         loadComponent: () =>
           import('./pages/gstr2a-b2b.page').then((m) => m.Gstr2aB2bPageComponent),

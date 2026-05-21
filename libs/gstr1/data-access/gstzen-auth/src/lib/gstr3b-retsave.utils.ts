@@ -11,6 +11,7 @@ import type {
   Gstr3bSupDetails,
   Gstr3bEcoDetails,
   Gstr3bInterSup,
+  Gstr3bInwardSup,
   Gstr3bItcElg,
 } from './gstr3b.models';
 import {
@@ -147,6 +148,68 @@ export function inwardRow(raw: Record<string, unknown>, ty: string): Gstr3bRetsa
   };
 }
 
+/** GST portal row order for table 5. */
+export const GSTR3B_INWARD_SUP_TYPES = ['GST', 'NONGST'] as const;
+
+export function orderInwardRows(
+  rows: readonly Gstr3bRetsaveInwardSupRow[],
+  types: readonly string[],
+): Gstr3bRetsaveInwardSupRow[] {
+  const byTy = new Map<string, Gstr3bRetsaveInwardSupRow>();
+  for (const row of rows) {
+    byTy.set(row.ty.trim().toUpperCase(), row);
+  }
+  return types.map((ty) => {
+    const existing = byTy.get(ty.toUpperCase());
+    return existing ? { ...existing, ty } : inwardRow({}, ty);
+  });
+}
+
+export function inwardRowsFromAutoliab(
+  raw: unknown,
+  types: readonly string[],
+): Gstr3bRetsaveInwardSupRow[] {
+  if (Array.isArray(raw)) {
+    const rows = raw
+      .map((r) => gstr2AsRecord(r))
+      .filter((r): r is Record<string, unknown> => !!r)
+      .map((r) => inwardRow(r, String(r['ty'] ?? '').trim().toUpperCase()));
+    return orderInwardRows(rows, types);
+  }
+  const container = gstr2AsRecord(raw);
+  if (!container) {
+    return types.map((ty) => inwardRow({}, ty));
+  }
+  return types.map((ty) => {
+    const sec =
+      container[ty] ?? container[ty.toLowerCase()] ?? container[ty.toUpperCase()];
+    return inwardRow(unwrapAutoliabSection(sec) ?? {}, ty);
+  });
+}
+
+export function normalizeGstr3bInwardSup(inward: Gstr3bInwardSup): Gstr3bInwardSup {
+  return {
+    isup_details: orderInwardRows(inward.isup_details, GSTR3B_INWARD_SUP_TYPES),
+  };
+}
+
+export function emptyGstr3bInwardSup(): Gstr3bInwardSup {
+  return normalizeGstr3bInwardSup({
+    isup_details: GSTR3B_INWARD_SUP_TYPES.map((ty) => inwardRow({}, ty)),
+  });
+}
+
+export function parseGstr3bInwardSupFromData(
+  inward: Record<string, unknown> | undefined,
+): Gstr3bInwardSup {
+  if (!inward) {
+    return emptyGstr3bInwardSup();
+  }
+  return normalizeGstr3bInwardSup({
+    isup_details: inwardRowsFromAutoliab(inward['isup_details'], GSTR3B_INWARD_SUP_TYPES),
+  });
+}
+
 export function interRows(raw: unknown): Gstr3bRetsaveInterSupRow[] {
   if (!Array.isArray(raw)) {
     return [];
@@ -264,12 +327,7 @@ export function emptyGstr3bRetsaveFormState(): Gstr3bRetsaveFormState {
     inter_sup: emptyGstr3bInterSup(),
     eco_dtls: emptyGstr3bEcoDetails(),
     itc_elg: emptyGstr3bItcElg(),
-    inward_sup: {
-      isup_details: [
-        { ty: 'GST', inter: 0, intra: 0 },
-        { ty: 'NONGST', inter: 0, intra: 0 },
-      ],
-    },
+    inward_sup: emptyGstr3bInwardSup(),
     intr_ltfee: { intr_details: { ...zeroItc } },
   };
 }
@@ -355,17 +413,7 @@ export function parseGstr3bRetsaveFromAutoliab(payload: unknown): Gstr3bRetsaveF
       eco_reg_sup: txvalLine(childSection(ecoSource, 'eco_reg_sup', 'ECO_REG_SUP')),
     },
     itc_elg: parseItcElgFromAutoliab(liabitc),
-    inward_sup: {
-      isup_details: Array.isArray(inward?.['isup_details'])
-        ? (inward['isup_details'] as unknown[])
-            .map((r) => gstr2AsRecord(r))
-            .filter((r): r is Record<string, unknown> => !!r)
-            .map((r) => inwardRow(r, String(r['ty'] ?? '').trim().toUpperCase()))
-        : [
-            inwardRow(unwrapAutoliabSection(inward?.['GST']) ?? {}, 'GST'),
-            inwardRow(unwrapAutoliabSection(inward?.['NONGST']) ?? {}, 'NONGST'),
-          ],
-    },
+    inward_sup: parseGstr3bInwardSupFromData(inward),
     intr_ltfee: {
       intr_details: itcTaxOnly(unwrapAutoliabSection(intr?.['intr_details'] ?? intr?.['intr'])),
     },

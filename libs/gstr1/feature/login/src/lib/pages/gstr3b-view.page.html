@@ -164,7 +164,11 @@
               </div>
             </a>
 
-            <article class="gstr3b-card">
+            <a
+              routerLink="/gstr1/workspace/gstr3b-inward-sup-details"
+              [queryParams]="gstr3bSectionQueryParams()"
+              class="gstr3b-card gstr3b-card--link"
+            >
               <header class="gstr3b-card__header">
                 <h2 class="gstr3b-card__title">5 Exempt, nil and Non GST inward supplies</h2>
               </header>
@@ -173,8 +177,9 @@
                   <div class="gstr3b-field"><dt>Inter-state supplies (₹)</dt><dd>{{ exemptField(table5(), 'interState') }}</dd></div>
                   <div class="gstr3b-field"><dt>Intra-state supplies (₹)</dt><dd>{{ exemptField(table5(), 'intraState') }}</dd></div>
                 </dl>
+                <span class="gstr3b-card__cta">Open table →</span>
               </div>
-            </article>
+            </a>
 
             <article class="gstr3b-card">
               <header class="gstr3b-card__header">
