@@ -65,6 +65,7 @@ export const environment = {
     gstr2TdstcsUrl: `${GSTZEN_DEV}/api/gstr2/tdstcs/`,
     gstr2ImpgUrl: `${GSTZEN_DEV}/api/gstr2/impg/`,
     gstr2ImpgsezUrl: `${GSTZEN_DEV}/api/gstr2/impgsez/`,
+    gstr22bUrl: `${GSTZEN_DEV}/api/gstr2/2b/`,
     gstr2CdnUrl: `${GSTZEN_DEV}/api/gstr2/cdn/`,
   } satisfies Gstr1Environment,
 };

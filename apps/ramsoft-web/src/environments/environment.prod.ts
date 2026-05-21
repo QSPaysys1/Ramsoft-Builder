@@ -62,6 +62,7 @@ export const environment = {
     gstr2TdstcsUrl: 'https://my.gstzen.in/api/gstr2/tdstcs/',
     gstr2ImpgUrl: 'https://my.gstzen.in/api/gstr2/impg/',
     gstr2ImpgsezUrl: 'https://my.gstzen.in/api/gstr2/impgsez/',
+    gstr22bUrl: 'https://my.gstzen.in/api/gstr2/2b/',
     gstr2CdnUrl: 'https://my.gstzen.in/api/gstr2/cdn/',
   } satisfies Gstr1Environment,
 };

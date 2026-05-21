@@ -1,0 +1,679 @@
+<div class="gstr2b-view pb-12">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li><a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a></li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li><a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a></li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li><span class="font-semibold text-slate-900" aria-current="page">GSTR-2B</span></li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">English</span>
+  </nav>
+
+  @if (!paramsValid()) {
+    <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+      <p class="font-bold">Missing parameters</p>
+      <p class="mt-1">Open from <span class="font-semibold">Returns dashboard → GSTR-2B → Open</span> with GSTIN and return period.</p>
+      <a routerLink="/gstr1/workspace/returns-dashboard" class="mt-3 inline-flex text-sm font-semibold text-[#1a56a7] hover:underline">Back to Returns</a>
+    </div>
+  } @else {
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+      <div class="bg-[#4db6ac] px-4 py-3 text-white md:px-5 md:py-4">
+        <div class="gstr2b-view__header-row">
+          <h1 class="text-sm font-bold md:text-base">GSTR-2B — Auto-drafted ITC statement</h1>
+          <button
+            type="button"
+            class="inline-flex min-h-[32px] shrink-0 items-center gap-1.5 rounded bg-[#1c2b54] px-3 text-[11px] font-bold uppercase tracking-wide text-white hover:bg-[#152347]"
+            (click)="openGstHelp()"
+          >
+            <span aria-hidden="true">?</span> Help
+          </button>
+        </div>
+      </div>
+
+      <div class="border-b border-slate-200 bg-slate-50/90 px-4 py-4 md:px-6">
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">GSTIN</p>
+            <p class="mt-0.5 font-mono text-sm font-semibold text-slate-900">{{ gstin() }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Legal name</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ legalName() || '—' }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Trade name</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ tradeName() || '—' }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Financial year</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ fyLabel() }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Return period</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ taxPeriodLabel() }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Generation date</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ generationDate() }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex border-b border-slate-200">
+        <button
+          type="button"
+          class="min-h-[44px] flex-1 border-b-2 px-4 text-xs font-bold uppercase tracking-wide md:text-sm"
+          [class.border-[#1a56a7]]="mainTab() === 'summary'"
+          [class.text-[#1a56a7]]="mainTab() === 'summary'"
+          [class.border-transparent]="mainTab() !== 'summary'"
+          [class.text-slate-600]="mainTab() !== 'summary'"
+          (click)="setMainTab('summary')"
+        >
+          Summary
+        </button>
+        <button
+          type="button"
+          class="min-h-[44px] flex-1 border-b-2 px-4 text-xs font-bold uppercase tracking-wide md:text-sm"
+          [class.border-[#1a56a7]]="mainTab() === 'allTables'"
+          [class.text-[#1a56a7]]="mainTab() === 'allTables'"
+          [class.border-transparent]="mainTab() !== 'allTables'"
+          [class.text-slate-600]="mainTab() !== 'allTables'"
+          (click)="setMainTab('allTables')"
+        >
+          All tables
+        </button>
+      </div>
+
+      @if (viewState() === 'loading') {
+        <div class="px-4 py-16 text-center text-sm text-slate-600">Loading GSTR-2B statement…</div>
+      } @else if (viewState() === 'error') {
+        <div class="space-y-4 px-4 py-8 md:px-6">
+          @if (logicalError()) {
+            <p class="text-sm font-semibold text-red-800">{{ logicalError() }}</p>
+          }
+          @if (httpError() !== null) {
+            <pre class="max-h-64 overflow-auto rounded border border-red-100 bg-red-50 p-3 font-mono text-[11px] text-red-900">{{ httpError() | json }}</pre>
+          }
+          <button type="button" class="text-sm font-semibold text-[#1a56a7] hover:underline" (click)="loadGstr2b()">Retry</button>
+        </div>
+      } @else if (mainTab() === 'summary') {
+        <div class="gstr2b-summary-tabs border-b border-slate-200 bg-white px-4 py-3 md:px-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap gap-2">
+              @for (tab of itcTabs; track tab) {
+                <button
+                  type="button"
+                  class="gstr2b-itc-tab rounded px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-slate-700 hover:bg-slate-100"
+                  [class]="itcTab() === tab ? activeItcTabClass() : ''"
+                  [attr.aria-selected]="itcTab() === tab"
+                  role="tab"
+                  (click)="setItcTab(tab)"
+                >
+                  {{ itcTabLabels[tab] }}
+                </button>
+              }
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" class="text-xs font-semibold text-[#1a56a7] hover:underline" (click)="openGstHelp()">
+                View Advisory
+              </button>
+              <button type="button" class="gstr2b-help-btn" title="Help" (click)="openGstHelp()">
+                <span aria-hidden="true" class="gstr2b-help-btn__icon">?</span>
+                Help
+              </button>
+            </div>
+          </div>
+        </div>
+
+        @if (viewState() === 'success') {
+          @if (activeItcTabAdvisory()) {
+            <p class="border-b border-sky-200 bg-sky-50 px-4 py-2.5 text-xs font-medium text-sky-950 md:px-5">
+              {{ activeItcTabAdvisory() }}
+            </p>
+          }
+
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-2 md:px-5">
+            <button type="button" class="text-xs font-semibold text-[#1a56a7] hover:underline" (click)="toggleExpandAll()">
+              {{ allExpanded() ? 'Collapse All' : 'Expand All' }} ^
+            </button>
+            <button
+              type="button"
+              class="text-xs font-semibold text-slate-600 hover:text-slate-900"
+              [disabled]="viewState() === 'loading'"
+              (click)="loadGstr2b()"
+            >
+              Refresh
+            </button>
+          </div>
+
+          <div class="overflow-x-auto px-2 pb-4 md:px-4">
+            <table class="gstr2b-summary-table w-full min-w-[900px] border-collapse text-left">
+              <thead>
+                <tr>
+                  <th class="w-12">S.NO.</th>
+                  <th>
+                    Heading
+                    <button type="button" class="ml-1 text-[#1a56a7] hover:underline" (click)="toggleExpandAll()">
+                      [{{ allExpanded() ? 'Collapse All' : 'Expand All' }} ^]
+                    </button>
+                  </th>
+                  <th class="w-28">GSTR-3B table</th>
+                  <th class="text-right">Integrated Tax (₹)</th>
+                  <th class="text-right">Central Tax (₹)</th>
+                  <th class="text-right">State/UT Tax (₹)</th>
+                  <th class="text-right">Cess (₹)</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of visibleSummaryRows(); track row.id) {
+                  <tr [class]="rowDepthClass(row)">
+                    <td>{{ row.serial }}</td>
+                    <td>
+                      @if (row.isExpandable) {
+                        <button
+                          type="button"
+                          class="text-left font-medium text-[#1a56a7] hover:underline"
+                          [attr.aria-expanded]="rowExpanded(row)"
+                          (click)="toggleRow(row)"
+                        >
+                          {{ row.heading }}
+                          <span class="ml-1 text-slate-400" aria-hidden="true">{{ expandToggleLabel(row) }}</span>
+                        </button>
+                      } @else {
+                        <span [class.gstr2b-summary-leaf]="row.depth === 2">{{ row.heading }}</span>
+                      }
+                    </td>
+                    <td>{{ row.isPartHeader ? '' : (row.gstr3bTable || '—') }}</td>
+                    <td class="text-right font-mono text-xs">{{ summaryTaxDisplay(row, 'igst') }}</td>
+                    <td class="text-right font-mono text-xs">{{ summaryTaxDisplay(row, 'cgst') }}</td>
+                    <td class="text-right font-mono text-xs">{{ summaryTaxDisplay(row, 'sgst') }}</td>
+                    <td class="text-right font-mono text-xs">{{ summaryTaxDisplay(row, 'cess') }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      } @else {
+        <div class="gstr2b-all-tables">
+          <div class="flex justify-end border-b border-slate-100 px-4 py-2 md:px-5">
+            <button type="button" class="text-xs font-semibold text-[#1a56a7] hover:underline" (click)="openGstHelp()">
+              View Advisory
+            </button>
+          </div>
+
+          <div class="gstr2b-table-select-bar">
+            <label class="sr-only" for="g2b-table-select">Select table to view details</label>
+            <select
+              id="g2b-table-select"
+              class="gstr2b-table-select-bar__dropdown"
+              [value]="selectedCpTable()"
+              (change)="setCpTable($any($event.target).value)"
+            >
+              @for (opt of cpTableOptions; track opt.id) {
+                <option [value]="opt.id">{{ opt.label }}</option>
+              }
+            </select>
+            <div class="gstr2b-table-select-bar__title">
+              <span class="line-clamp-2 text-sm font-semibold">{{ selectedTableLabel() }}</span>
+              <button
+                type="button"
+                class="gstr2b-help-btn shrink-0"
+                title="Help"
+                (click)="openGstHelp()"
+              >
+                <span aria-hidden="true" class="gstr2b-help-btn__icon">?</span>
+                Help
+              </button>
+            </div>
+          </div>
+
+          <div class="gstr2b-subtabs" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              class="gstr2b-subtab"
+              [class.gstr2b-subtab--active]="allTablesSubTab() === 'supplier'"
+              [attr.aria-selected]="allTablesSubTab() === 'supplier'"
+              (click)="setAllTablesSubTab('supplier')"
+            >
+              Supplier wise details
+            </button>
+            <button
+              type="button"
+              role="tab"
+              class="gstr2b-subtab"
+              [class.gstr2b-subtab--active]="allTablesSubTab() === 'document'"
+              [attr.aria-selected]="allTablesSubTab() === 'document'"
+              (click)="setAllTablesSubTab('document')"
+            >
+              Document details
+            </button>
+          </div>
+
+          @if (allTablesSubTab() === 'document') {
+            <div class="flex justify-end border-b border-slate-100 px-4 py-2 md:px-5">
+              <button
+                type="button"
+                disabled
+                title="Coming soon"
+                class="inline-flex items-center gap-1 text-xs font-semibold text-[#1a56a7] opacity-60"
+              >
+                <span aria-hidden="true">↓</span> Download Excel
+              </button>
+            </div>
+          }
+
+          <div class="gstr2b-table-toolbar">
+            @if (allTablesSubTab() === 'document') {
+              <div class="relative flex flex-col gap-1" data-gstr2b-column-picker>
+                <span class="text-xs font-semibold text-slate-700">Display/Hide Columns:</span>
+                <button
+                  type="button"
+                  class="gstr2b-toolbar-control"
+                  [attr.aria-expanded]="columnPickerOpen()"
+                  aria-haspopup="listbox"
+                  (click)="toggleColumnPicker(); $event.stopPropagation()"
+                >
+                  @if (hiddenDocumentColumnCount() > 0) {
+                    <span>+{{ hiddenDocumentColumnCount() }}</span>
+                  } @else {
+                    <span>All</span>
+                  }
+                  <span aria-hidden="true">{{ columnPickerOpen() ? '▲' : '▼' }}</span>
+                </button>
+                @if (columnPickerOpen()) {
+                  <div
+                    class="gstr2b-column-picker absolute left-0 top-full z-30 mt-1 w-[min(100%,20rem)]"
+                    role="listbox"
+                    aria-label="Display or hide columns"
+                  >
+                    <div class="border-b border-slate-200 py-1">
+                      <button type="button" class="gstr2b-column-picker__action" (click)="selectAllDocumentColumns()">
+                        Select All
+                      </button>
+                      <button type="button" class="gstr2b-column-picker__action" (click)="deselectAllDocumentColumns()">
+                        Uncheck All
+                      </button>
+                    </div>
+                    <ul class="gstr2b-column-picker__list max-h-56 overflow-y-auto py-1">
+                      @for (col of documentColumns; track col.id) {
+                        <li>
+                          <button
+                            type="button"
+                            class="gstr2b-column-picker__item"
+                            [class.gstr2b-column-picker__item--on]="isDocumentColumnVisible(col.id)"
+                            [disabled]="col.locked"
+                            (click)="toggleDocumentColumn(col.id)"
+                          >
+                            <span class="gstr2b-column-picker__check" aria-hidden="true">{{
+                              isDocumentColumnVisible(col.id) ? '✓' : ''
+                            }}</span>
+                            <span>{{ col.label }}</span>
+                          </button>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+            }
+
+            <div class="flex flex-col gap-1">
+              <span class="text-xs font-semibold text-slate-700">Records Per Page:</span>
+              <select
+                class="gstr2b-toolbar-control gstr2b-toolbar-control--select"
+                [value]="recordsPerPage()"
+                (change)="setRecordsPerPage($any($event.target).value)"
+              >
+                @for (n of recordsPerPageOptions; track n) {
+                  <option [value]="n">{{ n }}</option>
+                }
+              </select>
+            </div>
+
+            @if (allTablesSubTab() === 'document') {
+              <button type="button" class="gstr2b-filter-btn" (click)="openFilterModal()">
+                <span aria-hidden="true" class="gstr2b-filter-btn__icon">⏷</span>
+                Apply filter
+              </button>
+            }
+
+            <div class="gstr2b-search-wrap">
+              <label class="sr-only" for="g2b-all-tables-search">Search</label>
+              <input
+                id="g2b-all-tables-search"
+                type="search"
+                autocomplete="off"
+                placeholder="Search..."
+                class="gstr2b-search-input"
+                [value]="searchQuery()"
+                (input)="updateSearch($any($event.target).value)"
+              />
+              <span class="gstr2b-search-icon" aria-hidden="true">⌕</span>
+            </div>
+          </div>
+
+          @if (viewState() === 'success') {
+            @if (allTablesSubTab() === 'supplier') {
+              @if (hasCpTable()) {
+                <div class="overflow-x-auto px-2 pb-2 md:px-4">
+                  <table class="gstr2b-cp-table w-full min-w-[960px] border-collapse text-left text-sm">
+                    <thead>
+                      <tr>
+                        <th class="w-14">S.NO.</th>
+                        @for (col of supplierColumns; track col.id) {
+                          <th [class.text-right]="col.field !== 'supplierGstin' && col.field !== 'tradeName'">
+                            {{ col.label }}
+                            <span class="gstr2b-sort-icon" aria-hidden="true">⇅</span>
+                          </th>
+                        }
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of paginatedCpRows(); track trackCpRow(row, $index); let i = $index) {
+                        <tr>
+                          <td>{{ cpRowSerial(i) }}</td>
+                          @for (col of supplierColumns; track col.id) {
+                            <td [class.text-right]="col.field !== 'supplierGstin' && col.field !== 'tradeName'">
+                              @if (col.field === 'supplierGstin') {
+                                <span class="font-mono text-xs font-semibold text-[#1a56a7]">{{ row.supplierGstin }}</span>
+                              } @else {
+                                {{ cpCellValue(row, col.field) }}
+                              }
+                            </td>
+                          }
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td [attr.colspan]="supplierColumns.length + 1" class="py-8 text-center text-slate-600">
+                            No suppliers match your search.
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              } @else {
+                <p class="mx-4 mb-4 rounded border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950 md:mx-6">
+                  No supplier records for this table in the selected period.
+                </p>
+              }
+            } @else {
+              @if (hasDocTable()) {
+                <div class="overflow-x-auto px-2 pb-2 md:px-4">
+                  <table class="gstr2b-cp-table w-full min-w-[1400px] border-collapse text-left text-sm">
+                    <thead>
+                      <tr>
+                        @for (col of visibleDocumentColumns(); track col.id) {
+                          <th [class.text-right]="col.field.includes('Tax') || col.field.includes('Value') || col.field === 'cess'">
+                            {{ col.label }}
+                            <span class="gstr2b-sort-icon" aria-hidden="true">⇅</span>
+                          </th>
+                        }
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of paginatedDocRows(); track trackDocRow(row, $index)) {
+                        <tr>
+                          @for (col of visibleDocumentColumns(); track col.id) {
+                            <td [class.text-right]="col.field.includes('Tax') || col.field.includes('Value') || col.field === 'cess'">
+                              @if (col.field === 'supplierGstin') {
+                                <span class="font-mono text-xs font-semibold text-[#1a56a7]">{{ row.supplierGstin }}</span>
+                              } @else if (col.field === 'invoiceNumber') {
+                                <span class="inline-flex items-center gap-1 text-[#1a56a7]">
+                                  {{ docCellValue(row, col.field) }}
+                                  <span aria-hidden="true" class="text-[10px]">▼</span>
+                                </span>
+                              } @else {
+                                {{ docCellValue(row, col.field) }}
+                              }
+                            </td>
+                          }
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td [attr.colspan]="visibleDocumentColumns().length" class="py-8 text-center text-slate-600">
+                            No documents match your search or filters.
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              } @else {
+                <p class="mx-4 mb-4 rounded border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950 md:mx-6">
+                  No document records for this table in the selected period.
+                </p>
+              }
+            }
+
+            @if (activeAllTablesRows().length > 0) {
+              <nav class="gstr2b-pagination px-4 pb-4 md:px-6" aria-label="Table pagination">
+                <button
+                  type="button"
+                  class="gstr2b-pagination__btn"
+                  [disabled]="currentPage() <= 1"
+                  (click)="goToPage(currentPage() - 1)"
+                >
+                  « Previous
+                </button>
+                <button type="button" class="gstr2b-pagination__page gstr2b-pagination__page--active" disabled>
+                  {{ currentPage() }}
+                </button>
+                <button
+                  type="button"
+                  class="gstr2b-pagination__btn"
+                  [disabled]="currentPage() >= totalPages()"
+                  (click)="goToPage(currentPage() + 1)"
+                >
+                  Next »
+                </button>
+              </nav>
+            }
+          }
+
+          <div class="flex justify-end border-t border-slate-100 px-4 py-4 md:px-6">
+            <button
+              type="button"
+              class="inline-flex min-h-[36px] items-center justify-center rounded border border-slate-300 bg-white px-5 text-xs font-semibold text-slate-800 hover:bg-slate-50"
+              (click)="setMainTab('summary')"
+            >
+              Back to Summary
+            </button>
+          </div>
+        </div>
+
+        @if (filterModalOpen()) {
+          <div
+            class="gstr2b-modal-backdrop"
+            role="button"
+            tabindex="0"
+            aria-label="Close filter dialog"
+            (click)="closeFilterModal()"
+            (keydown.enter)="closeFilterModal()"
+            (keydown.escape)="closeFilterModal()"
+          ></div>
+          <div
+            class="gstr2b-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="g2b-filter-title"
+          >
+            <div class="gstr2b-modal__header">
+              <h2 id="g2b-filter-title" class="text-sm font-bold">Apply filter</h2>
+              <button type="button" class="gstr2b-modal__close" aria-label="Close" (click)="closeFilterModal()">×</button>
+            </div>
+            <div class="gstr2b-modal__body space-y-4">
+              <fieldset class="gstr2b-filter-fieldset">
+                <legend class="text-sm font-semibold text-slate-800">Invoice Date</legend>
+                <div class="mt-2 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label class="text-xs text-slate-600" for="g2b-inv-from">From</label>
+                    <input
+                      id="g2b-inv-from"
+                      type="text"
+                      placeholder="dd/mm/yyyy"
+                      class="gstr2b-filter-input mt-1 w-full"
+                      [value]="draftDocFilters().invoiceDateFrom"
+                      (input)="updateDraftFilter('invoiceDateFrom', $any($event.target).value)"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-xs text-slate-600" for="g2b-inv-to">To</label>
+                    <input
+                      id="g2b-inv-to"
+                      type="text"
+                      placeholder="dd/mm/yyyy"
+                      class="gstr2b-filter-input mt-1 w-full"
+                      [value]="draftDocFilters().invoiceDateTo"
+                      (input)="updateDraftFilter('invoiceDateTo', $any($event.target).value)"
+                    />
+                  </div>
+                </div>
+              </fieldset>
+
+              <div>
+                <label class="text-sm font-semibold text-slate-800" for="g2b-inv-type">Invoice type</label>
+                <select
+                  id="g2b-inv-type"
+                  class="gstr2b-filter-input mt-1 w-full"
+                  [value]="draftDocFilters().invoiceType"
+                  (change)="updateDraftFilter('invoiceType', $any($event.target).value)"
+                >
+                  @for (opt of invoiceTypeFilterOptions; track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="text-sm font-semibold text-slate-800" for="g2b-rev-charge">Supply Attract Reverse Charge</label>
+                <select
+                  id="g2b-rev-charge"
+                  class="gstr2b-filter-input mt-1 w-full"
+                  [value]="draftDocFilters().reverseCharge"
+                  (change)="updateDraftFilter('reverseCharge', $any($event.target).value)"
+                >
+                  @for (opt of yesNoFilterOptions; track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              </div>
+
+              <fieldset class="gstr2b-filter-fieldset">
+                <legend class="text-sm font-semibold text-slate-800">GSTR-1/IFF/GSTR-1A/GSTR-5 Filing Date</legend>
+                <div class="mt-2 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label class="text-xs text-slate-600" for="g2b-filing-from">From</label>
+                    <input
+                      id="g2b-filing-from"
+                      type="text"
+                      placeholder="dd/mm/yyyy"
+                      class="gstr2b-filter-input mt-1 w-full"
+                      [value]="draftDocFilters().gstr1FilingDateFrom"
+                      (input)="updateDraftFilter('gstr1FilingDateFrom', $any($event.target).value)"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-xs text-slate-600" for="g2b-filing-to">To</label>
+                    <input
+                      id="g2b-filing-to"
+                      type="text"
+                      placeholder="dd/mm/yyyy"
+                      class="gstr2b-filter-input mt-1 w-full"
+                      [value]="draftDocFilters().gstr1FilingDateTo"
+                      (input)="updateDraftFilter('gstr1FilingDateTo', $any($event.target).value)"
+                    />
+                  </div>
+                </div>
+              </fieldset>
+
+              <div>
+                <label class="text-sm font-semibold text-slate-800" for="g2b-itc">ITC Availability</label>
+                <select
+                  id="g2b-itc"
+                  class="gstr2b-filter-input mt-1 w-full"
+                  [value]="draftDocFilters().itcAvailability"
+                  (change)="updateDraftFilter('itcAvailability', $any($event.target).value)"
+                >
+                  @for (opt of yesNoFilterOptions; track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="text-sm font-semibold text-slate-800" for="g2b-tax-rate">Applicable % of Tax Rate</label>
+                <select
+                  id="g2b-tax-rate"
+                  class="gstr2b-filter-input mt-1 w-full"
+                  [value]="draftDocFilters().taxRatePercent"
+                  (change)="updateDraftFilter('taxRatePercent', $any($event.target).value)"
+                >
+                  @for (opt of taxRateFilterOptions; track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="gstr2b-modal__footer">
+              <button type="button" class="gstr2b-modal__btn gstr2b-modal__btn--secondary" (click)="closeFilterModal()">
+                Back
+              </button>
+              <button type="button" class="gstr2b-modal__btn gstr2b-modal__btn--primary" (click)="resetDocFilters()">
+                Reset
+              </button>
+              <button type="button" class="gstr2b-modal__btn gstr2b-modal__btn--primary" (click)="applyDocFilters()">
+                Apply
+              </button>
+            </div>
+          </div>
+        }
+      }
+
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50/80 px-4 py-4 md:px-6">
+        <a
+          routerLink="/gstr1/workspace/returns-dashboard"
+          [queryParams]="backToDashboardQueryParams()"
+          class="inline-flex min-h-[40px] items-center justify-center rounded-lg border-2 border-[#1c2b54] bg-white px-6 text-xs font-bold uppercase tracking-wide text-[#1c2b54] hover:bg-slate-50"
+        >
+          Back to dashboard
+        </a>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled
+            title="Coming soon"
+            class="inline-flex min-h-[40px] cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-3 text-[10px] font-bold uppercase tracking-wide text-white opacity-70 md:px-4 md:text-xs"
+          >
+            Download GSTR-2B summary (PDF)
+          </button>
+          <button
+            type="button"
+            disabled
+            title="Coming soon"
+            class="inline-flex min-h-[40px] cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-3 text-[10px] font-bold uppercase tracking-wide text-white opacity-70 md:px-4 md:text-xs"
+          >
+            Download GSTR-2B details (Excel)
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-[40px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-[#152347] md:px-4 md:text-xs"
+            (click)="openGstr3b()"
+          >
+            Open GSTR-3B
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-[40px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-[#152347] md:px-4 md:text-xs"
+            (click)="openImsDashboard()"
+          >
+            Open IMS dashboard
+          </button>
+        </div>
+      </div>
+    </section>
+  }
+</div>

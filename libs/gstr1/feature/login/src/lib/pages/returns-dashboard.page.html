@@ -393,15 +393,19 @@
                 <p class="text-sm text-slate-500">
                   Auto-drafted inward supplies for this period — open to view Part-A through Part-D sections.
                 </p>
+              } @else if (c.spec.id === 'gstr2b') {
+                <p class="text-sm text-slate-500">
+                  Auto-drafted ITC statement for this period — open to view summary and supplier tables.
+                </p>
               } @else if (!c.spec.showDueForGstr3b || !c.dueDateLine) {
                 <p class="text-sm text-slate-500">No filing data for this return in the selected period.</p>
               }
               <div class="mt-auto flex flex-wrap justify-center gap-2 pt-2">
-                @if (c.spec.id === 'gstr2a') {
+                @if (c.spec.id === 'gstr2a' || c.spec.id === 'gstr2b') {
                   @if (form.valid) {
                     <a
                       class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-3 text-center text-xs font-bold uppercase tracking-wide text-white hover:bg-[#154a8f] sm:flex-none"
-                      routerLink="/gstr1/workspace/gstr2a-view"
+                      [routerLink]="c.spec.id === 'gstr2b' ? '/gstr1/workspace/gstr2b-view' : '/gstr1/workspace/gstr2a-view'"
                       [queryParams]="{
                         gstin: gstinSnap().trim().toUpperCase(),
                         ret_period: selectedRetPeriod(),
@@ -415,7 +419,7 @@
                       type="button"
                       disabled
                       class="inline-flex min-h-[38px] min-w-[100px] flex-1 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-3 text-center text-xs font-bold uppercase tracking-wide text-white opacity-70 sm:flex-none"
-                      title="Enter a valid 15-character GSTIN to open GSTR-2A."
+                      [title]="c.spec.id === 'gstr2b' ? 'Enter a valid 15-character GSTIN to open GSTR-2B.' : 'Enter a valid 15-character GSTIN to open GSTR-2A.'"
                     >
                       Open
                     </button>

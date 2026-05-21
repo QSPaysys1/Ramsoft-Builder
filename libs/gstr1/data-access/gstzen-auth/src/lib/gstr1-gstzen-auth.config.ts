@@ -126,6 +126,11 @@ export interface Gstr1GstzenAuthEnvironment {
    */
   readonly gstr2ImpgsezUrl: string;
   /**
+   * GSTR-2B auto-drafted ITC — `POST` JSON (`gstin`, `ret_period`).
+   * Production: `https://my.gstzen.in/api/gstr2/2b/`.
+   */
+  readonly gstr22bUrl: string;
+  /**
    * GSTR-2A credit/debit notes — `POST` JSON (`gstin`, `ret_period`).
    * Production: `https://my.gstzen.in/api/gstr2/cdn/`.
    */
