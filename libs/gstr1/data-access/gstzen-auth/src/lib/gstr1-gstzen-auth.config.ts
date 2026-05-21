@@ -135,6 +135,11 @@ export interface Gstr1GstzenAuthEnvironment {
    * Production: `https://my.gstzen.in/api/gstr2/cdn/`.
    */
   readonly gstr2CdnUrl: string;
+  /**
+   * GSTR-3B auto-liability — `POST` JSON (`gstin`, `ret_period`).
+   * Production: `https://my.gstzen.in/api/gstr3b/autoliab/`.
+   */
+  readonly gstr3bAutoliabUrl: string;
 }
 
 export const GSTR1_GSTZEN_AUTH_CONFIG = new InjectionToken<Gstr1GstzenAuthEnvironment>(

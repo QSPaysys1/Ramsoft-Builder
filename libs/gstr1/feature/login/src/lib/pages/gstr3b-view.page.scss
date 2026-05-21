@@ -1,0 +1,95 @@
+:host {
+  --gst-navy: #1c2b54;
+  --gst-blue: #1a56a7;
+}
+
+.gstr3b-view {
+  background: linear-gradient(180deg, #eef1f5 0%, #f8fafc 28%, #f8fafc 100%);
+  margin-inline: -1rem;
+  padding-inline: 1rem;
+
+  @media (min-width: 768px) {
+    margin-inline: 0;
+    padding-inline: 0;
+    background: transparent;
+  }
+}
+
+.gstr3b-cards {
+  padding-top: 0.5rem;
+}
+
+.gstr3b-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 8%);
+  min-height: 100%;
+
+  &__header {
+    background: var(--gst-navy);
+    color: #fff;
+    padding: 0.65rem 0.85rem;
+    min-height: 3.25rem;
+    display: flex;
+    align-items: center;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  &__body {
+    flex: 1;
+    padding: 0.75rem 0.85rem 1rem;
+  }
+}
+
+.gstr3b-field-list {
+  margin: 0;
+}
+
+.gstr3b-field {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.8125rem;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  dt {
+    flex: 1;
+    color: #475569;
+    font-weight: 500;
+  }
+
+  dd {
+    margin: 0;
+    min-width: 5.5rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: #0f172a;
+  }
+}
+
+.gstr3b-actions {
+  @media (max-width: 639px) {
+    flex-direction: column;
+
+    > * {
+      width: 100%;
+    }
+  }
+}

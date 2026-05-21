@@ -21,6 +21,7 @@ import type { Gstr2B2bRequestBody } from './gstr2-b2b.models';
 import type { Gstr2B2baRequestBody } from './gstr2-b2ba.models';
 import type { Gstr2ImpgRequestBody } from './gstr2-impg.models';
 import type { Gstr22bRequestBody } from './gstr2-2b.models';
+import type { Gstr3bAutoliabRequestBody } from './gstr3b.models';
 import type { Gstr2ImpgsezRequestBody } from './gstr2-impgsez.models';
 import type { Gstr2TdstcsRequestBody } from './gstr2-tdstcs.models';
 import type { Gstr2IsdRequestBody } from './gstr2-isd.models';
@@ -320,6 +321,20 @@ export class Gstr1GstnOtpApiService {
   fetchGstr2Cdn(body: Gstr2CdnRequestBody): Observable<unknown> {
     return this.http.post<unknown>(
       this.config.gstr2CdnUrl,
+      {
+        gstin: body.gstin.trim().toUpperCase(),
+        ret_period: body.ret_period.trim(),
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+  }
+
+  /** `POST api/gstr3b/autoliab/` — GSTR-3B auto-liability summary (Bearer). */
+  fetchGstr3bAutoliab(body: Gstr3bAutoliabRequestBody): Observable<unknown> {
+    return this.http.post<unknown>(
+      this.config.gstr3bAutoliabUrl,
       {
         gstin: body.gstin.trim().toUpperCase(),
         ret_period: body.ret_period.trim(),

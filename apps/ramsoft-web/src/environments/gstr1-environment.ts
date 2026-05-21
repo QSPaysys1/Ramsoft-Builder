@@ -45,4 +45,5 @@ export interface Gstr1Environment {
   readonly gstr2ImpgsezUrl: string;
   readonly gstr22bUrl: string;
   readonly gstr2CdnUrl: string;
+  readonly gstr3bAutoliabUrl: string;
 }
