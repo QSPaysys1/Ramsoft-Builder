@@ -34,6 +34,7 @@ export * from './lib/gstr2-2b-payload.utils';
 export * from './lib/gstr3b.models';
 export * from './lib/gstr3b-payload.utils';
 export * from './lib/gstr3b-retsave.utils';
+export * from './lib/gstr3b-tx-pmt.utils';
 export * from './lib/gstr3b-retsum.utils';
 export * from './lib/gstr2b-summary.constants';
 export * from './lib/gstr2b-all-tables.constants';

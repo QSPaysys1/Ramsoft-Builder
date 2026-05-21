@@ -135,6 +135,84 @@ export interface Gstr3bIntrLtfee {
   ltfee_details: Gstr3bRetsaveItcTaxOnly;
 }
 
+export interface Gstr3bRetsavePditc {
+  liab_ldg_id: number;
+  trans_typ: number;
+  i_pdi: number;
+  i_pdc: number;
+  i_pds: number;
+  c_pdi: number;
+  c_pdc: number;
+  s_pdi: number;
+  s_pds: number;
+  cs_pdcs: number;
+}
+
+export interface Gstr3bRetsavePdcashRow {
+  liab_ldg_id: number;
+  trans_typ: number;
+  ipd: number;
+  cpd: number;
+  spd: number;
+  cspd: number;
+  i_intrpd: number;
+  c_intrpd: number;
+  s_intrpd: number;
+  cs_intrpd: number;
+  i_lfeepd: number;
+  c_lfeepd: number;
+  s_lfeepd: number;
+  cs_lfeepd: number;
+}
+
+export interface Gstr3bTaxPayComponent {
+  tx: number;
+  intr: number;
+  fee: number;
+}
+
+export interface Gstr3bNetTaxPayRow {
+  liab_ldg_id: number;
+  tran_desc: string;
+  trans_typ: number;
+  igst: Gstr3bTaxPayComponent;
+  cgst: Gstr3bTaxPayComponent;
+  sgst: Gstr3bTaxPayComponent;
+  cess: Gstr3bTaxPayComponent;
+}
+
+export type Gstr3bPaymentTaxKey = 'igst' | 'cgst' | 'sgst' | 'cess';
+
+export interface Gstr3bPaymentGridRow {
+  key: Gstr3bPaymentTaxKey;
+  label: string;
+  netNonRc: number;
+  netRc: number;
+  itcIgst: number;
+  itcCgst: number;
+  itcSgst: number;
+  itcCess: number;
+  cashNonRc: number;
+  cashRc: number;
+  intrPayable: number;
+  intrCash: number;
+  feePayable: number;
+  feeCash: number;
+}
+
+export interface Gstr3bCreditLedgerBalance {
+  igst: number;
+  cgst: number;
+  sgst: number;
+  cess: number;
+}
+
+export interface Gstr3bTxPmt {
+  pditc: Gstr3bRetsavePditc;
+  pdcash: Gstr3bRetsavePdcashRow[];
+  net_tax_pay: Gstr3bNetTaxPayRow[];
+}
+
 export interface Gstr3bRetsaveFormState {
   sup_details: Gstr3bSupDetails;
   inter_sup: Gstr3bInterSup;
@@ -142,6 +220,7 @@ export interface Gstr3bRetsaveFormState {
   itc_elg: Gstr3bItcElg;
   inward_sup: Gstr3bInwardSup;
   intr_ltfee: Gstr3bIntrLtfee;
+  tx_pmt: Gstr3bTxPmt;
 }
 
 export interface Gstr3bRetsaveRequestBody extends Gstr3bRetsaveFormState {

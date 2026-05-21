@@ -333,6 +333,13 @@ export const gstr1Routes: Routes = [
           ),
       },
       {
+        path: 'gstr3b-payment-details',
+        loadComponent: () =>
+          import('./pages/gstr3b-payment-details.page').then(
+            (m) => m.Gstr3bPaymentDetailsPageComponent,
+          ),
+      },
+      {
         path: 'gstr2a-b2b',
         loadComponent: () =>
           import('./pages/gstr2a-b2b.page').then((m) => m.Gstr2aB2bPageComponent),

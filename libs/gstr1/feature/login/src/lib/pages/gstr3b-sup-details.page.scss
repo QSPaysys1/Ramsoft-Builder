@@ -128,6 +128,11 @@
     border-radius: 2px;
     cursor: pointer;
 
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
     &--cancel {
       border: 2px solid var(--gst-navy);
       background: #fff;
@@ -153,4 +158,31 @@
       }
     }
   }
+}
+
+.gstr3b-payment {
+  &__ledger-wrap,
+  &__grid-wrap {
+    margin-top: 0.75rem;
+  }
+
+  &__ledger {
+    min-width: 64rem;
+  }
+
+  &__grid {
+    min-width: 88rem;
+  }
+
+  &__footer {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
+
+.cell-readonly {
+  background: #f8fafc;
+  color: #334155;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }

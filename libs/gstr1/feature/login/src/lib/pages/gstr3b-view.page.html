@@ -200,7 +200,11 @@
               </div>
             </a>
 
-            <article class="gstr3b-card md:col-span-2 xl:col-span-1">
+            <a
+              routerLink="/gstr1/workspace/gstr3b-payment-details"
+              [queryParams]="gstr3bSectionQueryParams()"
+              class="gstr3b-card gstr3b-card--link md:col-span-2 xl:col-span-1"
+            >
               <header class="gstr3b-card__header">
                 <h2 class="gstr3b-card__title">6.1 Payment of tax</h2>
               </header>
@@ -210,8 +214,9 @@
                   <div class="gstr3b-field"><dt>Paid through Cash (₹)</dt><dd>{{ paymentField(table61(), 'paidThroughCash') }}</dd></div>
                   <div class="gstr3b-field"><dt>Paid through Credit (₹)</dt><dd>{{ paymentField(table61(), 'paidThroughCredit') }}</dd></div>
                 </dl>
+                <span class="gstr3b-card__cta">Open table →</span>
               </div>
-            </article>
+            </a>
           </div>
         </div>
 

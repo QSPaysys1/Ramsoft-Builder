@@ -34,6 +34,7 @@ import {
   withComputedItcNet,
   zeroRatedLine,
 } from './gstr3b-retsave.utils';
+import { parseGstr3bTxPmtFromData } from './gstr3b-tx-pmt.utils';
 
 function num(v: unknown): number {
   return numGstr3b(v);
@@ -172,6 +173,7 @@ export function parseGstr3bRetsaveFromRetsumData(
   const itc = gstr2AsRecord(data['itc_elg'] ?? data['elgitc']);
   const inward = gstr2AsRecord(data['inward_sup']);
   const intr = gstr2AsRecord(data['intr_ltfee']);
+  const txPmt = gstr2AsRecord(data['tx_pmt']);
 
   return withComputedItcNet({
     sup_details: parseSupDetailsFromRetsum(sup),
@@ -187,6 +189,7 @@ export function parseGstr3bRetsaveFromRetsumData(
     itc_elg: parseItcElgFromRetsum(itc),
     inward_sup: parseGstr3bInwardSupFromData(inward),
     intr_ltfee: parseGstr3bIntrLtfeeFromData(intr),
+    tx_pmt: parseGstr3bTxPmtFromData(txPmt),
   });
 }
 

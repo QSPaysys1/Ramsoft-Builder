@@ -22,6 +22,7 @@ import {
   gstr2StatusIndicatesSuccess,
 } from './gstr2-response.utils';
 import { extractLiabitc } from './gstr3b-payload.utils';
+import { emptyGstr3bTxPmt, parseGstr3bTxPmtFromData } from './gstr3b-tx-pmt.utils';
 
 export function numGstr3b(v: unknown): number {
   if (v === null || v === undefined || v === '') {
@@ -359,6 +360,7 @@ export function emptyGstr3bRetsaveFormState(): Gstr3bRetsaveFormState {
     itc_elg: emptyGstr3bItcElg(),
     inward_sup: emptyGstr3bInwardSup(),
     intr_ltfee: emptyGstr3bIntrLtfee(),
+    tx_pmt: emptyGstr3bTxPmt(),
   };
 }
 
@@ -445,6 +447,7 @@ export function parseGstr3bRetsaveFromAutoliab(payload: unknown): Gstr3bRetsaveF
     itc_elg: parseItcElgFromAutoliab(liabitc),
     inward_sup: parseGstr3bInwardSupFromData(inward),
     intr_ltfee: parseGstr3bIntrLtfeeFromData(intr),
+    tx_pmt: parseGstr3bTxPmtFromData(gstr2AsRecord(liabitc['tx_pmt'])),
   });
 }
 
