@@ -119,16 +119,18 @@ export interface Gstr3bInterSup {
   uin_details: Gstr3bRetsaveInterSupRow[];
 }
 
+export interface Gstr3bItcElg {
+  itc_avl: Gstr3bRetsaveItcRow[];
+  itc_rev: Gstr3bRetsaveItcRow[];
+  itc_net: Gstr3bRetsaveItcTaxOnly;
+  itc_inelg: Gstr3bRetsaveItcRow[];
+}
+
 export interface Gstr3bRetsaveFormState {
   sup_details: Gstr3bSupDetails;
   inter_sup: Gstr3bInterSup;
   eco_dtls: Gstr3bEcoDetails;
-  itc_elg: {
-    itc_avl: Gstr3bRetsaveItcRow[];
-    itc_rev: Gstr3bRetsaveItcRow[];
-    itc_net: Gstr3bRetsaveItcTaxOnly;
-    itc_inelg: Gstr3bRetsaveItcRow[];
-  };
+  itc_elg: Gstr3bItcElg;
   inward_sup: {
     isup_details: Gstr3bRetsaveInwardSupRow[];
   };

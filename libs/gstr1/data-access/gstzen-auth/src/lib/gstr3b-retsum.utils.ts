@@ -24,8 +24,13 @@ import {
   inwardRow,
   itcRowsFromAutoliab,
   itcTaxOnly,
+  normalizeGstr3bItcElg,
   numGstr3b,
+  GSTR3B_ITC_AVL_TYPES,
+  GSTR3B_ITC_INELG_TYPES,
+  GSTR3B_ITC_REV_TYPES,
   txvalLine,
+  withComputedItcNet,
   zeroRatedLine,
 } from './gstr3b-retsave.utils';
 
@@ -102,14 +107,12 @@ function parseItcElgFromRetsum(itc: Record<string, unknown> | undefined): Gstr3b
   if (!itc) {
     return emptyGstr3bRetsaveFormState().itc_elg;
   }
-  const avlTypes = ['IMPG', 'IMPS', 'ISRC', 'ISD', 'OTH'] as const;
-  const revTypes = ['RUL', 'OTH'] as const;
-  return {
-    itc_avl: itcRowsFromAutoliab(itc['itc_avl'], avlTypes),
-    itc_rev: itcRowsFromAutoliab(itc['itc_rev'], revTypes),
-    itc_net: itcTaxOnly(gstr2AsRecord(itc['itc_net'])),
-    itc_inelg: itcRowsFromAutoliab(itc['itc_inelg'], revTypes),
-  };
+  return normalizeGstr3bItcElg({
+    itc_avl: itcRowsFromAutoliab(itc['itc_avl'] ?? itc['itcavl'], GSTR3B_ITC_AVL_TYPES),
+    itc_rev: itcRowsFromAutoliab(itc['itc_rev'] ?? itc['itcrev'], GSTR3B_ITC_REV_TYPES),
+    itc_net: itcTaxOnly(gstr2AsRecord(itc['itc_net'] ?? itc['itcnet'])),
+    itc_inelg: itcRowsFromAutoliab(itc['itc_inelg'] ?? itc['itcinelg'], GSTR3B_ITC_INELG_TYPES),
+  });
 }
 
 function paymentFromRetsum(txPmt: Record<string, unknown> | undefined): Gstr3bPaymentAmounts {
@@ -165,11 +168,11 @@ export function parseGstr3bRetsaveFromRetsumData(
   const sup = gstr2AsRecord(data['sup_details']);
   const inter = gstr2AsRecord(data['inter_sup']);
   const eco = gstr2AsRecord(data['eco_dtls']);
-  const itc = gstr2AsRecord(data['itc_elg']);
+  const itc = gstr2AsRecord(data['itc_elg'] ?? data['elgitc']);
   const inward = gstr2AsRecord(data['inward_sup']);
   const intr = gstr2AsRecord(data['intr_ltfee']);
 
-  return {
+  return withComputedItcNet({
     sup_details: parseSupDetailsFromRetsum(sup),
     inter_sup: {
       unreg_details: interRows(inter?.['unreg_details']),
@@ -192,7 +195,7 @@ export function parseGstr3bRetsaveFromRetsumData(
     intr_ltfee: {
       intr_details: itcTaxOnly(gstr2AsRecord(intr?.['intr_details'])),
     },
-  };
+  });
 }
 
 export function parseGstr3bRetsaveFromRetsum(payload: unknown): Gstr3bRetsaveFormState | null {

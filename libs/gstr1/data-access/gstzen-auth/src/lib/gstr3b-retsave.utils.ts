@@ -11,6 +11,7 @@ import type {
   Gstr3bSupDetails,
   Gstr3bEcoDetails,
   Gstr3bInterSup,
+  Gstr3bItcElg,
 } from './gstr3b.models';
 import {
   gstr2AsRecord,
@@ -102,6 +103,34 @@ export function itcRow(raw: Record<string, unknown>, ty: string): Gstr3bRetsaveI
   return { ty, ...itcTaxOnly(raw) };
 }
 
+/** GST portal row order for table 4. */
+export const GSTR3B_ITC_AVL_TYPES = ['IMPG', 'IMPS', 'ISRC', 'ISD', 'OTH'] as const;
+export const GSTR3B_ITC_REV_TYPES = ['RUL', 'OTH'] as const;
+export const GSTR3B_ITC_INELG_TYPES = ['RUL', 'OTH'] as const;
+
+export function orderItcRows(
+  rows: readonly Gstr3bRetsaveItcRow[],
+  types: readonly string[],
+): Gstr3bRetsaveItcRow[] {
+  const byTy = new Map<string, Gstr3bRetsaveItcRow>();
+  for (const row of rows) {
+    byTy.set(row.ty.trim().toUpperCase(), row);
+  }
+  return types.map((ty) => {
+    const existing = byTy.get(ty.toUpperCase());
+    return existing ? { ...existing, ty } : itcRow({}, ty);
+  });
+}
+
+export function normalizeGstr3bItcElg(itc: Gstr3bItcElg): Gstr3bItcElg {
+  return {
+    itc_avl: orderItcRows(itc.itc_avl, GSTR3B_ITC_AVL_TYPES),
+    itc_rev: orderItcRows(itc.itc_rev, GSTR3B_ITC_REV_TYPES),
+    itc_net: { ...itc.itc_net },
+    itc_inelg: orderItcRows(itc.itc_inelg, GSTR3B_ITC_INELG_TYPES),
+  };
+}
+
 export function interRow(raw: Record<string, unknown>): Gstr3bRetsaveInterSupRow {
   return {
     pos: String(raw['pos'] ?? '').trim().padStart(2, '0').slice(-2),
@@ -146,10 +175,11 @@ function interRowsFromAutoliab(raw: unknown): Gstr3bRetsaveInterSupRow[] {
 
 export function itcRowsFromAutoliab(raw: unknown, types: readonly string[]): Gstr3bRetsaveItcRow[] {
   if (Array.isArray(raw)) {
-    return raw
+    const rows = raw
       .map((r) => gstr2AsRecord(r))
       .filter((r): r is Record<string, unknown> => !!r)
       .map((r) => itcRow(r, String(r['ty'] ?? '').trim().toUpperCase()));
+    return orderItcRows(rows, types);
   }
   const container = gstr2AsRecord(raw);
   if (!container) {
@@ -216,6 +246,16 @@ export function ensureGstr3bInterSupDefaultRows(interSup: Gstr3bInterSup): Gstr3
   };
 }
 
+export function emptyGstr3bItcElg(): Gstr3bItcElg {
+  const zeroItc: Gstr3bRetsaveItcTaxOnly = { iamt: 0, camt: 0, samt: 0, csamt: 0 };
+  return normalizeGstr3bItcElg({
+    itc_avl: GSTR3B_ITC_AVL_TYPES.map((ty) => ({ ty, ...zeroItc })),
+    itc_rev: GSTR3B_ITC_REV_TYPES.map((ty) => ({ ty, ...zeroItc })),
+    itc_net: { ...zeroItc },
+    itc_inelg: GSTR3B_ITC_INELG_TYPES.map((ty) => ({ ty, ...zeroItc })),
+  });
+}
+
 export function emptyGstr3bRetsaveFormState(): Gstr3bRetsaveFormState {
   const zeroItc: Gstr3bRetsaveItcTaxOnly = { iamt: 0, camt: 0, samt: 0, csamt: 0 };
 
@@ -223,12 +263,7 @@ export function emptyGstr3bRetsaveFormState(): Gstr3bRetsaveFormState {
     sup_details: emptyGstr3bSupDetails(),
     inter_sup: emptyGstr3bInterSup(),
     eco_dtls: emptyGstr3bEcoDetails(),
-    itc_elg: {
-      itc_avl: ['IMPG', 'IMPS', 'ISRC', 'ISD', 'OTH'].map((ty) => ({ ty, ...zeroItc })),
-      itc_rev: ['RUL', 'OTH'].map((ty) => ({ ty, ...zeroItc })),
-      itc_net: { ...zeroItc },
-      itc_inelg: ['RUL', 'OTH'].map((ty) => ({ ty, ...zeroItc })),
-    },
+    itc_elg: emptyGstr3bItcElg(),
     inward_sup: {
       isup_details: [
         { ty: 'GST', inter: 0, intra: 0 },
@@ -258,14 +293,12 @@ function parseItcElgFromAutoliab(liabitc: Record<string, unknown>): Gstr3bRetsav
   if (!itc) {
     return emptyGstr3bRetsaveFormState().itc_elg;
   }
-  const avlTypes = ['IMPG', 'IMPS', 'ISRC', 'ISD', 'OTH'] as const;
-  const revTypes = ['RUL', 'OTH'] as const;
-  return {
-    itc_avl: itcRowsFromAutoliab(itc['itc_avl'] ?? itc['itcavl'] ?? itc, avlTypes),
-    itc_rev: itcRowsFromAutoliab(itc['itc_rev'] ?? itc['itcrev'] ?? itc, revTypes),
+  return normalizeGstr3bItcElg({
+    itc_avl: itcRowsFromAutoliab(itc['itc_avl'] ?? itc['itcavl'] ?? itc, GSTR3B_ITC_AVL_TYPES),
+    itc_rev: itcRowsFromAutoliab(itc['itc_rev'] ?? itc['itcrev'] ?? itc, GSTR3B_ITC_REV_TYPES),
     itc_net: itcTaxOnly(unwrapAutoliabSection(itc['itc_net'] ?? itc['itcnet'])),
-    itc_inelg: itcRowsFromAutoliab(itc['itc_inelg'] ?? itc['itcinelg'] ?? itc, revTypes),
-  };
+    itc_inelg: itcRowsFromAutoliab(itc['itc_inelg'] ?? itc['itcinelg'] ?? itc, GSTR3B_ITC_INELG_TYPES),
+  });
 }
 
 export function computeGstr3bItcNet(state: Gstr3bRetsaveFormState): Gstr3bRetsaveItcTaxOnly {
