@@ -113,13 +113,15 @@ export interface Gstr3bEcoDetails {
   eco_reg_sup: Gstr3bRetsaveTxvalLine;
 }
 
+export interface Gstr3bInterSup {
+  unreg_details: Gstr3bRetsaveInterSupRow[];
+  comp_details: Gstr3bRetsaveInterSupRow[];
+  uin_details: Gstr3bRetsaveInterSupRow[];
+}
+
 export interface Gstr3bRetsaveFormState {
   sup_details: Gstr3bSupDetails;
-  inter_sup: {
-    unreg_details: Gstr3bRetsaveInterSupRow[];
-    comp_details: Gstr3bRetsaveInterSupRow[];
-    uin_details: Gstr3bRetsaveInterSupRow[];
-  };
+  inter_sup: Gstr3bInterSup;
   eco_dtls: Gstr3bEcoDetails;
   itc_elg: {
     itc_avl: Gstr3bRetsaveItcRow[];

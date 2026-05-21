@@ -128,7 +128,11 @@
               </div>
             </a>
 
-            <article class="gstr3b-card">
+            <a
+              routerLink="/gstr1/workspace/gstr3b-inter-sup-details"
+              [queryParams]="gstr3bSectionQueryParams()"
+              class="gstr3b-card gstr3b-card--link"
+            >
               <header class="gstr3b-card__header">
                 <h2 class="gstr3b-card__title">3.2 Inter-state supplies</h2>
               </header>
@@ -137,8 +141,9 @@
                   <div class="gstr3b-field"><dt>Taxable Value (₹)</dt><dd>{{ interField(table32(), 'taxableValue') }}</dd></div>
                   <div class="gstr3b-field"><dt>Integrated Tax (₹)</dt><dd>{{ interField(table32(), 'igst') }}</dd></div>
                 </dl>
+                <span class="gstr3b-card__cta">Open table →</span>
               </div>
-            </article>
+            </a>
 
             <article class="gstr3b-card">
               <header class="gstr3b-card__header">

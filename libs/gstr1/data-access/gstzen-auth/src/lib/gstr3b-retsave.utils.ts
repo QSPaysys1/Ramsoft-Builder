@@ -10,6 +10,7 @@ import type {
   Gstr3bRetsaveZeroRatedLine,
   Gstr3bSupDetails,
   Gstr3bEcoDetails,
+  Gstr3bInterSup,
 } from './gstr3b.models';
 import {
   gstr2AsRecord,
@@ -192,12 +193,35 @@ export function emptyGstr3bEcoDetails(): Gstr3bEcoDetails {
   };
 }
 
+export function emptyGstr3bInterSupRow(): Gstr3bRetsaveInterSupRow {
+  return { pos: '', txval: 0, iamt: 0 };
+}
+
+export function emptyGstr3bInterSup(): Gstr3bInterSup {
+  return {
+    unreg_details: [],
+    comp_details: [],
+    uin_details: [],
+  };
+}
+
+/** Ensure each inter-state section has at least one editable row for the UI. */
+export function ensureGstr3bInterSupDefaultRows(interSup: Gstr3bInterSup): Gstr3bInterSup {
+  const withDefault = (rows: Gstr3bRetsaveInterSupRow[]) =>
+    rows.length > 0 ? rows.map((r) => ({ ...r })) : [emptyGstr3bInterSupRow()];
+  return {
+    unreg_details: withDefault(interSup.unreg_details),
+    comp_details: withDefault(interSup.comp_details),
+    uin_details: withDefault(interSup.uin_details),
+  };
+}
+
 export function emptyGstr3bRetsaveFormState(): Gstr3bRetsaveFormState {
   const zeroItc: Gstr3bRetsaveItcTaxOnly = { iamt: 0, camt: 0, samt: 0, csamt: 0 };
 
   return {
     sup_details: emptyGstr3bSupDetails(),
-    inter_sup: { unreg_details: [], comp_details: [], uin_details: [] },
+    inter_sup: emptyGstr3bInterSup(),
     eco_dtls: emptyGstr3bEcoDetails(),
     itc_elg: {
       itc_avl: ['IMPG', 'IMPS', 'ISRC', 'ISD', 'OTH'].map((ty) => ({ ty, ...zeroItc })),
