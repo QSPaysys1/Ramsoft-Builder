@@ -28,7 +28,7 @@ declare
     'gstin', '36AAYCA9563F1ZZ',
     'gstrGstin', '36AAYCA9563F1ZZ',
     'gstr1Gstin', '36AAYCA9563F1ZZ',
-    'organizationGstin', '36AADCG4992P1ZU',
+    'organizationGstin', '36AAYCA9563F1ZZ',
     'phone', '7013857444',
     'city', 'Hyderabad',
     'address', 'Gachibowli',

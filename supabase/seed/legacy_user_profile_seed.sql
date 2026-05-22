@@ -27,7 +27,7 @@ declare
   "objectID": "q98exBwjDThigZGdTMrg7IpFZ193",
   "organizationAddress": "",
   "pincode": 500082,
-  "GSTIN": "36AADCG4992P1ZU",
+  "GSTIN": "36AAYCA9563F1ZZ",
   "phone": "7013857444",
   "isUnitsAdded": true,
   "txn": "b9cad73f287e454e8bac5887c4261678",
@@ -215,7 +215,7 @@ begin
   )
   values (
     v_uid,
-    '36AADCG4992P1ZU',
+    '36AAYCA9563F1ZZ',
     'SBP Consulting Private Limited',
     'Ajay',
     'ajay.gunda@sbpcorp.in',

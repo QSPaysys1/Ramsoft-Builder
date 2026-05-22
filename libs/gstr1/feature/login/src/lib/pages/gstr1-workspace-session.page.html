@@ -18,6 +18,32 @@
       Your GSTZen JWT is active. Future GSTR&#8209;1 API modules use this session automatically
       for requests that match the configured URL prefixes.
     </p>
+
+    <section
+      class="mt-6 rounded-lg border border-slate-200 bg-slate-950 p-4"
+      aria-labelledby="gstr1-workspace-logged-user"
+    >
+      <h2
+        id="gstr1-workspace-logged-user"
+        class="text-xs font-semibold uppercase tracking-wide text-slate-400"
+      >
+        Logged user console
+      </h2>
+      <p class="mt-1 text-xs text-slate-500">
+        Ramsoft login + resolved GSTR session (GSTIN
+        <span class="font-mono text-slate-300">36AAYCA9563F1ZZ</span> when configured). Also
+        logged to the browser console as
+        <span class="font-mono text-slate-300">[GSTR1 workspace] logged user</span>.
+      </p>
+      @if (!profileResolved()) {
+        <p class="mt-3 text-sm text-slate-400">Loading profile…</p>
+      } @else {
+        <pre
+          class="mt-3 max-h-64 overflow-auto rounded border border-slate-700 bg-black/40 p-3 font-mono text-[11px] leading-relaxed text-emerald-100"
+        >{{ loggedUserConsoleText() }}</pre>
+      }
+    </section>
+
     @if (hasToken()) {
       <p class="mt-3 text-sm leading-relaxed text-slate-700">
         Open
