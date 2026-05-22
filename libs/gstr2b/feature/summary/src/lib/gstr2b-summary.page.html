@@ -1,4 +1,4 @@
-<div class="gstr2b-view pb-12">
+<div class="gstr2b-view pb-12 p-4">
   <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
     <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
       <li><a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a></li>
@@ -62,10 +62,10 @@
         </div>
       </div>
 
-      <div class="flex border-b border-slate-200">
+      <div class="gstr2b-main-tabs flex border-b border-slate-200">
         <button
           type="button"
-          class="min-h-[44px] flex-1 border-b-2 px-4 text-xs font-bold uppercase tracking-wide md:text-sm"
+          class="gstr2b-main-tab min-h-[44px] flex-1 border-b-2 px-4 text-xs font-bold uppercase tracking-wide md:text-sm"
           [class.border-[#1a56a7]]="mainTab() === 'summary'"
           [class.text-[#1a56a7]]="mainTab() === 'summary'"
           [class.border-transparent]="mainTab() !== 'summary'"
@@ -76,7 +76,7 @@
         </button>
         <button
           type="button"
-          class="min-h-[44px] flex-1 border-b-2 px-4 text-xs font-bold uppercase tracking-wide md:text-sm"
+          class="gstr2b-main-tab min-h-[44px] flex-1 border-b-2 px-4 text-xs font-bold uppercase tracking-wide md:text-sm"
           [class.border-[#1a56a7]]="mainTab() === 'allTables'"
           [class.text-[#1a56a7]]="mainTab() === 'allTables'"
           [class.border-transparent]="mainTab() !== 'allTables'"
@@ -149,7 +149,7 @@
             </button>
           </div>
 
-          <div class="overflow-x-auto px-2 pb-4 md:px-4">
+          <div class="gstr2b-summary-table-scroll">
             <table class="gstr2b-summary-table w-full min-w-[900px] border-collapse text-left">
               <thead>
                 <tr>
@@ -360,7 +360,7 @@
           @if (viewState() === 'success') {
             @if (allTablesSubTab() === 'supplier') {
               @if (hasCpTable()) {
-                <div class="overflow-x-auto px-2 pb-2 md:px-4">
+                <div class="gstr2b-summary-table-scroll gstr2b-summary-table-scroll--compact">
                   <table class="gstr2b-cp-table w-full min-w-[960px] border-collapse text-left text-sm">
                     <thead>
                       <tr>
@@ -404,7 +404,7 @@
               }
             } @else {
               @if (hasDocTable()) {
-                <div class="overflow-x-auto px-2 pb-2 md:px-4">
+                <div class="gstr2b-summary-table-scroll gstr2b-summary-table-scroll--compact">
                   <table class="gstr2b-cp-table w-full min-w-[1400px] border-collapse text-left text-sm">
                     <thead>
                       <tr>

@@ -7,12 +7,13 @@
   background: linear-gradient(180deg, #eef1f5 0%, #f8fafc 28%, #f8fafc 100%);
   margin-inline: -1rem;
   padding-inline: 1rem;
+  padding: 40px;
 
-  @media (min-width: 768px) {
-    margin-inline: 0;
-    padding-inline: 0;
-    background: transparent;
-  }
+  // @media (min-width: 768px) {
+  //   margin-inline: 0;
+  //   padding-inline: 0;
+  //   background: transparent;
+  // }
 }
 
 .gstr3b-cards {

@@ -558,6 +558,9 @@ export class Gstr2bSummaryPageComponent {
     if (row.isPartHeader) {
       return 'gstr2b-part-row';
     }
+    if (row.depth === 1) {
+      return 'gstr2b-depth-1';
+    }
     if (row.depth === 2) {
       return 'gstr2b-depth-2';
     }

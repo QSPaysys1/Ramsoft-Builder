@@ -227,6 +227,13 @@ export class Gstr3bInterSupDetailsPageComponent {
     this.touchInterSup();
   }
 
+  openGstHelp(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+    window.open('https://www.gst.gov.in/', '_blank', 'noopener,noreferrer');
+  }
+
   cancel(): void {
     this.draftInterSup.set(
       ensureGstr3bInterSupDefaultRows(structuredClone(this.retsaveForm().inter_sup)),

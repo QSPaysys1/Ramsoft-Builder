@@ -3,17 +3,51 @@
   --gst-navy: #1c2b54;
   --gst-blue: #1a56a7;
   --gst-subtab-active: #2e9e8f;
+  --gstr2b-page-pad-x: 1rem;
+  --gstr2b-page-pad-x-md: 1.25rem;
+  --gstr2b-section-pad-y: 0.75rem;
 }
 
 .gstr2b-view {
   background: linear-gradient(180deg, #eef1f5 0%, #f8fafc 28%, #f8fafc 100%);
   margin-inline: -1rem;
-  padding-inline: 1rem;
+  padding-inline: var(--gstr2b-page-pad-x);
+  padding-bottom: 3rem;
+  padding: 40px;
 
-  @media (min-width: 768px) {
-    margin-inline: 0;
+  // @media (min-width: 768px) {
+  //   margin-inline: 0;
+  //   padding-inline: 0;
+  //   padding-bottom: 3rem;
+  //   background: transparent;
+  // }
+
+  /* Breadcrumb + outer chrome — align with card inner padding on small screens */
+  > nav {
     padding-inline: 0;
+
+    @media (min-width: 768px) {
+      padding-inline: 0;
+    }
+  }
+
+  button:not(:disabled),
+  [role='tab']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.gstr2b-main-tabs {
+  .gstr2b-main-tab {
+    cursor: pointer;
     background: transparent;
+    border-top: none;
+    border-left: none;
+    border-right: none;
   }
 }
 
@@ -25,6 +59,40 @@
   gap: 0.75rem;
 }
 
+.gstr2b-summary-tabs {
+  padding-block: var(--gstr2b-section-pad-y);
+
+  .gstr2b-itc-tab:not([class*='--active']) {
+    border: 1px solid #e2e8f0;
+  }
+
+  .gstr2b-itc-tab {
+    padding: 0.4rem 0.85rem;
+    cursor: pointer;
+  }
+
+  button[type='button'] {
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+}
+
+.gstr2b-summary-table-scroll {
+  overflow-x: auto;
+  padding: 0 1rem 1.25rem;
+
+  @media (min-width: 768px) {
+    padding: 0 1.25rem 1.5rem;
+  }
+
+  &--compact {
+    padding-bottom: 0.75rem;
+  }
+}
+
 .gstr2b-summary-table {
   thead tr {
     background: #e8eef4;
@@ -32,12 +100,17 @@
   }
 
   th {
-    padding: 0.65rem 0.75rem;
+    padding: 0.65rem 0.85rem;
     font-size: 0.6875rem;
     font-weight: 700;
     color: #334155;
     vertical-align: bottom;
     white-space: nowrap;
+
+    &.text-right {
+      padding-right: 1rem;
+      padding-left: 0.5rem;
+    }
   }
 
   tbody tr {
@@ -49,27 +122,41 @@
   }
 
   td {
-    padding: 0.55rem 0.75rem;
+    padding: 0.6rem 0.85rem;
     color: #1e293b;
     vertical-align: top;
     font-size: 0.8125rem;
+
+    &.text-right {
+      padding-right: 1rem;
+      padding-left: 0.5rem;
+    }
   }
 
   .gstr2b-part-row td {
     background: #f1f5f9;
     font-weight: 700;
     color: #0f172a;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
   }
 
-  .gstr2b-depth-2 td:first-child + td,
-  .gstr2b-summary-leaf {
-    padding-left: 1.5rem;
+  /* Heading column hierarchy — matches portal indent */
+  tr.gstr2b-depth-1 td:nth-child(2) {
+    padding-left: 1.25rem;
   }
-}
 
-.gstr2b-summary-tabs {
-  .gstr2b-itc-tab:not([class*='--active']) {
-    border: 1px solid #e2e8f0;
+  tr.gstr2b-depth-2 td:nth-child(2),
+  tr.gstr2b-depth-2 .gstr2b-summary-leaf {
+    padding-left: 2.25rem;
+  }
+
+  tr.gstr2b-depth-1 button,
+  tr.gstr2b-depth-2 button,
+  thead button {
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
   }
 }
 
@@ -80,20 +167,30 @@
   }
 
   th {
-    padding: 0.55rem 0.75rem;
+    padding: 0.55rem 0.85rem;
     font-size: 0.6875rem;
     font-weight: 700;
     color: #1e3a5f;
     white-space: nowrap;
     vertical-align: bottom;
+
+    &.text-right {
+      padding-right: 1rem;
+      padding-left: 0.5rem;
+    }
   }
 
   td {
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 0.85rem;
     font-size: 0.8125rem;
     color: #1e293b;
     border-bottom: 1px solid #e2e8f0;
     vertical-align: top;
+
+    &.text-right {
+      padding-right: 1rem;
+      padding-left: 0.5rem;
+    }
   }
 
   tbody tr:nth-child(even) {
@@ -113,6 +210,8 @@
 }
 
 .gstr2b-itc-tab {
+  cursor: pointer;
+
   &--active-avl {
     background: #2e7d32;
     color: #fff;
@@ -160,9 +259,13 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    padding: 0.5rem 1rem;
+    padding: 0.65rem 1rem;
     color: #1e3a5f;
     min-width: 0;
+
+    @media (min-width: 768px) {
+      padding: 0.65rem 1.25rem;
+    }
   }
 }
 
@@ -244,7 +347,7 @@
   gap: 0.5rem;
   border: 1px solid #cbd5e1;
   background: #fff;
-  padding: 0.25rem 0.6rem;
+  padding: 0.35rem 0.65rem;
   font-size: 0.8125rem;
   color: #1e293b;
   cursor: pointer;
@@ -262,7 +365,7 @@
   min-height: 2rem;
   border: 1px solid #cbd5e1;
   background: #fff;
-  padding: 0.25rem 0.75rem;
+  padding: 0.35rem 0.75rem;
   font-size: 0.8125rem;
   font-weight: 600;
   color: #334155;
@@ -291,7 +394,7 @@
   min-height: 2rem;
   border: 1px solid #cbd5e1;
   border-radius: 2px;
-  padding: 0.25rem 2rem 0.25rem 0.6rem;
+  padding: 0.35rem 2rem 0.35rem 0.65rem;
   font-size: 0.8125rem;
 
   &:focus {
@@ -318,7 +421,7 @@
   &__action {
     display: block;
     width: 100%;
-    padding: 0.4rem 0.75rem;
+    padding: 0.45rem 0.85rem;
     text-align: left;
     font-size: 0.8125rem;
     color: #1e293b;
@@ -336,7 +439,7 @@
     width: 100%;
     align-items: flex-start;
     gap: 0.5rem;
-    padding: 0.4rem 0.75rem;
+    padding: 0.45rem 0.85rem;
     text-align: left;
     font-size: 0.8125rem;
     color: #1e293b;
@@ -374,6 +477,11 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
+  padding: 0.75rem 1rem 1rem;
+
+  @media (min-width: 768px) {
+    padding: 0.75rem 1.25rem 1.25rem;
+  }
 
   &__btn {
     border: none;
@@ -391,7 +499,7 @@
 
   &__page {
     min-width: 1.75rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.3rem 0.55rem;
     font-size: 0.8125rem;
     border: 1px solid #cbd5e1;
     background: #fff;
@@ -489,7 +597,7 @@
 .gstr2b-filter-input {
   border: 1px solid #cbd5e1;
   border-radius: 2px;
-  padding: 0.4rem 0.6rem;
+  padding: 0.4rem 0.65rem;
   font-size: 0.8125rem;
 
   &:focus {
