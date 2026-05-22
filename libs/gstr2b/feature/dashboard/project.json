@@ -1,0 +1,13 @@
+{
+  "name": "gstr2b-feature-dashboard",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr2b/feature/dashboard/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:feature", "domain:gstr2b"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

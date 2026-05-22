@@ -1,0 +1,19 @@
+{
+  "name": "gstr2b-utils-transformers",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr2b/utils/transformers/src",
+  "projectType": "library",
+  "tags": ["type:utils", "domain:gstr2b"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr2b/utils/transformers",
+        "main": "libs/gstr2b/utils/transformers/src/index.ts",
+        "tsConfig": "libs/gstr2b/utils/transformers/tsconfig.lib.json",
+        "assets": ["libs/gstr2b/utils/transformers/*.md"]
+      }
+    }
+  }
+}

@@ -4,6 +4,8 @@
       <li><a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a></li>
       <li aria-hidden="true"><span>›</span></li>
       <li><a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a></li>
+      <li aria-hidden="true">›</li>
+      <li><a routerLink="/gstr2b/hub" [queryParams]="{ gstin: gstin(), ret_period: retPeriod(), filing_status: filingLabel() }" class="text-[#1a56a7] hover:underline">GSTR-2B</a></li>
       <li aria-hidden="true"><span>›</span></li>
       <li><span class="font-semibold text-slate-900" aria-current="page">GSTR-2B</span></li>
     </ol>

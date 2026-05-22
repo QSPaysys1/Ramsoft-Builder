@@ -1,0 +1,19 @@
+{
+  "name": "gstr2b-utils-constants",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr2b/utils/constants/src",
+  "projectType": "library",
+  "tags": ["type:utils", "domain:gstr2b"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr2b/utils/constants",
+        "main": "libs/gstr2b/utils/constants/src/index.ts",
+        "tsConfig": "libs/gstr2b/utils/constants/tsconfig.lib.json",
+        "assets": ["libs/gstr2b/utils/constants/*.md"]
+      }
+    }
+  }
+}

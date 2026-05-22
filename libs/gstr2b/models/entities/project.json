@@ -1,0 +1,19 @@
+{
+  "name": "gstr2b-models-entities",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr2b/models/entities/src",
+  "projectType": "library",
+  "tags": ["type:models", "domain:gstr2b"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr2b/models/entities",
+        "main": "libs/gstr2b/models/entities/src/index.ts",
+        "tsConfig": "libs/gstr2b/models/entities/tsconfig.lib.json",
+        "assets": ["libs/gstr2b/models/entities/*.md"]
+      }
+    }
+  }
+}

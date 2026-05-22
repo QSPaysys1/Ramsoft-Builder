@@ -26,6 +26,15 @@ export default [
               ],
             },
             {
+              sourceTag: 'domain:gstr2b',
+              onlyDependOnLibsWithTags: [
+                'domain:gstr2b',
+                'domain:gstr1',
+                'domain:auth',
+                'domain:e-invoices',
+              ],
+            },
+            {
               sourceTag: 'domain:gstr1',
               onlyDependOnLibsWithTags: ['*'],
             },

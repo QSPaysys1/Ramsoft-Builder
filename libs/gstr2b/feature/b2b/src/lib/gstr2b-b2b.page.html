@@ -1,0 +1,88 @@
+<div class="gstr2b-b2b pb-12">
+  <nav class="mb-4 flex flex-wrap items-center gap-2 text-xs text-slate-600 md:text-sm">
+    <a routerLink="/gstr2b/hub" [queryParams]="backToHubQueryParams()" class="text-[#1a56a7] hover:underline">GSTR-2B hub</a>
+    <span aria-hidden="true">›</span>
+    <span class="font-semibold text-slate-900">B2B documents</span>
+  </nav>
+
+  @if (!paramsValid()) {
+    <p class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+      Open from <a routerLink="/gstr2b/hub" class="font-semibold text-[#1a56a7] hover:underline">GSTR-2B hub</a> with GSTIN and MMYYYY period.
+    </p>
+  } @else {
+    <lib-gstr2b-header-summary
+      [gstin]="gstin()"
+      [legalName]="profile.legalName()"
+      [tradeName]="profile.tradeName()"
+      [fyLabel]="fyLabel()"
+      [taxPeriodLabel]="taxPeriodLabel()"
+    />
+
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+      <div class="bg-[#4db6ac] px-4 py-3 text-white">
+        <h1 class="text-sm font-bold md:text-base">B2B — document details (GSTR-2B bundle slice)</h1>
+      </div>
+
+      <div class="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 md:flex-row md:flex-wrap md:items-end">
+        <lib-gstr2b-column-picker
+          [columns]="tableColumns"
+          [open]="filterStore.columnPickerOpen()"
+          [visibleCount]="visibleColumns().length"
+          [totalCount]="tableColumns.length"
+          [isVisibleFn]="isColumnVisibleFn"
+          (toggleOpen)="filterStore.toggleColumnPicker()"
+          (checkAll)="filterStore.checkAllColumns(tableColumns)"
+          (uncheckAll)="filterStore.uncheckAllColumns(tableColumns)"
+          (columnToggle)="filterStore.toggleColumn($event, tableColumns)"
+        />
+        <lib-gstr2b-search-box
+          [value]="filterStore.searchQuery()"
+          (searchChange)="filterStore.updateSearch($event)"
+        />
+        <button
+          type="button"
+          class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold hover:bg-slate-50"
+          [disabled]="viewState() === 'loading'"
+          (click)="reload()"
+        >
+          Refresh
+        </button>
+      </div>
+
+      @if (viewState() === 'loading') {
+        <lib-gstr2b-section-loader message="Loading GSTR-2B statement…" />
+      } @else if (viewState() === 'error') {
+        <div class="space-y-4 px-4 py-6">
+          <p class="text-sm font-semibold text-red-800">{{ errorMessage() }}</p>
+          @if (workspace.httpError() !== null) {
+            <pre class="max-h-64 overflow-auto rounded border border-red-100 bg-red-50 p-3 font-mono text-[11px]">{{ workspace.httpError() | json }}</pre>
+          }
+        </div>
+      } @else if (viewState() === 'empty') {
+        <lib-gstr2b-empty-state title="No B2B documents in this GSTR-2B period." />
+      } @else {
+        <lib-gstr2b-invoice-table [columns]="visibleColumns()" [rows]="pagedRows()" />
+        <p class="border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
+          Showing {{ pagedRows().length }} of {{ filteredRows().length }} document(s) ({{ docRows().length }} total)
+        </p>
+      }
+
+      <div class="flex flex-wrap gap-3 border-t border-slate-200 bg-slate-50/80 px-4 py-4">
+        <button
+          type="button"
+          class="rounded-lg border border-slate-300 px-4 py-2 text-xs font-semibold hover:bg-white"
+          (click)="downloadCsv()"
+        >
+          Download CSV
+        </button>
+        <a
+          routerLink="/gstr2b/hub"
+          [queryParams]="backToHubQueryParams()"
+          class="inline-flex items-center rounded-lg border-2 border-[#1c2b54] px-6 text-xs font-bold uppercase text-[#1c2b54]"
+        >
+          Back to hub
+        </a>
+      </div>
+    </section>
+  }
+</div>

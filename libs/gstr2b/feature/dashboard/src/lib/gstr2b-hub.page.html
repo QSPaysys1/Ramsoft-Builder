@@ -1,0 +1,33 @@
+<div class="gstr2b-hub px-4 py-6 md:px-6">
+  <h1 class="text-lg font-bold text-slate-900">GSTR-2B</h1>
+  <p class="mt-1 text-sm text-slate-600">
+    Uses GSTR-1 GSTZen session — refer GSTR-1 authentication/session establishment flow.
+  </p>
+
+  @if (!paramsValid()) {
+    <p class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+      Open from Returns dashboard with GSTIN and return period (MMYYYY).
+    </p>
+  } @else {
+    <p class="mt-2 text-xs text-slate-500">
+      {{ period.gstin() }} · {{ period.retPeriod() }}
+    </p>
+    <ul class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      @for (tile of tiles; track tile.id) {
+        <li>
+          <button
+            type="button"
+            class="w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-left text-sm font-semibold text-[#1a56a7] shadow-sm hover:border-[#4db6ac]"
+            (click)="open(tile.route)"
+          >
+            {{ tile.label }}
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  <a routerLink="/gstr1/workspace/returns-dashboard" class="mt-8 inline-block text-sm text-[#1a56a7] hover:underline">
+    ← Returns dashboard
+  </a>
+</div>

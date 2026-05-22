@@ -233,6 +233,147 @@
       "@ramsoft-builder/gstr2a/utils/validators": [
         "libs/gstr2a/utils/validators/src/index.ts"
       ],
+      "@ramsoft-builder/gstr2b/data-access/api": [
+        "libs/gstr2b/data-access/api/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/data-access/facades": [
+        "libs/gstr2b/data-access/facades/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/data-access/guards": [
+        "libs/gstr2b/data-access/guards/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/data-access/interceptors": [
+        "libs/gstr2b/data-access/interceptors/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/data-access/services": [
+        "libs/gstr2b/data-access/services/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/data-access/state": [
+        "libs/gstr2b/data-access/state/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/data-access/stores": [
+        "libs/gstr2b/data-access/stores/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/b2b": [
+        "libs/gstr2b/feature/b2b/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/b2ba": [
+        "libs/gstr2b/feature/b2ba/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/cdn": [
+        "libs/gstr2b/feature/cdn/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/cdna": [
+        "libs/gstr2b/feature/cdna/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/dashboard": [
+        "libs/gstr2b/feature/dashboard/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/ecom": [
+        "libs/gstr2b/feature/ecom/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/ecoma": [
+        "libs/gstr2b/feature/ecoma/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/impg": [
+        "libs/gstr2b/feature/impg/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/impgsez": [
+        "libs/gstr2b/feature/impgsez/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/isd": [
+        "libs/gstr2b/feature/isd/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/isda": [
+        "libs/gstr2b/feature/isda/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/itc-summary": [
+        "libs/gstr2b/feature/itc-summary/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/reconciliation": [
+        "libs/gstr2b/feature/reconciliation/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/shared": [
+        "libs/gstr2b/feature/shared/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/feature/summary": [
+        "libs/gstr2b/feature/summary/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/models/entities": [
+        "libs/gstr2b/models/entities/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/models/enums": [
+        "libs/gstr2b/models/enums/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/models/interfaces": [
+        "libs/gstr2b/models/interfaces/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/models/requests": [
+        "libs/gstr2b/models/requests/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/models/responses": [
+        "libs/gstr2b/models/responses/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/shared/caching": [
+        "libs/gstr2b/shared/caching/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/shared/error-handler": [
+        "libs/gstr2b/shared/error-handler/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/shared/filters": [
+        "libs/gstr2b/shared/filters/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/shared/pagination": [
+        "libs/gstr2b/shared/pagination/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/shared/reconciliation": [
+        "libs/gstr2b/shared/reconciliation/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/shared/return-period": [
+        "libs/gstr2b/shared/return-period/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/shared/session": [
+        "libs/gstr2b/shared/session/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/ui/empty-state": [
+        "libs/gstr2b/ui/empty-state/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/ui/filters": [
+        "libs/gstr2b/ui/filters/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/ui/invoice-table": [
+        "libs/gstr2b/ui/invoice-table/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/ui/loaders": [
+        "libs/gstr2b/ui/loaders/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/ui/mismatch-view": [
+        "libs/gstr2b/ui/mismatch-view/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/ui/reconciliation-table": [
+        "libs/gstr2b/ui/reconciliation-table/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/ui/shared": [
+        "libs/gstr2b/ui/shared/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/ui/summary-cards": [
+        "libs/gstr2b/ui/summary-cards/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/utils/constants": [
+        "libs/gstr2b/utils/constants/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/utils/helpers": [
+        "libs/gstr2b/utils/helpers/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/utils/mappers": [
+        "libs/gstr2b/utils/mappers/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/utils/transformers": [
+        "libs/gstr2b/utils/transformers/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr2b/utils/validators": [
+        "libs/gstr2b/utils/validators/src/index.ts"
+      ],
       "@ramsoft-builder/shared/data-access/supabase": [
         "libs/shared/data-access/supabase/src/index.ts"
       ]
