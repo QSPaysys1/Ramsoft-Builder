@@ -1,0 +1,11 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+
+@Component({
+  selector: 'lib-gstr1a-workspace-layout',
+  standalone: true,
+  imports: [RouterOutlet],
+  template: `<router-outlet />`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class Gstr1aWorkspaceLayoutComponent {}

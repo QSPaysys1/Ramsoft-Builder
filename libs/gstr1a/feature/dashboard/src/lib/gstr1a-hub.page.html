@@ -1,0 +1,636 @@
+<div class="gstr1a-hub pb-12">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+      </li>
+      <li class="inline-flex items-center gap-2" aria-hidden="true"><span>›</span></li>
+      <li class="inline-flex items-center gap-2">
+        <span class="font-semibold text-slate-900" aria-current="page">GSTR-1A</span>
+      </li>
+    </ol>
+    <div class="flex items-center gap-2 text-slate-500">
+      <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm"> English </span>
+    </div>
+  </nav>
+
+  <div class="mb-4 flex flex-wrap items-center gap-3">
+    <a
+      routerLink="/gstr1/workspace/returns-dashboard"
+      class="inline-flex min-h-[38px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50"
+    >
+      ← Back to dashboard
+    </a>
+  </div>
+
+  <header class="mb-0 overflow-hidden rounded-t-xl bg-[#4db6ac] shadow-sm">
+    <div class="flex flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6 md:py-5">
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-white md:text-xl">
+          GSTR-1A — Amendment of outward supplies of goods or services for current tax period
+        </h1>
+        <p class="mt-1 max-w-3xl text-sm text-white/95">
+          Portal-style workspace · RETSUM tile counts via
+          <span class="font-mono text-xs">POST /api/gstr1a/download/</span> (<span class="font-mono text-xs">api_name=retsum</span>), then section JSON for
+          <span class="font-mono text-xs">{{ apiName() }}</span>{{ selectedApiHint() ? ' — ' + selectedApiHint() : '' }}. Persisting changes uses
+          <span class="font-mono text-xs">POST /api/gstr1a/retsave/</span> (same body shape as GSTZen/NIC — <span class="font-mono text-xs">fp</span>,
+          <span class="font-mono text-xs">gstin</span>, <span class="font-mono text-xs">gt</span>, <span class="font-mono text-xs">cur_gt</span>, and the active section key such as
+          <span class="font-mono text-xs">b2b</span>).
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          class="inline-flex min-h-[38px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-xs font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347]"
+          title="GST help (opens gst.gov.in)"
+          (click)="openGstHelp()"
+        >
+          HELP ?
+        </button>
+        <button
+          type="button"
+          class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/50 bg-white/15 text-white hover:bg-white/25 disabled:opacity-50"
+          [disabled]="retsumLoading() || loading()"
+          (click)="refresh()"
+          title="Refresh RETSUM and current section"
+          aria-label="Refresh"
+        >
+          ↻
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="mb-6 rounded-b-xl border border-t-0 border-slate-200 bg-white px-4 py-4 shadow-md md:px-6 md:py-5">
+    <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <div class="grid flex-1 gap-3 sm:grid-cols-3">
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">GSTIN</p>
+          <p class="mt-0.5 font-mono text-sm font-semibold text-slate-900">{{ gstin() || '—' }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">FY</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ fyLabel() }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Tax period</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ taxPeriodLabel() }}</p>
+        </div>
+        <div class="sm:col-span-3 lg:col-span-1">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Legal name</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ legalName() || '—' }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Trade name</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ tradeName() || '—' }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Status</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">
+            @if (filingLabel().length) {
+              {{ filingLabel() }}
+            } @else {
+              —
+            }
+          </p>
+        </div>
+      </div>
+      <p class="text-[11px] font-medium text-slate-500 lg:text-right">
+        <span class="text-red-600">*</span> Indicates mandatory fields
+      </p>
+    </div>
+
+    <div>
+      @if(false) {
+        <div class="grid gap-4 lg:grid-cols-12 lg:items-end">
+          <div class="flex flex-col gap-1.5 lg:col-span-3">
+            <label class="text-sm font-semibold text-slate-700" for="g1a-gstin">GSTIN <span class="text-red-600">*</span></label>
+            <input
+              id="g1a-gstin"
+              maxlength="15"
+              autocomplete="off"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm uppercase tracking-wide text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+              [value]="gstin()"
+              (input)="updateGstin($any($event.target).value)"
+            />
+          </div>
+          <div class="flex flex-col gap-1.5 lg:col-span-2">
+            <label class="text-sm font-semibold text-slate-700" for="g1a-period">Return period <span class="text-red-600">*</span></label>
+            <input
+              id="g1a-period"
+              maxlength="6"
+              autocomplete="off"
+              placeholder="MMYYYY"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+              [value]="retPeriod()"
+              (input)="updateRetPeriod($any($event.target).value)"
+            />
+          </div>
+          <div class="flex flex-col gap-1.5 lg:col-span-3">
+            <label class="text-sm font-semibold text-slate-700" for="g1a-api">API name</label>
+            <select
+              id="g1a-api"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 shadow-sm focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+              [value]="apiName()"
+              (change)="updateApiName($any($event.target).value)"
+              [attr.title]="selectedApiHint()"
+            >
+              @for (opt of apiOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+            @if (selectedApiHint().length) {
+              <p class="text-[11px] leading-snug text-slate-500">{{ selectedApiHint() }}</p>
+            }
+          </div>
+          <div class="flex flex-wrap gap-2 lg:col-span-4 lg:justify-end">
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-5 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#154a8f] disabled:cursor-not-allowed disabled:opacity-55 lg:flex-none lg:min-w-[140px]"
+              [disabled]="retsumLoading() || loading()"
+              (click)="loadRetsumAndSection()"
+            >
+              @if (retsumLoading() || loading()) {
+                <span>Loading…</span>
+              } @else {
+                <span>Load data</span>
+              }
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-teal-800/40 bg-white/95 px-4 text-xs font-bold uppercase tracking-wide text-[#0f2744] shadow-sm hover:bg-white disabled:opacity-45"
+              [disabled]="!canSubmitGstr1aRetsave() || retsaveSubmitting()"
+              (click)="submitGstr1aRetsave()"
+              title="POST downloaded section to GSTZen GSTR-1A retsave (portal SAVE equivalent)"
+            >
+              @if (retsaveSubmitting()) {
+                <span>Saving…</span>
+              } @else {
+                <span>Submit retsave</span>
+              }
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-45"
+              [disabled]="rawResponse() === null"
+              (click)="copyJson()"
+            >
+              Copy JSON
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[42px] items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-45"
+              [disabled]="rawResponse() === null"
+              (click)="downloadJson()"
+            >
+              Download JSON
+            </button>
+          </div>
+        </div>
+      }
+      @if (!paramsValid()) {
+        <p class="mt-3 text-xs font-medium text-amber-800">
+          Enter a valid GSTIN (15 chars) and return period (<span class="font-mono">MMYYYY</span>) before loading.
+        </p>
+      }
+      @if (retsaveError() !== null) {
+        <div class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-red-950 shadow-sm">
+          <p class="text-sm font-bold">GSTR-1A retsave failed</p>
+          <pre class="mt-2 max-h-48 overflow-auto rounded border border-red-100 bg-white p-3 font-mono text-[11px] leading-relaxed text-red-900">{{ retsaveError() | json }}</pre>
+        </div>
+      }
+      @if (retsaveSuccessPayload() !== null) {
+        <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-emerald-950 shadow-sm">
+          <p class="text-sm font-bold">GSTR-1A retsave response</p>
+          <pre class="mt-2 max-h-48 overflow-auto rounded border border-emerald-100 bg-white p-3 font-mono text-[11px] leading-relaxed text-emerald-950">{{ retsaveSuccessPayload() | json }}</pre>
+        </div>
+      }
+    </div>
+  </section>
+
+  @if (!retsumLoading() && retsumLogicalError()) {
+    <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-amber-950 shadow-sm">
+      <p class="text-sm font-bold">Return summary (RETSUM)</p>
+      <p class="mt-1 text-sm">{{ retsumLogicalError() }}</p>
+    </div>
+  }
+  @if (!retsumLoading() && retsumHttpError() !== null) {
+    <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-5 text-red-950 shadow-sm">
+      <p class="text-sm font-bold">RETSUM request failed</p>
+      <pre class="mt-3 max-h-64 overflow-auto rounded border border-red-100 bg-white p-3 font-mono text-[11px] leading-relaxed text-red-900">{{ retsumHttpError() | json }}</pre>
+    </div>
+  }
+
+  <!-- ADD RECORD DETAILS — summary grid (portal-style) -->
+  <section
+    id="g1a-add-tiles"
+    class="mb-6 scroll-mt-24 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md"
+    aria-label="Add record summary"
+  >
+    <button
+      type="button"
+      class="flex w-full items-center justify-between gap-3 bg-[#2c4172] px-4 py-3 text-left text-white md:px-5"
+      (click)="toggleAddSection()"
+      [attr.aria-expanded]="addRecordOpen()"
+    >
+      <span class="text-sm font-bold uppercase tracking-wide md:text-base">Add record details</span>
+      <span class="text-lg font-bold">{{ addRecordOpen() ? '▲' : '▼' }}</span>
+    </button>
+    @if (addRecordOpen()) {
+      <div class="border-t border-slate-200 bg-slate-50/80 p-4 md:p-5">
+        @if (retsumLoading()) {
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            @for (x of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]; track x) {
+              <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+                <div class="h-9 animate-pulse bg-[#2c4172]/90"></div>
+                <div class="flex flex-col items-center gap-2 px-3 py-6">
+                  <div class="h-10 w-10 animate-pulse rounded-full bg-slate-200"></div>
+                  <div class="h-6 w-12 animate-pulse rounded bg-slate-200"></div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          @if (retsumTileCounts() === null && !retsumLogicalError()) {
+            <p class="mb-4 text-center text-sm text-slate-600">
+              Enter GSTIN &amp; return period, then press <span class="font-semibold">Load data</span> to fetch RETSUM counts and the selected section.
+            </p>
+          }
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            @for (title of summaryTitles; track title; let i = $index) {
+              <button
+                type="button"
+                class="cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-white text-left shadow-md outline-none transition hover:shadow-lg focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+                [class.ring-2]="summaryTileActiveExtended(i) && (viewState() === 'success' || viewState() === 'empty' || viewState() === 'loading')"
+                [class.ring-blue-800]="summaryTileActiveExtended(i) && (viewState() === 'success' || viewState() === 'empty' || viewState() === 'loading')"
+                (click)="navigateToAddTile(i)"
+                [disabled]="addRecordTileDisabled(i)"
+                [attr.title]="
+                  gstr1aPrimaryApiAt(i) ? 'Open ' + gstr1aPrimaryApiAt(i) + ' (GSTR-1A)' : 'Documents issued — use GSTR-1 workspace (doc_issue)'
+                "
+              >
+                <div class="bg-[#2c4172] px-2 py-2 text-center text-[10px] font-semibold leading-snug text-white md:text-[11px]">{{ title }}</div>
+                <div class="flex flex-col items-center justify-center gap-2 px-2 py-6">
+                  <span
+                    class="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-lg text-emerald-700"
+                    aria-hidden="true"
+                    >✓</span
+                  >
+                  <p class="text-2xl font-bold text-emerald-700">{{ summaryCounts()[i] }}</p>
+                </div>
+              </button>
+            }
+          </div>
+          <p class="mt-4 text-center text-[11px] text-slate-500">
+            Tiles <span class="font-semibold">4A–6C (B2B)</span>, <span class="font-semibold">5 (B2CL)</span>,
+            <span class="font-semibold">6A (Exports)</span>, <span class="font-semibold">7 (B2CS)</span>,
+            <span class="font-semibold">8 (Nil)</span>, <span class="font-semibold">9B (CDNR/CDNUR)</span>, and
+            <span class="font-semibold">11A (Tax liability — advance received)</span>, and
+            <span class="font-semibold">12 (HSN summary)</span> open dedicated workspaces; other tiles load sections below.
+            Counts use GSTZen RETSUM <span class="font-mono text-[10px]">sec_sum.ttl_rec</span>.
+            Use <span class="font-semibold">Submit retsave</span> to POST <span class="font-mono text-[10px]">message[api_name]</span> to
+            <span class="font-mono text-[10px]">POST /api/gstr1a/retsave/</span> when data is loaded here.
+          </p>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md" aria-label="Amend record summary">
+    <button
+      type="button"
+      class="flex w-full items-center justify-between gap-3 bg-[#2c4172] px-4 py-3 text-left text-white md:px-5"
+      (click)="toggleAmendSection()"
+      [attr.aria-expanded]="amendRecordOpen()"
+    >
+      <span class="text-sm font-bold uppercase tracking-wide md:text-base">Amend record details</span>
+      <span class="text-lg font-bold">{{ amendRecordOpen() ? '▲' : '▼' }}</span>
+    </button>
+    @if (amendRecordOpen()) {
+      <div class="border-t border-slate-200 bg-slate-50/80 p-4 md:p-5">
+        <p class="mb-4 text-center text-sm text-slate-600">
+          Counts prefer RETSUM amendment <span class="font-mono text-xs">sec_nm</span> rows (<span class="font-mono text-xs">B2BA</span>,
+          <span class="font-mono text-xs">EXPA</span>, …) when present; otherwise they match the related “Add record” tile.
+        </p>
+        @if (retsumLoading()) {
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            @for (x of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track x) {
+              <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+                <div class="h-9 animate-pulse bg-[#2c4172]/90"></div>
+                <div class="flex flex-col items-center gap-2 px-3 py-6">
+                  <div class="h-10 w-10 animate-pulse rounded-full bg-slate-200"></div>
+                  <div class="h-6 w-12 animate-pulse rounded bg-slate-200"></div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            @for (tile of amendRecordTiles; track tile.portalLabel) {
+              <button
+                type="button"
+                class="cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-white text-left shadow-md outline-none transition hover:shadow-lg focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+                (click)="navigateToAmendTile(tile)"
+                [disabled]="amendRecordTileDisabled()"
+                [attr.title]="amendRecordTileHint(tile)"
+              >
+                <div class="bg-[#2c4172] px-2 py-2.5 text-center text-[10px] font-bold leading-snug text-white md:text-[11px]">
+                  {{ tile.portalLabel }}
+                </div>
+                <div class="flex flex-col items-center justify-center gap-2 px-2 py-6">
+                  <span
+                    class="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-lg text-emerald-700"
+                    aria-hidden="true"
+                    >✓</span
+                  >
+                  <p class="text-2xl font-bold text-emerald-700">{{ amendRecordTileCount(tile) }}</p>
+                </div>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  @if (viewState() === 'error') {
+    <div class="space-y-4">
+      @if (logicalErrorText()) {
+        <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-amber-950 shadow-sm">
+          <p class="text-sm font-bold">GSTR-1A download response</p>
+          <p class="mt-1 text-sm">{{ logicalErrorText() }}</p>
+        </div>
+      }
+      @if (httpError() !== null) {
+        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-5 text-red-950 shadow-sm">
+          <p class="text-sm font-bold">Request failed</p>
+          <pre class="mt-3 max-h-64 overflow-auto rounded border border-red-100 bg-white p-3 font-mono text-[11px] leading-relaxed text-red-900">{{ httpError() | json }}</pre>
+        </div>
+      }
+    </div>
+  } @else if (loading()) {
+    <div class="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center shadow-sm" aria-busy="true">
+      <p class="text-sm font-semibold text-slate-800">Loading invoice details…</p>
+      <div class="mt-4 space-y-2">
+        @for (x of [1, 2, 3, 4, 5]; track x) {
+          <div class="h-3 animate-pulse rounded bg-slate-200"></div>
+        }
+      </div>
+    </div>
+  } @else if (viewState() === 'idle') {
+    <div class="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center text-slate-600 shadow-sm">
+      <p class="text-base font-semibold text-slate-900">Configure GSTIN &amp; period</p>
+      <p class="mt-2 max-w-lg text-sm text-slate-600">
+        Open from Returns dashboard after a successful search, or enter <span class="font-semibold">GSTIN</span> and
+        <span class="font-semibold">MMYYYY</span> above.
+      </p>
+    </div>
+  } @else {
+    @if (aggregate(); as agg) {
+      <section class="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Metrics">
+        <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+          <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Total line items</div>
+          <div class="px-4 py-4">
+            <p class="text-3xl font-bold text-emerald-700">{{ agg.totalLineItems }}</p>
+            <p class="mt-1 text-xs text-slate-600">Parsed rows · bucket size {{ agg.sourceBucketLength }}</p>
+          </div>
+        </article>
+        <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+          <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Invoices / CTINs</div>
+          <div class="px-4 py-4">
+            <p class="text-2xl font-bold text-slate-900">{{ agg.invoiceCount }} / {{ agg.ctinCount }}</p>
+            <p class="mt-1 text-xs text-slate-600">Unique invoices · distinct CTINs</p>
+          </div>
+        </article>
+        <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+          <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Taxable value</div>
+          <div class="px-4 py-4">
+            <p class="text-xl font-bold text-teal-800">₹{{ formatMoney(agg.taxableTotal) }}</p>
+          </div>
+        </article>
+        <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+          <div class="bg-[#1c2b54] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white">Last synced</div>
+          <div class="px-4 py-4">
+            <p class="text-sm font-semibold text-teal-800">{{ formatSynced(lastSyncedAt()) }}</p>
+            <div class="mt-2 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+              <p><span class="font-semibold">IGST:</span> ₹{{ formatMoney(agg.igstTotal) }}</p>
+              <p><span class="font-semibold">CGST:</span> ₹{{ formatMoney(agg.cgstTotal) }}</p>
+              <p><span class="font-semibold">SGST:</span> ₹{{ formatMoney(agg.sgstTotal) }}</p>
+              <p><span class="font-semibold">CESS:</span> ₹{{ formatMoney(agg.cessTotal) }}</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+        <label class="text-xs font-bold uppercase tracking-wide text-slate-500" for="g1a-filter">Search invoices</label>
+        <input
+          id="g1a-filter"
+          type="search"
+          autocomplete="off"
+          placeholder="CTIN, invoice no., IRN, POS…"
+          class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-inner focus:border-[#1a56a7] focus:outline-none focus:ring-2 focus:ring-blue-200"
+          [value]="filterQuery()"
+          (input)="filterQuery.set($any($event.target).value)"
+        />
+      </section>
+
+      @if (viewState() === 'empty') {
+        <div class="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+          <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-3xl text-slate-400" aria-hidden="true">∅</div>
+          <p class="text-lg font-semibold text-slate-900">No records for this section</p>
+          <p class="mt-2 max-w-md text-sm text-slate-600">
+            API returned success with an empty <span class="font-mono">message[{{ apiName() }}]</span> bucket.
+          </p>
+        </div>
+      } @else {
+        <section aria-label="Export and invoice details">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-base font-bold text-[#222f3f]">Invoice details</h2>
+            <div class="flex flex-wrap items-center gap-2">
+              <p class="text-xs text-slate-500">{{ filteredHierarchy().length }} CTIN groups</p>
+              <button
+                type="button"
+                class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50 disabled:opacity-45"
+                [disabled]="filteredHierarchy().length === 0"
+                (click)="toggleExpandCollapseAll()"
+              >
+                {{ accordionFullyExpanded() ? 'Collapse all' : 'Expand all' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            @for (g of filteredHierarchy(); track g.ctin) {
+              <article class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-between gap-3 bg-[#1c2b54] px-4 py-3 text-left text-white transition hover:bg-[#162447]"
+                  (click)="toggleCtin(g.ctin)"
+                  [attr.aria-expanded]="expandedCtins().has(g.ctin)"
+                >
+                  <div>
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-white/85">CTIN / Party</p>
+                    <p class="font-mono text-sm font-bold md:text-base">{{ g.ctin }}</p>
+                  </div>
+                  <span class="rounded-full bg-white/15 px-2 py-1 text-[11px] font-bold">{{ g.invoices.length }} invoices · {{ expandedCtins().has(g.ctin) ? '▼' : '▶' }}</span>
+                </button>
+                @if (expandedCtins().has(g.ctin)) {
+                  <div class="divide-y divide-slate-100">
+                    @for (inv of g.invoices; track inv.invoiceKey) {
+                      <div class="bg-slate-50/60">
+                        <button
+                          type="button"
+                          class="flex w-full flex-col gap-2 px-4 py-3 text-left md:flex-row md:items-center md:justify-between"
+                          (click)="toggleInvoice(g.ctin, inv.invoiceKey)"
+                          [attr.aria-expanded]="expandedInvoices().has(invoiceExpandId(g.ctin, inv.invoiceKey))"
+                        >
+                          <div class="min-w-0 flex-1">
+                            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Invoice no. · Date · Status</p>
+                            <p class="truncate font-mono text-sm font-semibold text-slate-900">{{ inv.invoiceNo }}</p>
+                            <p class="text-xs text-slate-600">{{ inv.invoiceDate }} · <span class="font-medium text-emerald-800">Parsed</span></p>
+                          </div>
+                          @if (invoiceTotals(inv); as t) {
+                            <div class="hidden gap-3 text-xs md:grid md:grid-cols-6 lg:grid-cols-8">
+                              <div>
+                                <span class="text-slate-500">Taxable</span><br /><span class="font-semibold text-teal-800">₹{{ formatMoney(t.tx) }}</span>
+                              </div>
+                              <div>
+                                <span class="text-slate-500">IGST</span><br /><span class="font-semibold">₹{{ formatMoney(t.igst) }}</span>
+                              </div>
+                              <div>
+                                <span class="text-slate-500">CGST</span><br /><span class="font-semibold">₹{{ formatMoney(t.cgst) }}</span>
+                              </div>
+                              <div>
+                                <span class="text-slate-500">SGST</span><br /><span class="font-semibold">₹{{ formatMoney(t.sgst) }}</span>
+                              </div>
+                              <div>
+                                <span class="text-slate-500">POS</span><br /><span class="font-semibold">{{ inv.pos || '—' }}</span>
+                              </div>
+                              <div class="min-w-0">
+                                <span class="text-slate-500">IRN</span><br /><span class="break-all font-mono text-[11px]">{{ inv.irn || '—' }}</span>
+                              </div>
+                            </div>
+                          }
+                        </button>
+                        @if (expandedInvoices().has(invoiceExpandId(g.ctin, inv.invoiceKey))) {
+                          <div class="overflow-x-auto border-t border-slate-200 bg-white px-2 pb-3 pt-2 md:px-4">
+                            <table class="w-full min-w-[720px] border-collapse text-left text-xs md:text-sm">
+                              <thead class="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                                <tr>
+                                  <th class="px-2 py-2">Line</th>
+                                  <th class="px-2 py-2 text-right">Taxable</th>
+                                  <th class="px-2 py-2 text-right">IGST</th>
+                                  <th class="px-2 py-2 text-right">CGST</th>
+                                  <th class="px-2 py-2 text-right">SGST</th>
+                                  <th class="px-2 py-2 text-right">CESS</th>
+                                </tr>
+                              </thead>
+                              <tbody class="divide-y divide-slate-100">
+                                @for (line of inv.items; track $index) {
+                                  <tr>
+                                    <td class="px-2 py-2">{{ line.lineLabel }}</td>
+                                    <td class="px-2 py-2 text-right font-semibold text-teal-800">₹{{ formatMoney(line.taxableValue) }}</td>
+                                    <td class="px-2 py-2 text-right">₹{{ formatMoney(line.igst) }}</td>
+                                    <td class="px-2 py-2 text-right">₹{{ formatMoney(line.cgst) }}</td>
+                                    <td class="px-2 py-2 text-right">₹{{ formatMoney(line.sgst) }}</td>
+                                    <td class="px-2 py-2 text-right">₹{{ formatMoney(line.cess) }}</td>
+                                  </tr>
+                                }
+                              </tbody>
+                            </table>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        </section>
+      }
+
+      <section class="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-inner md:p-5" aria-label="Raw response">
+        <h3 class="text-sm font-bold text-[#222f3f]">Complete API response</h3>
+        <p class="mt-1 text-xs text-slate-600">
+          Full payload returned by <span class="font-mono">POST /api/gstr1a/download/</span>. Use <span class="font-semibold">Submit retsave</span> to POST the active section to
+          <span class="font-mono">/api/gstr1a/retsave/</span> (full multi-section JSON like NIC examples can be sent the same way once composed).
+        </p>
+        <pre class="mt-3 max-h-96 overflow-auto rounded-lg border border-slate-200 bg-white p-3 font-mono text-[11px] leading-relaxed text-slate-800">{{ rawResponse() | json }}</pre>
+      </section>
+    }
+  }
+
+  <footer class="sticky bottom-0 z-10 mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg" aria-label="Workspace actions">
+    <div class="flex flex-col items-stretch gap-4 border-t-4 border-[#4db6ac] px-4 py-4 md:flex-row md:items-center md:justify-center md:gap-6 md:px-6 md:py-5">
+      <a
+        routerLink="/gstr1/workspace/returns-dashboard"
+        class="inline-flex min-h-[44px] items-center justify-center rounded-lg border-2 border-[#1c2b54] bg-white px-8 text-sm font-bold uppercase tracking-wide text-[#1c2b54] shadow-sm hover:bg-slate-50"
+      >
+        Back
+      </a>
+      <button
+        type="button"
+        class="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[#1c2b54] px-8 text-sm font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347]"
+        (click)="openResetConfirm()"
+        title="Clear RETSUM cache and section data"
+      >
+        Reset
+      </button>
+      <button
+        type="button"
+        class="inline-flex min-h-[44px] cursor-not-allowed items-center justify-center rounded-lg bg-[#1c2b54]/50 px-8 text-sm font-bold uppercase tracking-wide text-white shadow-sm"
+        disabled
+        title="Summary generation for GSTR-1A is not wired in this workspace yet."
+      >
+        Generate summary
+      </button>
+    </div>
+  </footer>
+
+  @if (resetConfirmOpen()) {
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/45 px-4 py-8" role="presentation">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="gstr1a-reset-title"
+        aria-describedby="gstr1a-reset-desc"
+        class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl md:p-8"
+      >
+        <div class="flex flex-col items-center text-center">
+          <div
+            class="mb-5 flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-full border-[3px] border-amber-500 text-[2.25rem] font-bold leading-none text-amber-600"
+            aria-hidden="true"
+          >
+            !
+          </div>
+          <h2 id="gstr1a-reset-title" class="sr-only">Confirm reset workspace</h2>
+          <p id="gstr1a-reset-desc" class="text-sm leading-relaxed text-slate-800 md:text-base">
+            Clear cached RETSUM counts and the loaded section. You can press <span class="font-semibold">Load data</span> to fetch again.
+          </p>
+          <div class="mt-8 flex w-full flex-wrap items-center justify-center gap-4">
+            <button
+              type="button"
+              class="inline-flex min-h-[44px] min-w-[6rem] items-center justify-center rounded-lg border-2 border-slate-900 bg-white px-8 text-sm font-bold uppercase tracking-wide text-slate-900 shadow-sm hover:bg-slate-50"
+              (click)="cancelResetConfirm()"
+            >
+              No
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[44px] min-w-[6rem] items-center justify-center rounded-lg bg-[#1c2b54] px-8 text-sm font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347]"
+              (click)="confirmResetWorkspace()"
+            >
+              Yes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

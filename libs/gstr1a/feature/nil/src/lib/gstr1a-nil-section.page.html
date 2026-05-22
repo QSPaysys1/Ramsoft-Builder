@@ -1,0 +1,220 @@
+<div class="gstr1a-nil-section pb-12">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li><a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a></li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li><a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a></li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li>
+        <a
+          routerLink="/gstr1a/hub"
+          [queryParams]="backToGstr1aQueryParams()"
+          class="text-[#1a56a7] hover:underline"
+          >GSTR-1A</a>
+      </li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li><span class="font-semibold text-slate-900" aria-current="page">NIL-RATED</span></li>
+    </ol>
+    <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">
+      English
+    </span>
+  </nav>
+
+  @if (!paramsValid()) {
+    <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+      <p class="font-bold">Invalid URL</p>
+      <p class="mt-1">Use a 15-character GSTIN and return period (<span class="font-mono">MMYYYY</span>) in the path.</p>
+    </div>
+  } @else {
+    <section class="mb-6 rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-md md:px-6 md:py-5">
+      <div class="grid gap-3 sm:grid-cols-3">
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">GSTIN</p>
+          <p class="mt-0.5 font-mono text-sm font-semibold text-slate-900">{{ gstin() }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">FY</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ fyLabel() }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Tax period</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ taxPeriodLabel() }} · <span class="font-mono">{{ retPeriod() }}</span></p>
+        </div>
+        <div class="sm:col-span-3">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Legal name</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ legalName() || '—' }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Trade name</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ tradeName() || '—' }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Status</p>
+          <p class="mt-0.5 text-sm font-semibold text-slate-900">
+            @if (filingLabel().length) {
+              {{ filingLabel() }}
+            } @else {
+              —
+            }
+          </p>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Last synced</p>
+          <p class="mt-0.5 text-sm font-semibold text-teal-800">{{ formatSynced(lastSyncedAt()) }}</p>
+        </div>
+      </div>
+    </section>
+
+    @if (viewState() === 'loading') {
+      <div class="mb-6 rounded-xl border border-slate-200 bg-white px-6 py-16 text-center text-sm font-medium text-slate-600 shadow-md">
+        Loading section…
+      </div>
+    }
+
+    @if (viewState() === 'error') {
+      <div class="mb-6 space-y-3 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-950">
+        @if (logicalErrorText()) {
+          <p class="font-semibold">{{ logicalErrorText() }}</p>
+        }
+        @if (httpError()) {
+          <pre class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap font-mono text-[11px]">{{ httpError() | json }}</pre>
+        }
+      </div>
+    }
+
+    @if (viewState() === 'success') {
+      <section class="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md" aria-label="Nil rated exempt non-GST">
+        <div class="bg-[#4db6ac] px-4 py-3 text-white md:px-5 md:py-4">
+          <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <h1 class="text-sm font-bold leading-snug md:text-base">
+              8A, 8B, 8C, 8D — Nil Rated, Exempted and Non-GST Supplies
+            </h1>
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                class="inline-flex min-h-[36px] items-center justify-center rounded-lg bg-[#1c2b54] px-3 text-[11px] font-bold uppercase tracking-wide text-white hover:bg-[#152347]"
+                (click)="openGstHelp()"
+              >
+                HELP ?
+              </button>
+              <button
+                type="button"
+                class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/50 bg-white/15 text-white hover:bg-white/25 disabled:opacity-50"
+                [disabled]="loading()"
+                (click)="loadSection()"
+                title="Refresh section"
+                aria-label="Refresh"
+              >
+                ↻
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-b border-slate-100 bg-slate-50/90 px-4 py-3 md:px-5">
+          <p class="text-xs text-slate-700">
+            GSTZen <span class="font-semibold">{{ sectionHint }}</span> — portal sections
+            <span class="font-semibold">8A–8D</span>. Persist with
+            <span class="font-mono text-[11px]">POST /api/gstr1a/retsave/</span>
+            (<span class="font-mono text-[11px]">nil</span> bucket).
+          </p>
+        </div>
+
+        <div class="px-4 py-5 md:px-6 md:py-6">
+          <form [formGroup]="form" (ngSubmit)="submitGstr1aRetsave()" class="space-y-6">
+            <section class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:p-5">
+              <h2 class="mb-3 text-sm font-bold text-[#1c2b54] md:text-base">Item details</h2>
+              <div class="overflow-x-auto rounded-lg border border-slate-200">
+                <table class="w-full min-w-[720px] border-collapse text-left text-xs md:text-sm">
+                  <thead>
+                    <tr class="border-b border-slate-200 bg-slate-100">
+                      <th scope="col" class="min-w-[200px] px-3 py-2.5 font-semibold text-slate-800">Description</th>
+                      <th scope="col" class="min-w-[120px] px-3 py-2.5 text-right font-semibold text-slate-800">
+                        Nil Rated Supplies (₹)
+                      </th>
+                      <th scope="col" class="min-w-[200px] px-3 py-2.5 text-right font-semibold text-slate-800">
+                        Exempted (Other than Nil rated/non-GST supply) (₹)
+                      </th>
+                      <th scope="col" class="min-w-[120px] px-3 py-2.5 text-right font-semibold text-slate-800">
+                        Non-GST Supplies (₹)
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    @for (meta of rowMeta; track meta.sply_ty; let i = $index) {
+                      <tr [formGroup]="lineGroup(i)" class="bg-white">
+                        <th scope="row" class="max-w-[280px] px-3 py-2.5 align-middle font-normal leading-snug text-slate-800">
+                          {{ meta.label }}
+                        </th>
+                        <td class="px-2 py-2 align-middle">
+                          <input
+                            type="text"
+                            inputmode="decimal"
+                            formControlName="nil_amt"
+                            class="field w-full rounded border border-slate-300 bg-white px-2 py-2 text-right font-mono text-xs tabular-nums shadow-sm md:text-sm"
+                            [class.field-error]="showFieldError(lineGroup(i).get('nil_amt')!)"
+                          />
+                        </td>
+                        <td class="px-2 py-2 align-middle">
+                          <input
+                            type="text"
+                            inputmode="decimal"
+                            formControlName="expt_amt"
+                            class="field w-full rounded border border-slate-300 bg-white px-2 py-2 text-right font-mono text-xs tabular-nums shadow-sm md:text-sm"
+                            [class.field-error]="showFieldError(lineGroup(i).get('expt_amt')!)"
+                          />
+                        </td>
+                        <td class="px-2 py-2 align-middle">
+                          <input
+                            type="text"
+                            inputmode="decimal"
+                            formControlName="ngsup_amt"
+                            class="field w-full rounded border border-slate-300 bg-white px-2 py-2 text-right font-mono text-xs tabular-nums shadow-sm md:text-sm"
+                            [class.field-error]="showFieldError(lineGroup(i).get('ngsup_amt')!)"
+                          />
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <p class="mt-3 text-[11px] font-medium text-slate-500">
+                <span class="text-red-600">*</span> Enter amounts in ₹ (up to two decimal places)
+              </p>
+            </section>
+
+            @if (retsaveError()) {
+              <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-950">
+                <p class="font-semibold">Save failed</p>
+                <pre class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap font-mono text-[11px]">{{ retsaveError() | json }}</pre>
+              </div>
+            }
+            @if (retsaveSuccessPayload()) {
+              <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+                <p class="font-semibold">Save response</p>
+                <pre class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap font-mono text-[11px]">{{ retsaveSuccessPayload() | json }}</pre>
+              </div>
+            }
+
+            <footer class="flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-4" aria-label="Actions">
+              <a
+                routerLink="/gstr1a/hub"
+                [queryParams]="backToGstr1aQueryParams()"
+                class="btn-secondary inline-flex min-h-[44px] items-center justify-center px-8 text-sm font-bold uppercase tracking-wide"
+              >
+                Back
+              </a>
+              <button
+                type="submit"
+                class="btn-primary inline-flex min-h-[44px] items-center justify-center px-8 text-sm font-bold uppercase tracking-wide"
+                [disabled]="retsaveSubmitting() || loading()"
+              >
+                {{ retsaveSubmitting() ? 'Saving…' : 'Save' }}
+              </button>
+            </footer>
+          </form>
+        </div>
+      </section>
+    }
+  }
+</div>

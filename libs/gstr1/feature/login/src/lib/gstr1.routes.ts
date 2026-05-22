@@ -103,9 +103,10 @@ export const gstr1Routes: Routes = [
           {
             path: 'section/:apiName/:gstin/:retPeriod/amend-ecoma',
             loadComponent: () =>
-              import('./pages/gstr1-ecoma-amend-record.page').then(
-                (m) => m.Gstr1EcomaAmendRecordPageComponent,
+              import('./pages/gstr1a-route-redirect.page').then(
+                (m) => m.Gstr1aRouteRedirectPageComponent,
               ),
+            data: { gstr1aTarget: 'gstr1a-view', gstr1aAmendSuffix: 'amend-ecoma' },
           },
           {
             path: 'section/:apiName/:gstin/:retPeriod/supplies-eco',
@@ -117,9 +118,10 @@ export const gstr1Routes: Routes = [
           {
             path: 'section/:apiName/:gstin/:retPeriod/amend-supecoa',
             loadComponent: () =>
-              import('./pages/gstr1-supecoa-amend-record.page').then(
-                (m) => m.Gstr1SupecoaAmendRecordPageComponent,
+              import('./pages/gstr1a-route-redirect.page').then(
+                (m) => m.Gstr1aRouteRedirectPageComponent,
               ),
+            data: { gstr1aTarget: 'gstr1a-view', gstr1aAmendSuffix: 'amend-supecoa' },
           },
           {
             path: 'section/:apiName/:gstin/:retPeriod/supplies-us-95',
@@ -131,58 +133,66 @@ export const gstr1Routes: Routes = [
           {
             path: 'section/:apiName/:gstin/:retPeriod/amend-b2b',
             loadComponent: () =>
-              import('./pages/gstr1-b2ba-amend-record.page').then(
-                (m) => m.Gstr1B2baAmendRecordPageComponent,
+              import('./pages/gstr1a-route-redirect.page').then(
+                (m) => m.Gstr1aRouteRedirectPageComponent,
               ),
+            data: { gstr1aTarget: 'gstr1a-view', gstr1aAmendSuffix: 'amend-b2b' },
           },
           {
             path: 'section/:apiName/:gstin/:retPeriod/amend-b2cla',
             loadComponent: () =>
-              import('./pages/gstr1-b2cla-amend-record.page').then(
-                (m) => m.Gstr1B2claAmendRecordPageComponent,
+              import('./pages/gstr1a-route-redirect.page').then(
+                (m) => m.Gstr1aRouteRedirectPageComponent,
               ),
+            data: { gstr1aTarget: 'gstr1a-view', gstr1aAmendSuffix: 'amend-b2cla' },
           },
           {
             path: 'section/:apiName/:gstin/:retPeriod/amend-exp',
             loadComponent: () =>
-              import('./pages/gstr1-expa-amend-record.page').then(
-                (m) => m.Gstr1ExpaAmendRecordPageComponent,
+              import('./pages/gstr1a-route-redirect.page').then(
+                (m) => m.Gstr1aRouteRedirectPageComponent,
               ),
+            data: { gstr1aTarget: 'gstr1a-view', gstr1aAmendSuffix: 'amend-exp' },
           },
           {
             path: 'section/:apiName/:gstin/:retPeriod/amend-cdnra',
             loadComponent: () =>
-              import('./pages/gstr1-cdnra-amend-record.page').then(
-                (m) => m.Gstr1CdnraAmendRecordPageComponent,
+              import('./pages/gstr1a-route-redirect.page').then(
+                (m) => m.Gstr1aRouteRedirectPageComponent,
               ),
+            data: { gstr1aTarget: 'gstr1a-view', gstr1aAmendSuffix: 'amend-cdnra' },
           },
           {
             path: 'section/:apiName/:gstin/:retPeriod/amend-cdnura',
             loadComponent: () =>
-              import('./pages/gstr1-cdnura-amend-record.page').then(
-                (m) => m.Gstr1CdnuraAmendRecordPageComponent,
+              import('./pages/gstr1a-route-redirect.page').then(
+                (m) => m.Gstr1aRouteRedirectPageComponent,
               ),
+            data: { gstr1aTarget: 'gstr1a-view', gstr1aAmendSuffix: 'amend-cdnura' },
           },
           {
             path: 'section/:apiName/:gstin/:retPeriod/amend-b2csa',
             loadComponent: () =>
-              import('./pages/gstr1-b2csa-amend-record.page').then(
-                (m) => m.Gstr1B2csaAmendRecordPageComponent,
+              import('./pages/gstr1a-route-redirect.page').then(
+                (m) => m.Gstr1aRouteRedirectPageComponent,
               ),
+            data: { gstr1aTarget: 'gstr1a-view', gstr1aAmendSuffix: 'amend-b2csa' },
           },
           {
             path: 'section/:apiName/:gstin/:retPeriod/amend-ata',
             loadComponent: () =>
-              import('./pages/gstr1-ata-amend-record.page').then(
-                (m) => m.Gstr1AtaAmendRecordPageComponent,
+              import('./pages/gstr1a-route-redirect.page').then(
+                (m) => m.Gstr1aRouteRedirectPageComponent,
               ),
+            data: { gstr1aTarget: 'gstr1a-view', gstr1aAmendSuffix: 'amend-ata' },
           },
           {
             path: 'section/:apiName/:gstin/:retPeriod/amend-txpa',
             loadComponent: () =>
-              import('./pages/gstr1-txpa-amend-record.page').then(
-                (m) => m.Gstr1TxpaAmendRecordPageComponent,
+              import('./pages/gstr1a-route-redirect.page').then(
+                (m) => m.Gstr1aRouteRedirectPageComponent,
               ),
+            data: { gstr1aTarget: 'gstr1a-view', gstr1aAmendSuffix: 'amend-txpa' },
           },
           {
             path: 'section/:apiName/:gstin/:retPeriod',
@@ -196,77 +206,90 @@ export const gstr1Routes: Routes = [
       {
         path: 'gstr1a-b2b/:gstin/:retPeriod',
         loadComponent: () =>
-          import('./pages/gstr1a-b2b-section.page').then(
-            (m) => m.Gstr1aB2bSectionPageComponent,
+          import('./pages/gstr1a-route-redirect.page').then(
+            (m) => m.Gstr1aRouteRedirectPageComponent,
           ),
+        data: { gstr1aTarget: 'gstr1a-b2b' },
       },
       {
         path: 'gstr1a-b2cl/:gstin/:retPeriod',
         loadComponent: () =>
-          import('./pages/gstr1a-b2cl-section.page').then(
-            (m) => m.Gstr1aB2clSectionPageComponent,
+          import('./pages/gstr1a-route-redirect.page').then(
+            (m) => m.Gstr1aRouteRedirectPageComponent,
           ),
+        data: { gstr1aTarget: 'gstr1a-b2cl' },
       },
       {
         path: 'gstr1a-exp/:gstin/:retPeriod',
         loadComponent: () =>
-          import('./pages/gstr1a-exp-section.page').then(
-            (m) => m.Gstr1aExpSectionPageComponent,
+          import('./pages/gstr1a-route-redirect.page').then(
+            (m) => m.Gstr1aRouteRedirectPageComponent,
           ),
+        data: { gstr1aTarget: 'gstr1a-exp' },
       },
       {
         path: 'gstr1a-b2cs/:gstin/:retPeriod',
         loadComponent: () =>
-          import('./pages/gstr1a-b2cs-section.page').then(
-            (m) => m.Gstr1aB2csSectionPageComponent,
+          import('./pages/gstr1a-route-redirect.page').then(
+            (m) => m.Gstr1aRouteRedirectPageComponent,
           ),
+        data: { gstr1aTarget: 'gstr1a-b2cs' },
       },
       {
         path: 'gstr1a-nil/:gstin/:retPeriod',
         loadComponent: () =>
-          import('./pages/gstr1a-nil-section.page').then(
-            (m) => m.Gstr1aNilSectionPageComponent,
+          import('./pages/gstr1a-route-redirect.page').then(
+            (m) => m.Gstr1aRouteRedirectPageComponent,
           ),
+        data: { gstr1aTarget: 'gstr1a-nil' },
       },
       {
         path: 'gstr1a-cdnr/:gstin/:retPeriod',
         loadComponent: () =>
-          import('./pages/gstr1a-cdnr-section.page').then(
-            (m) => m.Gstr1aCdnrSectionPageComponent,
+          import('./pages/gstr1a-route-redirect.page').then(
+            (m) => m.Gstr1aRouteRedirectPageComponent,
           ),
+        data: { gstr1aTarget: 'gstr1a-cdnr' },
       },
       {
         path: 'gstr1a-cdnur/:gstin/:retPeriod',
         loadComponent: () =>
-          import('./pages/gstr1a-cdnur-section.page').then(
-            (m) => m.Gstr1aCdnurSectionPageComponent,
+          import('./pages/gstr1a-route-redirect.page').then(
+            (m) => m.Gstr1aRouteRedirectPageComponent,
           ),
+        data: { gstr1aTarget: 'gstr1a-cdnur' },
       },
       {
         path: 'gstr1a-at/:gstin/:retPeriod',
         loadComponent: () =>
-          import('./pages/gstr1a-at-section.page').then(
-            (m) => m.Gstr1aAtSectionPageComponent,
+          import('./pages/gstr1a-route-redirect.page').then(
+            (m) => m.Gstr1aRouteRedirectPageComponent,
           ),
+        data: { gstr1aTarget: 'gstr1a-at' },
       },
       {
         path: 'gstr1a-at/:gstin/:retPeriod/add-statewise',
         loadComponent: () =>
-          import('./pages/gstr1a-at-add-statewise.page').then(
-            (m) => m.Gstr1aAtAddStatewisePageComponent,
+          import('./pages/gstr1a-route-redirect.page').then(
+            (m) => m.Gstr1aRouteRedirectPageComponent,
           ),
+        data: { gstr1aTarget: 'gstr1a-at' },
       },
       {
         path: 'gstr1a-hsn/:gstin/:retPeriod',
         loadComponent: () =>
-          import('./pages/gstr1a-hsn-section.page').then(
-            (m) => m.Gstr1aHsnSectionPageComponent,
+          import('./pages/gstr1a-route-redirect.page').then(
+            (m) => m.Gstr1aRouteRedirectPageComponent,
           ),
+        data: { gstr1aTarget: 'gstr1a-hsn' },
       },
       {
         path: 'gstr1a-view',
         loadComponent: () =>
-          import('./pages/gstr1a-view.page').then((m) => m.Gstr1aViewPageComponent),
+          import('./pages/gstr1a-route-redirect.page').then(
+            (m) => m.Gstr1aRouteRedirectPageComponent,
+          ),
+        data: { gstr1aTarget: 'gstr1a-view' },
       },
       {
         path: 'gstr2a-view',

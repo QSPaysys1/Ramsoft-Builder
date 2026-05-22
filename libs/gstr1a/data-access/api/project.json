@@ -1,0 +1,16 @@
+{
+  "name": "gstr1a-data-access-api",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1a/data-access/api/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": [
+    "type:data-access",
+    "domain:gstr1a"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

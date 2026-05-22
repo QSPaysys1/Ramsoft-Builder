@@ -1,0 +1,16 @@
+{
+  "name": "gstr1a-ui-loaders",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1a/ui/loaders/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": [
+    "type:ui",
+    "domain:gstr1a"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

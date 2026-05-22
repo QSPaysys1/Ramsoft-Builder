@@ -256,7 +256,7 @@
                   @if (hasValidGstin() && isGstr1aPrepareEnabled(c)) {
                     <a
                       class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-3 text-center text-xs font-bold uppercase tracking-wide text-white hover:bg-[#154a8f] sm:flex-none"
-                      routerLink="/gstr1/workspace/gstr1a-view"
+                      routerLink="/gstr1a/hub"
                       [queryParams]="{
                         gstin: profileGstin(),
                         ret_period: selectedRetPeriod(),

@@ -1,0 +1,16 @@
+{
+  "name": "gstr1a-shared-session",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1a/shared/session/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": [
+    "type:shared",
+    "domain:gstr1a"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

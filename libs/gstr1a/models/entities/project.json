@@ -1,0 +1,16 @@
+{
+  "name": "gstr1a-models-entities",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1a/models/entities/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": [
+    "type:models",
+    "domain:gstr1a"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "gstr1a-utils-validators",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1a/utils/validators/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": [
+    "type:utils",
+    "domain:gstr1a"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

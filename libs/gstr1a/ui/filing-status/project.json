@@ -1,0 +1,16 @@
+{
+  "name": "gstr1a-ui-filing-status",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1a/ui/filing-status/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": [
+    "type:ui",
+    "domain:gstr1a"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

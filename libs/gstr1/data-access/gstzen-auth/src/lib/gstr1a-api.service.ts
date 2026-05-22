@@ -4,7 +4,10 @@ import type { Gstr1aDownloadRequestBody } from './gstr1-download.models';
 import { GSTR1_GSTZEN_AUTH_CONFIG } from './gstr1-gstzen-auth.config';
 import { GstzenHttpClient } from './gstzen-http.client';
 
-/** GSTR-1A download and retsave APIs. */
+/**
+ * GSTR-1A download and retsave APIs.
+ * Canonical implementation also available at `@ramsoft-builder/gstr1a/data-access/api`.
+ */
 @Injectable({ providedIn: 'root' })
 export class Gstr1aApiService {
   private readonly http = inject(GstzenHttpClient);

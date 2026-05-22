@@ -1,0 +1,16 @@
+{
+  "name": "gstr1a-shared-pagination",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1a/shared/pagination/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": [
+    "type:shared",
+    "domain:gstr1a"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

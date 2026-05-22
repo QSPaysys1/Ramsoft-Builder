@@ -1,0 +1,16 @@
+{
+  "name": "gstr1a-feature-b2cs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1a/feature/b2cs/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": [
+    "type:feature",
+    "domain:gstr1a"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
