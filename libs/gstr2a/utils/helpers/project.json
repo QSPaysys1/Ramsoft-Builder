@@ -1,0 +1,19 @@
+{
+  "name": "gstr2a-utils-helpers",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr2a/utils/helpers/src",
+  "projectType": "library",
+  "tags": ["type:utils", "domain:gstr2a"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr2a/utils/helpers",
+        "main": "libs/gstr2a/utils/helpers/src/index.ts",
+        "tsConfig": "libs/gstr2a/utils/helpers/tsconfig.lib.json",
+        "assets": ["libs/gstr2a/utils/helpers/*.md"]
+      }
+    }
+  }
+}

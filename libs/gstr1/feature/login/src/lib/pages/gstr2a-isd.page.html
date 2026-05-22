@@ -7,13 +7,13 @@
       <li aria-hidden="true"><span>›</span></li>
       <li>
         <a
-          routerLink="/gstr1/workspace/gstr2a-view"
+          routerLink="/gstr2a/hub"
           [queryParams]="backToGstr2aQueryParams()"
           class="text-[#1a56a7] hover:underline"
           >GSTR-2A</a>
       </li>
       <li aria-hidden="true"><span>›</span></li>
-      <li><span class="font-semibold text-slate-900" aria-current="page">ISD Credits</span></li>
+      <li><span class="font-semibold text-slate-900" aria-current="page">{{ breadcrumbLabel() }}</span></li>
     </ol>
     <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">
       English
@@ -27,7 +27,7 @@
         Open from <span class="font-semibold">GSTR-2A → ISD Credits</span> with GSTIN and return period
         (<span class="font-mono">MMYYYY</span>).
       </p>
-      <a routerLink="/gstr1/workspace/gstr2a-view" class="mt-3 inline-flex text-sm font-semibold text-[#1a56a7] hover:underline"
+      <a routerLink="/gstr2a/hub" class="mt-3 inline-flex text-sm font-semibold text-[#1a56a7] hover:underline"
         >Back to GSTR-2A</a>
     </div>
   } @else {
@@ -58,7 +58,7 @@
 
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md" aria-label="ISD credits">
       <div class="gstr2a-isd__header-row bg-[#4db6ac] px-4 py-3 text-white md:px-5 md:py-4">
-        <h1 class="text-sm font-bold md:text-base">ISD Credits</h1>
+        <h1 class="text-sm font-bold md:text-base">{{ pageTitle() }}</h1>
         <button
           type="button"
           class="inline-flex min-h-[32px] shrink-0 items-center gap-1.5 rounded bg-[#1c2b54] px-3 text-[11px] font-bold uppercase tracking-wide text-white hover:bg-[#152347]"
@@ -243,7 +243,7 @@
 
       <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50/80 px-4 py-4 md:px-5">
         <a
-          routerLink="/gstr1/workspace/gstr2a-view"
+          routerLink="/gstr2a/hub"
           [queryParams]="backToGstr2aQueryParams()"
           class="inline-flex min-h-[40px] items-center justify-center rounded-lg border-2 border-[#1c2b54] bg-white px-6 text-xs font-bold uppercase tracking-wide text-[#1c2b54] hover:bg-slate-50"
         >

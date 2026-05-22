@@ -190,6 +190,10 @@ export class Gstr2aViewPageComponent {
       void this.router.navigate(['/gstr1/workspace/gstr2a-isd'], { queryParams });
       return;
     }
+    if (tile.id === 'isda') {
+      void this.router.navigate(['/gstr1/workspace/gstr2a-isda'], { queryParams });
+      return;
+    }
     if (tile.id === 'tds') {
       void this.router.navigate(['/gstr1/workspace/gstr2a-tds'], { queryParams });
       return;

@@ -1,0 +1,19 @@
+{
+  "name": "gstr2a-utils-transformers",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr2a/utils/transformers/src",
+  "projectType": "library",
+  "tags": ["type:utils", "domain:gstr2a"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr2a/utils/transformers",
+        "main": "libs/gstr2a/utils/transformers/src/index.ts",
+        "tsConfig": "libs/gstr2a/utils/transformers/tsconfig.lib.json",
+        "assets": ["libs/gstr2a/utils/transformers/*.md"]
+      }
+    }
+  }
+}

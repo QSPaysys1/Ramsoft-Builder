@@ -39,14 +39,18 @@ export class UserDashboardRepository {
     }
     return new Observable((subscriber) => {
       let channel: RealtimeChannel | null = null;
+      let cancelled = false;
 
-      const load = async () => {
+      const load = async (): Promise<void> => {
         const { data, error } = await c
           .from('user_dashboard_fy')
           .select('*')
           .eq('user_id', userId)
           .eq('fy_key', fyKey)
           .maybeSingle();
+        if (cancelled) {
+          return;
+        }
         if (error || !data) {
           subscriber.next({});
         } else {
@@ -54,9 +58,16 @@ export class UserDashboardRepository {
         }
       };
 
-      void load().then(() => {
-        channel = c
-          .channel(`dash-${userId}-${fyKey}`)
+      const channelName = `dash-${userId}-${fyKey}`;
+
+      void (async () => {
+        await load();
+        if (cancelled) {
+          return;
+        }
+        // Register postgres_changes before subscribe() (Supabase realtime requirement).
+        channel = c.channel(channelName);
+        channel
           .on(
             'postgres_changes',
             {
@@ -68,20 +79,22 @@ export class UserDashboardRepository {
             (payload) => {
               if (payload.eventType === 'DELETE') {
                 void load();
-              } else {
-                const row = payload.new as { fy_key?: string } | undefined;
-                if (row?.fy_key === fyKey) {
-                  void load();
-                }
+                return;
+              }
+              const row = payload.new as { fy_key?: string } | undefined;
+              if (row?.fy_key === fyKey) {
+                void load();
               }
             },
           )
           .subscribe();
-      });
+      })();
 
       return () => {
+        cancelled = true;
         if (channel) {
           void c.removeChannel(channel);
+          channel = null;
         }
       };
     });

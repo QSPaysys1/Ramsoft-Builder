@@ -6,6 +6,34 @@ import {
   gstr2Str,
 } from './gstr2-response.utils';
 
+function extractIsdSectionArray(
+  msg: Record<string, unknown>,
+  sectionKey: 'isd' | 'isda',
+): unknown[] {
+  const direct = msg[sectionKey];
+  if (Array.isArray(direct)) {
+    return direct;
+  }
+  if (direct && typeof direct === 'object' && !Array.isArray(direct)) {
+    const inner = direct as Record<string, unknown>;
+    for (const k of ['data', 'list', 'credits', 'documents', 'doclist'] as const) {
+      const v = inner[k];
+      if (Array.isArray(v)) {
+        return v;
+      }
+    }
+    return [direct];
+  }
+  const data = msg['data'];
+  if (data && typeof data === 'object') {
+    const nested = (data as Record<string, unknown>)[sectionKey];
+    if (Array.isArray(nested)) {
+      return nested;
+    }
+  }
+  return [];
+}
+
 function extractIsdRawArray(payload: unknown): unknown[] {
   const root = gstr2AsRecord(payload);
   if (!root) {
@@ -13,26 +41,9 @@ function extractIsdRawArray(payload: unknown): unknown[] {
   }
   const msg = gstr2AsRecord(root['message']);
   if (msg) {
-    const direct = msg['isd'];
-    if (Array.isArray(direct)) {
-      return direct;
-    }
-    if (direct && typeof direct === 'object' && !Array.isArray(direct)) {
-      const inner = direct as Record<string, unknown>;
-      for (const k of ['data', 'list', 'credits', 'documents', 'doclist'] as const) {
-        const v = inner[k];
-        if (Array.isArray(v)) {
-          return v;
-        }
-      }
-      return [direct];
-    }
-    const data = msg['data'];
-    if (data && typeof data === 'object') {
-      const nested = (data as Record<string, unknown>)['isd'];
-      if (Array.isArray(nested)) {
-        return nested;
-      }
+    const fromMsg = extractIsdSectionArray(msg, 'isd');
+    if (fromMsg.length > 0) {
+      return fromMsg;
     }
   }
   for (const k of ['isd', 'ISD', 'data', 'Data'] as const) {
@@ -163,11 +174,37 @@ export function gstr2aIsdRowKey(row: Gstr2aIsdCreditRow): string {
   ].join('::');
 }
 
+function extractIsdaRawArray(payload: unknown): unknown[] {
+  const root = gstr2AsRecord(payload);
+  if (!root) {
+    return [];
+  }
+  const msg = gstr2AsRecord(root['message']);
+  if (msg) {
+    const fromMsg = extractIsdSectionArray(msg, 'isda');
+    if (fromMsg.length > 0) {
+      return fromMsg;
+    }
+  }
+  for (const k of ['isda', 'ISDA'] as const) {
+    const v = root[k];
+    if (Array.isArray(v)) {
+      return v;
+    }
+  }
+  return [];
+}
+
+export type Gstr2aIsdSection = 'isd' | 'isda';
+
 /**
- * Normalizes GSTZen `POST gstr2/isd/` into ISD credit rows.
+ * Normalizes GSTZen `POST gstr2/isd/` into ISD / ISD-amendment credit rows.
  */
-export function parseGstr2IsdCreditsFromPayload(payload: unknown): Gstr2aIsdCreditRow[] {
-  const raw = extractIsdRawArray(payload);
+export function parseGstr2IsdCreditsFromPayload(
+  payload: unknown,
+  section: Gstr2aIsdSection = 'isd',
+): Gstr2aIsdCreditRow[] {
+  const raw = section === 'isda' ? extractIsdaRawArray(payload) : extractIsdRawArray(payload);
   const flat = flattenIsdCredits(raw);
   const seen = new Set<string>();
   const unique: Gstr2aIsdCreditRow[] = [];
@@ -188,8 +225,14 @@ export function parseGstr2IsdCreditsFromPayload(payload: unknown): Gstr2aIsdCred
   });
 }
 
-export function gstr2IsdLogicalError(payload: unknown): string | null {
-  return gstr2LogicalError(payload, 'GSTR-2 ISD');
+export function gstr2IsdLogicalError(
+  payload: unknown,
+  section: Gstr2aIsdSection = 'isd',
+): string | null {
+  return gstr2LogicalError(
+    payload,
+    section === 'isda' ? 'GSTR-2 ISD (Amendment)' : 'GSTR-2 ISD',
+  );
 }
 
 export interface Gstr2aIsdCsvColumn {

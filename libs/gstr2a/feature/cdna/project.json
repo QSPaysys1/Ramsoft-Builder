@@ -1,0 +1,13 @@
+{
+  "name": "gstr2a-feature-cdna",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr2a/feature/cdna/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:feature", "domain:gstr2a"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

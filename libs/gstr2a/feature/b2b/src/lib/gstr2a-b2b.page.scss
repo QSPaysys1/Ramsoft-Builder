@@ -1,0 +1,17 @@
+:host {
+  display: block;
+}
+
+.gstr2a-b2b {
+  .gstr2a-invoice-table th {
+    padding: 0.5rem 0.75rem;
+    font-weight: 600;
+    color: #1e293b;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .gstr2a-invoice-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+}

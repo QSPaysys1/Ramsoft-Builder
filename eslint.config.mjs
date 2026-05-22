@@ -17,6 +17,19 @@ export default [
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
           depConstraints: [
             {
+              sourceTag: 'domain:gstr2a',
+              onlyDependOnLibsWithTags: [
+                'domain:gstr2a',
+                'domain:gstr1',
+                'domain:auth',
+                'domain:e-invoices',
+              ],
+            },
+            {
+              sourceTag: 'domain:gstr1',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+            {
               sourceTag: '*',
               onlyDependOnLibsWithTags: ['*'],
             },

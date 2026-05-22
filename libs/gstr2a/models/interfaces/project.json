@@ -1,0 +1,19 @@
+{
+  "name": "gstr2a-models-interfaces",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr2a/models/interfaces/src",
+  "projectType": "library",
+  "tags": ["type:models", "domain:gstr2a"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr2a/models/interfaces",
+        "main": "libs/gstr2a/models/interfaces/src/index.ts",
+        "tsConfig": "libs/gstr2a/models/interfaces/tsconfig.lib.json",
+        "assets": ["libs/gstr2a/models/interfaces/*.md"]
+      }
+    }
+  }
+}

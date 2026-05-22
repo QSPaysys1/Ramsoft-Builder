@@ -1,0 +1,19 @@
+{
+  "name": "gstr2a-utils-mappers",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr2a/utils/mappers/src",
+  "projectType": "library",
+  "tags": ["type:utils", "domain:gstr2a"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr2a/utils/mappers",
+        "main": "libs/gstr2a/utils/mappers/src/index.ts",
+        "tsConfig": "libs/gstr2a/utils/mappers/tsconfig.lib.json",
+        "assets": ["libs/gstr2a/utils/mappers/*.md"]
+      }
+    }
+  }
+}

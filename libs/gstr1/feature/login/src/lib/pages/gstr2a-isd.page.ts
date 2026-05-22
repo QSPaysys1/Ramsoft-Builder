@@ -23,6 +23,7 @@ import {
   parseGstr2IsdCreditsFromPayload,
   RETURN_PERIOD_REGEX,
   type Gstr2aIsdCreditRow,
+  type Gstr2aIsdSection,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
 import { catchError, firstValueFrom, of, switchMap } from 'rxjs';
 import {
@@ -32,6 +33,10 @@ import {
 } from '../utils/gstr2a-period-labels';
 
 type ViewState = 'idle' | 'loading' | 'success' | 'empty' | 'error';
+
+function readIsdSection(data: Record<string, unknown>): Gstr2aIsdSection {
+  return data['isdSection'] === 'isda' ? 'isda' : 'isd';
+}
 
 export interface Gstr2aIsdColumnDef {
   readonly id: string;
@@ -115,6 +120,18 @@ export class Gstr2aIsdPageComponent {
   private readonly authStore = inject(AuthStore);
   private readonly userProfile = inject(UserProfileRepository);
 
+  readonly isdSection = signal<Gstr2aIsdSection>(
+    readIsdSection(this.route.snapshot.data),
+  );
+  readonly pageTitle = computed(() =>
+    this.isdSection() === 'isda'
+      ? 'Amendments to ISD Credits'
+      : 'ISD Credits',
+  );
+  readonly breadcrumbLabel = computed(() =>
+    this.isdSection() === 'isda' ? 'ISD Amendments' : 'ISD Credits',
+  );
+
   readonly gstin = signal('');
   readonly retPeriod = signal('');
   readonly filingLabel = signal('');
@@ -177,6 +194,16 @@ export class Gstr2aIsdPageComponent {
   );
 
   constructor() {
+    this.route.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
+      const next = readIsdSection(data);
+      if (next !== this.isdSection()) {
+        this.isdSection.set(next);
+        if (this.paramsValid() && isPlatformBrowser(this.platformId)) {
+          void this.loadIsdCredits();
+        }
+      }
+    });
+
     this.route.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((q) => {
@@ -317,13 +344,14 @@ export class Gstr2aIsdPageComponent {
       const payload = await firstValueFrom(
         this.api.fetchGstr2Isd({ gstin, ret_period }),
       );
-      const topErr = gstr2IsdLogicalError(payload);
+      const section = this.isdSection();
+      const topErr = gstr2IsdLogicalError(payload, section);
       if (topErr) {
         this.logicalError.set(topErr);
         this.viewState.set('error');
         return;
       }
-      const rows = parseGstr2IsdCreditsFromPayload(payload);
+      const rows = parseGstr2IsdCreditsFromPayload(payload, section);
       this.creditRows.set(rows);
       this.viewState.set(rows.length > 0 ? 'success' : 'empty');
     } catch (err: unknown) {
@@ -348,7 +376,7 @@ export class Gstr2aIsdPageComponent {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `gstr2a-isd-${this.gstin()}-${this.retPeriod()}.csv`;
+    a.download = `gstr2a-${this.isdSection()}-${this.gstin()}-${this.retPeriod()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }

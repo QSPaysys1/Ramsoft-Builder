@@ -271,7 +271,10 @@ export const gstr1Routes: Routes = [
       {
         path: 'gstr2a-view',
         loadComponent: () =>
-          import('./pages/gstr2a-view.page').then((m) => m.Gstr2aViewPageComponent),
+          import('./pages/gstr2a-route-redirect.page').then(
+            (m) => m.Gstr2aRouteRedirectPageComponent,
+          ),
+        data: { gstr2aTarget: 'hub' },
       },
       {
         path: 'gstr2b-view',
@@ -335,7 +338,10 @@ export const gstr1Routes: Routes = [
       {
         path: 'gstr2a-b2b',
         loadComponent: () =>
-          import('./pages/gstr2a-b2b.page').then((m) => m.Gstr2aB2bPageComponent),
+          import('./pages/gstr2a-route-redirect.page').then(
+            (m) => m.Gstr2aRouteRedirectPageComponent,
+          ),
+        data: { gstr2aTarget: 'b2b' },
       },
       {
         path: 'gstr2a-b2ba',
@@ -362,6 +368,13 @@ export const gstr1Routes: Routes = [
         path: 'gstr2a-isd',
         loadComponent: () =>
           import('./pages/gstr2a-isd.page').then((m) => m.Gstr2aIsdPageComponent),
+        data: { isdSection: 'isd' },
+      },
+      {
+        path: 'gstr2a-isda',
+        loadComponent: () =>
+          import('./pages/gstr2a-isd.page').then((m) => m.Gstr2aIsdPageComponent),
+        data: { isdSection: 'isda' },
       },
       {
         path: 'gstr2a-tds',

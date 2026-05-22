@@ -1,0 +1,19 @@
+{
+  "name": "gstr2a-shared-return-period",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr2a/shared/return-period/src",
+  "projectType": "library",
+  "tags": ["type:shared", "domain:gstr2a"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr2a/shared/return-period",
+        "main": "libs/gstr2a/shared/return-period/src/index.ts",
+        "tsConfig": "libs/gstr2a/shared/return-period/tsconfig.lib.json",
+        "assets": ["libs/gstr2a/shared/return-period/*.md"]
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "gstr2a-models-enums",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr2a/models/enums/src",
+  "projectType": "library",
+  "tags": ["type:models", "domain:gstr2a"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr2a/models/enums",
+        "main": "libs/gstr2a/models/enums/src/index.ts",
+        "tsConfig": "libs/gstr2a/models/enums/tsconfig.lib.json",
+        "assets": ["libs/gstr2a/models/enums/*.md"]
+      }
+    }
+  }
+}
