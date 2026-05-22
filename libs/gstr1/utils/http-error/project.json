@@ -1,0 +1,9 @@
+{
+  "name": "utils-http-error-gstr1",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1/utils/http-error/src",
+  "projectType": "library",
+  "tags": ["domain:gstr1", "type:utils"],
+  "// targets": "to see all targets run: nx show project utils-http-error-gstr1 --web",
+  "targets": {}
+}

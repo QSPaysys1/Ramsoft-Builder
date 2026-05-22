@@ -1,5 +1,4 @@
 import { JsonPipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -20,12 +19,15 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
-  Gstr1GstnOtpApiService,
   RETURN_PERIOD_REGEX,
   coerceGstr1DownloadApiName,
   type Gstr1DownloadApiName,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
-import { firstValueFrom, merge } from 'rxjs';
+import {
+  Gstr1SectionRetsaveFacade,
+  submitGstr1SectionRetsave,
+} from '@ramsoft-builder/gstr1/data-access/gstr1-filing';
+import { merge } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import {
   GSTR1_NIL_RESAVE_INV_ORDER,
@@ -58,6 +60,7 @@ function roundMoney2(n: number): number {
   selector: 'lib-gstr1-nil-supplies-page',
   standalone: true,
   imports: [JsonPipe, RouterLink, ReactiveFormsModule],
+  providers: [Gstr1SectionRetsaveFacade],
   templateUrl: './gstr1-nil-supplies.page.html',
   styleUrl: './gstr1-b2b-add-record.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,7 +71,7 @@ export class Gstr1NilSuppliesPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
-  private readonly api = inject(Gstr1GstnOtpApiService);
+  private readonly retsaveFacade = inject(Gstr1SectionRetsaveFacade);
   private readonly cdr = inject(ChangeDetectorRef);
 
   readonly apiName = signal<Gstr1DownloadApiName>('nil');
@@ -79,9 +82,9 @@ export class Gstr1NilSuppliesPageComponent {
 
   readonly rowMeta = GSTR1_NIL_SUPPLY_ROWS;
 
-  readonly saveSubmitting = signal(false);
-  readonly saveError = signal<unknown>(null);
-  readonly saveSuccessPayload = signal<unknown>(null);
+  readonly saveSubmitting = this.retsaveFacade.saveSubmitting;
+  readonly saveError = this.retsaveFacade.saveError;
+  readonly saveSuccessPayload = this.retsaveFacade.saveSuccessPayload;
   readonly requestPayloadJson = signal<string>('');
 
   readonly form = this.fb.group({
@@ -235,41 +238,10 @@ export class Gstr1NilSuppliesPageComponent {
       return;
     }
 
-    this.saveSubmitting.set(true);
-    this.saveError.set(null);
-    this.saveSuccessPayload.set(null);
-
-    const payload = this.buildRetsavePayload();
-    if (!payload) {
-      this.saveSubmitting.set(false);
-      this.cdr.markForCheck();
-      return;
-    }
-
-    try {
-      const res = await firstValueFrom(this.api.retsaveGstr1Return(payload));
-      this.saveSuccessPayload.set(res);
-    } catch (err: unknown) {
-      if (err instanceof HttpErrorResponse) {
-        let body = err.error;
-        if (typeof body === 'string') {
-          try {
-            body = JSON.parse(body) as unknown;
-          } catch {
-            /* keep string */
-          }
-        }
-        this.saveError.set({
-          status: err.status,
-          statusText: err.statusText,
-          body,
-        });
-      } else {
-        this.saveError.set({ message: err instanceof Error ? err.message : String(err) });
-      }
-    } finally {
-      this.saveSubmitting.set(false);
-      this.cdr.markForCheck();
-    }
+    await submitGstr1SectionRetsave(this.retsaveFacade, {
+      isGstr1a: false,
+      buildPayload: () => this.buildRetsavePayload(),
+    });
+    this.cdr.markForCheck();
   }
 }

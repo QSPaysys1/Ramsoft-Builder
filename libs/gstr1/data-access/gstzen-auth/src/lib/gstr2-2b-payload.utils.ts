@@ -163,7 +163,7 @@ function extractGstr2bDataRoot(payload: unknown): Record<string, unknown> | unde
   }
   const msg = gstr2MessageRecord(root);
   if (msg) {
-    let data = gstr2AsRecord(msg['data']);
+    const data = gstr2AsRecord(msg['data']);
     if (data) {
       return unwrapGstr2bStatementData(data);
     }

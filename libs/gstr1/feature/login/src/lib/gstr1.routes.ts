@@ -1,17 +1,10 @@
 import { Routes } from '@angular/router';
-import {
-  gstr1AuthGuard,
-  gstr1LoginRedirectGuard,
-} from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
+import { gstr1AuthGuard } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
 import { returnsDashboardRoute } from './returns-dashboard.routes';
+import { gstr1AuthRoutes } from './routes/gstr1-auth.routes';
 
 export const gstr1Routes: Routes = [
-  {
-    path: 'login',
-    loadComponent: () =>
-      import('./pages/gstr1-login.page').then((m) => m.Gstr1LoginPageComponent),
-    canActivate: [gstr1LoginRedirectGuard],
-  },
+  ...gstr1AuthRoutes,
   {
     path: 'workspace',
     loadComponent: () =>
@@ -430,30 +423,6 @@ export const gstr1Routes: Routes = [
           ),
       },
     ],
-  },
-  {
-    path: 'gstn/generate-otp',
-    loadComponent: () =>
-      import('./pages/gstr1-gstn-generate-otp.page').then(
-        (m) => m.Gstr1GstnGenerateOtpPageComponent,
-      ),
-    canActivate: [gstr1AuthGuard],
-  },
-  {
-    path: 'gstn/return-status',
-    loadComponent: () =>
-      import('./pages/gstr1-gstn-return-status.page').then(
-        (m) => m.Gstr1GstnReturnStatusPageComponent,
-      ),
-    canActivate: [gstr1AuthGuard],
-  },
-  {
-    path: 'gstn/view-track-returns',
-    loadComponent: () =>
-      import('./pages/gstr1-gstn-view-track-returns.page').then(
-        (m) => m.Gstr1GstnViewTrackReturnsPageComponent,
-      ),
-    canActivate: [gstr1AuthGuard],
   },
   { path: '', pathMatch: 'full', redirectTo: 'workspace' },
 ];

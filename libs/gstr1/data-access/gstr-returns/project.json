@@ -1,0 +1,14 @@
+{
+  "name": "data-access-gstr-returns-gstr1",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr1/data-access/gstr-returns/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["domain:gstr1", "type:data-access"],
+  "implicitDependencies": ["gstr1-data-access-gstzen-auth", "utils-http-error-gstr1"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

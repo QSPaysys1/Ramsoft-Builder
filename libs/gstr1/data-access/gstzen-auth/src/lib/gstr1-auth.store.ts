@@ -9,6 +9,10 @@ import { GSTR1_GSTZEN_AUTH_CONFIG } from './gstr1-gstzen-auth.config';
 
 export type Gstr1AuthStatus = 'idle' | 'loading' | 'authenticated' | 'error';
 
+/**
+ * GSTZen JWT session (access + refresh). Distinct from GST **portal** session
+ * (`GstnSessionApiService` / server-side). Hydrates from `localStorage` on startup.
+ */
 @Injectable({ providedIn: 'root' })
 export class Gstr1AuthStore {
   private readonly platformId = inject(PLATFORM_ID);

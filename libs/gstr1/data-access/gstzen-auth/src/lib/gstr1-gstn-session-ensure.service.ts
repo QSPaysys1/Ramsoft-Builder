@@ -6,7 +6,7 @@ import {
   type GstnCheckSessionSuccessResponse,
 } from './gstn-check-session.models';
 import { Gstr1AuthError } from './gstr1-auth.errors';
-import { Gstr1GstnOtpApiService } from './gstr1-gstn-otp-api.service';
+import { GstnSessionApiService } from './gstn-session-api.service';
 
 /** Outcome of {@link Gstr1GstnSessionEnsureService.ensureGstnPortalSession}. */
 export type EnsureGstnPortalSessionResult =
@@ -28,7 +28,7 @@ export type EnsureGstnPortalSessionResult =
  */
 @Injectable({ providedIn: 'root' })
 export class Gstr1GstnSessionEnsureService {
-  private readonly gstnApi = inject(Gstr1GstnOtpApiService);
+  private readonly gstnApi = inject(GstnSessionApiService);
 
   ensureGstnPortalSession(gstin: string): Observable<EnsureGstnPortalSessionResult> {
     const g = gstin.trim().toUpperCase();

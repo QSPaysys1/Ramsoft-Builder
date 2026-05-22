@@ -1,4 +1,3 @@
-import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import type {
@@ -33,340 +32,126 @@ import type { Gstr2EcomaRequestBody } from './gstr2-ecoma.models';
 import type { Gstr2EcomRequestBody } from './gstr2-ecom.models';
 import type { Gstr2CdnaRequestBody } from './gstr2-cdna.models';
 import type { Gstr2CdnRequestBody } from './gstr2-cdn.models';
-import { GSTR1_GSTZEN_AUTH_CONFIG } from './gstr1-gstzen-auth.config';
+import { GstnSessionApiService } from './gstn-session-api.service';
+import { GstrReturnsApiService } from './gstr-returns-api.service';
+import { Gstr1ApiService } from './gstr1-api.service';
+import { Gstr1aApiService } from './gstr1a-api.service';
+import { Gstr2ApiService } from './gstr2-api.service';
+import { Gstr3bApiService } from './gstr3b-api.service';
 
 /**
- * GSTZen GSTN APIs (Generate OTP, Establish Session, Check Session, Refresh Session). Bearer token applied by interceptors.
+ * @deprecated Prefer domain services: {@link GstnSessionApiService}, {@link GstrReturnsApiService},
+ * {@link Gstr1ApiService}, {@link Gstr1aApiService}, {@link Gstr2ApiService}, {@link Gstr3bApiService}.
+ * This facade remains for backward compatibility during the GSTR library split.
  */
 @Injectable({ providedIn: 'root' })
 export class Gstr1GstnOtpApiService {
-  private readonly http = inject(HttpClient);
-  private readonly config = inject(GSTR1_GSTZEN_AUTH_CONFIG);
+  private readonly gstn = inject(GstnSessionApiService);
+  private readonly returns = inject(GstrReturnsApiService);
+  private readonly gstr1 = inject(Gstr1ApiService);
+  private readonly gstr1a = inject(Gstr1aApiService);
+  private readonly gstr2 = inject(Gstr2ApiService);
+  private readonly gstr3b = inject(Gstr3bApiService);
 
   generateOtp(body: GstnGenerateOtpRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstnGenerateOtpUrl,
-      { gstin: body.gstin.trim().toUpperCase(), username: body.username.trim() },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstn.generateOtp(body);
   }
 
   establishSession(body: GstnEstablishSessionRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstnEstablishSessionUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        otp: body.otp.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstn.establishSession(body);
   }
 
-  /** `POST gstn-check-session/` — Bearer token attached by `gstr1BearerInterceptor`. */
   checkGstinSession(
     body: GstnCheckSessionRequestBody,
   ): Observable<GstnCheckSessionSuccessResponse> {
-    return this.http.post<GstnCheckSessionSuccessResponse>(
-      this.config.gstnCheckSessionUrl,
-      { gstin: body.gstin.trim().toUpperCase() },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstn.checkGstinSession(body);
   }
 
-  /** `POST gstn-refresh-session/` — Bearer token attached by `gstr1BearerInterceptor`. */
   refreshGstinSession(body: GstnRefreshSessionRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstnRefreshSessionUrl,
-      { gstin: body.gstin.trim().toUpperCase() },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstn.refreshGstinSession(body);
   }
 
-  /** `POST retstatus/` — Bearer token attached by `gstr1BearerInterceptor`. */
   getReturnStatus(body: GstnRetStatusRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstnRetStatusUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-        reference_id: body.reference_id.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.returns.getReturnStatus(body);
   }
 
-  /** `POST rettrack/` — Bearer token attached by `gstr1BearerInterceptor`. */
   viewAndTrackReturns(body: GstnRettrackRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstnRettrackUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.returns.viewAndTrackReturns(body);
   }
 
-  /** `POST api/gstr1/download/` — Bearer token attached by `gstr1BearerInterceptor`. */
   downloadGstr1Return(body: Gstr1DownloadRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr1DownloadUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-        api_name: body.api_name,
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr1.downloadGstr1Return(body);
   }
 
-  /** `POST api/gstr1a/download/` — Bearer token attached by `gstr1BearerInterceptor`. */
   downloadGstr1aReturn(body: Gstr1aDownloadRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr1aDownloadUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-        api_name: body.api_name,
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr1a.downloadGstr1aReturn(body);
   }
 
-  /** `POST api/gstr1/reset/` — GSTR‑1 proceed to file (Bearer). */
   resetGstr1Proceed(body: Gstr1ResetRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr1ResetUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr1.resetGstr1Proceed(body);
   }
 
-  /**
-   * `POST api/gstr1/retsave/` — persist GSTR-1 data (e.g. `b2b` buckets). Bearer token applied by interceptor.
-   */
   retsaveGstr1Return(body: Record<string, unknown>): Observable<unknown> {
-    return this.http.post<unknown>(this.config.gstr1RetsaveUrl, body, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return this.gstr1.retsaveGstr1Return(body);
   }
 
-  /**
-   * `POST api/gstr1a/retsave/` — persist GSTR-1A section data (Bearer). Same envelope fields as GSTR-1 retsave.
-   */
   retsaveGstr1aReturn(body: Record<string, unknown>): Observable<unknown> {
-    return this.http.post<unknown>(this.config.gstr1aRetsaveUrl, body, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return this.gstr1a.retsaveGstr1aReturn(body);
   }
 
-  /** `POST api/gstr2/b2b/` — GSTR-2A B2B supplier summary (Bearer). */
   fetchGstr2B2b(body: Gstr2B2bRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr2B2bUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr2.fetchGstr2B2b(body);
   }
 
-  /** `POST api/gstr2/b2ba/` — GSTR-2A amendments to B2B supplier summary (Bearer). */
   fetchGstr2B2ba(body: Gstr2B2baRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr2B2baUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr2.fetchGstr2B2ba(body);
   }
 
-  /** `POST api/gstr2/cdna/` — GSTR-2A amendments to CDN supplier summary (Bearer). */
   fetchGstr2Cdna(body: Gstr2CdnaRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr2CdnaUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr2.fetchGstr2Cdna(body);
   }
 
-  /** `POST api/gstr2/ecoma/` — GSTR-2A amendments to ECO documents (Bearer). */
   fetchGstr2Ecoma(body: Gstr2EcomaRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr2EcomaUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr2.fetchGstr2Ecoma(body);
   }
 
-  /** `POST api/gstr2/ecom/` — GSTR-2A ECO documents (Bearer). */
   fetchGstr2Ecom(body: Gstr2EcomRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr2EcomUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr2.fetchGstr2Ecom(body);
   }
 
-  /** `POST api/gstr2/isd/` — GSTR-2A ISD credits (Bearer). */
   fetchGstr2Isd(body: Gstr2IsdRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr2IsdUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr2.fetchGstr2Isd(body);
   }
 
-  /** `POST api/gstr2/tdstcs/` — GSTR-2A TDS / TDSA / TCS credits (Bearer). */
   fetchGstr2Tdstcs(body: Gstr2TdstcsRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr2TdstcsUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr2.fetchGstr2Tdstcs(body);
   }
 
-  /** `POST api/gstr2/impg/` — GSTR-2A import of goods on bill of entry (Bearer). */
   fetchGstr2Impg(body: Gstr2ImpgRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr2ImpgUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr2.fetchGstr2Impg(body);
   }
 
-  /** `POST api/gstr2/impgsez/` — GSTR-2A SEZ import on bill of entry (Bearer). */
   fetchGstr2Impgsez(body: Gstr2ImpgsezRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr2ImpgsezUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr2.fetchGstr2Impgsez(body);
   }
 
-  /** `POST api/gstr2/2b/` — GSTR-2B auto-drafted ITC statement (Bearer). */
   fetchGstr22b(body: Gstr22bRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr22bUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr2.fetchGstr22b(body);
   }
 
-  /** `POST api/gstr2/cdn/` — GSTR-2A credit/debit notes (Bearer). */
   fetchGstr2Cdn(body: Gstr2CdnRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr2CdnUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr2.fetchGstr2Cdn(body);
   }
 
-  /** `POST api/gstr3b/autoliab/` — GSTR-3B auto-liability summary (Bearer). */
   fetchGstr3bAutoliab(body: Gstr3bAutoliabRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr3bAutoliabUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr3b.fetchGstr3bAutoliab(body);
   }
 
-  /** `POST api/gstr3b/retsave/` — persist GSTR-3B return data (Bearer). */
   retsaveGstr3bReturn(body: Gstr3bRetsaveRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(this.config.gstr3bRetsaveUrl, body, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return this.gstr3b.retsaveGstr3bReturn(body);
   }
 
-  /** `POST api/gstr3b/retsum/` — fetch saved GSTR-3B return summary (Bearer). */
   fetchGstr3bRetsum(body: Gstr3bRetsumRequestBody): Observable<unknown> {
-    return this.http.post<unknown>(
-      this.config.gstr3bRetsumUrl,
-      {
-        gstin: body.gstin.trim().toUpperCase(),
-        ret_period: body.ret_period.trim(),
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return this.gstr3b.fetchGstr3bRetsum(body);
   }
 }

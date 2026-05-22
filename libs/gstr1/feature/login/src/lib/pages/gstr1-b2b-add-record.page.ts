@@ -1,5 +1,5 @@
 import { JsonPipe } from '@angular/common';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -20,11 +20,11 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
-  Gstr1GstnOtpApiService,
   RETURN_PERIOD_REGEX,
   coerceGstr1DownloadApiName,
   type Gstr1DownloadApiName,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
+import { Gstr1B2bFacade } from '@ramsoft-builder/gstr1/data-access/gstr1-filing';
 import { firstValueFrom, merge } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import { INDIAN_STATE_POS_OPTIONS } from '../constants/indian-state-pos.options';
@@ -132,7 +132,7 @@ export class Gstr1B2bAddRecordPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
-  private readonly api = inject(Gstr1GstnOtpApiService);
+  private readonly retsaveFacade = inject(Gstr1B2bFacade);
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -142,9 +142,9 @@ export class Gstr1B2bAddRecordPageComponent {
   readonly filingStatusLabel = signal('');
   readonly dueDateLabel = signal('');
 
-  readonly saveSubmitting = signal(false);
-  readonly saveError = signal<unknown>(null);
-  readonly saveSuccessPayload = signal<unknown>(null);
+  readonly saveSubmitting = this.retsaveFacade.saveSubmitting;
+  readonly saveError = this.retsaveFacade.saveError;
+  readonly saveSuccessPayload = this.retsaveFacade.saveSuccessPayload;
 
   /** From GSTR-1A workspace: `?gstr1a=1` → `POST .../api/gstr1a/retsave/`. */
   readonly isGstr1aWorkspace = signal(false);
@@ -524,44 +524,13 @@ export class Gstr1B2bAddRecordPageComponent {
       return;
     }
 
-    this.saveSubmitting.set(true);
-    this.saveError.set(null);
-    this.saveSuccessPayload.set(null);
-
-    const payload = this.buildRetsavePayload();
-    if (!payload) {
-      this.saveSubmitting.set(false);
-      this.cdr.markForCheck();
-      return;
-    }
-
-    try {
-      const req = this.isGstr1aWorkspace()
-        ? this.api.retsaveGstr1aReturn(payload)
-        : this.api.retsaveGstr1Return(payload);
-      const res = await firstValueFrom(req);
-      this.saveSuccessPayload.set(res);
-    } catch (err: unknown) {
-      if (err instanceof HttpErrorResponse) {
-        let body = err.error;
-        if (typeof body === 'string') {
-          try {
-            body = JSON.parse(body) as unknown;
-          } catch {
-            /* keep string */
-          }
-        }
-        this.saveError.set({
-          status: err.status,
-          statusText: err.statusText,
-          body,
-        });
-      } else {
-        this.saveError.set({ message: err instanceof Error ? err.message : String(err) });
-      }
-    } finally {
-      this.saveSubmitting.set(false);
-      this.cdr.markForCheck();
-    }
+    this.retsaveFacade.setContext(
+      this.filerGstin(),
+      this.retPeriod(),
+      this.isGstr1aWorkspace(),
+    );
+    this.retsaveFacade.registerPayloadBuilder(() => this.buildRetsavePayload());
+    await this.retsaveFacade.submit();
+    this.cdr.markForCheck();
   }
 }

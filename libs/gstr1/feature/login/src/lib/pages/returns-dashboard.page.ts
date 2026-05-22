@@ -1,5 +1,4 @@
 import { isPlatformBrowser, JsonPipe, NgClass, TitleCasePipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -7,7 +6,6 @@ import {
   DestroyRef,
   PLATFORM_ID,
   computed,
-  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -17,13 +15,18 @@ import { RouterLink } from '@angular/router';
 import { AuthStore } from '@ramsoft-builder/auth/data-access/auth';
 import { UserProfileRepository } from '@ramsoft-builder/e-invoices/data-access/einvoice';
 import {
-  Gstr1GstnOtpApiService,
+  GstrReturnPeriodStore,
+  GstrReturnsDashboardStore,
+  GST_QUARTERS,
+  type QuarterId,
+  periodMonthsForQuarter,
+} from '@ramsoft-builder/gstr1/data-access/gstr-returns';
+import {
   type MonthReturnKind,
   RETURN_PERIOD_REGEX,
   asRecord,
   cellFromRow,
   deriveFamilyStatus,
-  filedListFromPayload,
   isGstr1IffFamily,
   isGstr1IffFamilyExclusive,
   isGstr1aFamily,
@@ -35,20 +38,8 @@ import {
   pickRepresentativeRow,
   rowArn,
   rowFilingDateLabel,
-  topLevelPayloadError,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
-import { catchError, firstValueFrom, of, switchMap } from 'rxjs';
-import {
-  GST_QUARTERS,
-  type IndianFySelection,
-  type PeriodMonthOption,
-  type QuarterId,
-  defaultSelectionForDate,
-  listIndianFinancialYears,
-  periodMonthsForQuarter,
-} from '../utils/indian-fy-return-period';
-
-const FILTER_STORAGE_KEY = 'gstr1-returns-dashboard-filters-v2';
+import { catchError, of, switchMap } from 'rxjs';
 
 const GSTIN_PROFILE_KEYS = [
   'GSTIN',
@@ -59,12 +50,6 @@ const GSTIN_PROFILE_KEYS = [
 ] as const;
 
 type AggregateStatus = 'filed' | 'pending' | 'notFiled' | 'error';
-
-interface StoredFilters {
-  readonly fyStartYear: number;
-  readonly quarter: QuarterId;
-  readonly retPeriod: string;
-}
 
 interface ReturnSectionSpec {
   readonly id: string;
@@ -570,39 +555,6 @@ function aggregateFromKinds(
   return 'notFiled';
 }
 
-function normalizeErrorEnvelope(err: unknown): unknown {
-  if (err instanceof HttpErrorResponse) {
-    const bodyUnknown = err.error;
-    let parsedBody = bodyUnknown;
-    if (typeof bodyUnknown === 'string') {
-      try {
-        parsedBody = JSON.parse(bodyUnknown) as unknown;
-      } catch {
-        parsedBody = bodyUnknown;
-      }
-    }
-    return {
-      httpStatus: err.status,
-      statusText: err.statusText,
-      url: err.url ?? null,
-      body: parsedBody,
-    };
-  }
-  if (err instanceof Error) {
-    return { message: err.message };
-  }
-  return { message: String(err) };
-}
-
-function defaultFilters(now = new Date()): StoredFilters {
-  const d = defaultSelectionForDate(now);
-  return {
-    fyStartYear: d.fy.startYear,
-    quarter: d.quarter,
-    retPeriod: d.retPeriod,
-  };
-}
-
 export interface ReturnCardVm {
   readonly spec: ReturnSectionSpec;
   readonly kind: Exclude<MonthReturnKind, 'idle'>;
@@ -627,42 +579,33 @@ export interface ReturnCardVm {
 export class ReturnsDashboardPageComponent {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly gstnApi = inject(Gstr1GstnOtpApiService);
+  private readonly periodStore = inject(GstrReturnPeriodStore);
+  private readonly dashboardStore = inject(GstrReturnsDashboardStore);
   private readonly authStore = inject(AuthStore);
   private readonly userProfile = inject(UserProfileRepository);
 
-  readonly fyOptions = signal<IndianFySelection[]>([]);
-
-  readonly selectedFyStart = signal<number>(defaultFilters(new Date()).fyStartYear);
-  readonly selectedQuarter = signal<QuarterId>(defaultFilters(new Date()).quarter);
-  readonly selectedRetPeriod = signal<string>(defaultFilters(new Date()).retPeriod);
+  readonly fyOptions = this.periodStore.fyOptions;
+  readonly selectedFyStart = this.periodStore.selectedFyStart;
+  readonly selectedQuarter = this.periodStore.selectedQuarter;
+  readonly selectedRetPeriod = this.periodStore.selectedRetPeriod;
+  readonly periodOptions = this.periodStore.periodOptions;
 
   readonly profileGstin = signal('');
-
-  readonly periodOptions = computed((): PeriodMonthOption[] =>
-    periodMonthsForQuarter(this.selectedFyStart(), this.selectedQuarter()),
-  );
 
   readonly hasValidGstin = computed(() => this.profileGstin().length === 15);
 
   readonly canSearch = computed(
-    () =>
-      this.hasValidGstin() &&
-      RETURN_PERIOD_REGEX.test(this.selectedRetPeriod().trim()),
+    () => this.hasValidGstin() && this.periodStore.canUseRetPeriod(),
   );
 
-  readonly loading = signal(false);
-  readonly payloadOk = signal<boolean | null>(null);
-  readonly rawPayload = signal<unknown>(null);
-  readonly httpError = signal<unknown>(null);
-  readonly lastSearchLabel = signal<string>('');
+  readonly loading = this.dashboardStore.loading;
+  readonly payloadOk = this.dashboardStore.payloadOk;
+  readonly rawPayload = this.dashboardStore.rawPayload;
+  readonly httpError = this.dashboardStore.httpError;
+  readonly lastSearchLabel = this.dashboardStore.lastSearchLabel;
   readonly monthlyFrequencyBannerDismissed = signal(false);
 
-  readonly filedRows = computed(() =>
-    this.payloadOk() === true
-      ? filedListFromPayload(this.rawPayload())
-      : [],
-  );
+  readonly filedRows = this.dashboardStore.filedRows;
 
   readonly filingFrequency = computed((): TaxpayerFilingFrequency => {
     if (this.payloadOk() !== true) {
@@ -780,18 +723,6 @@ export class ReturnsDashboardPageComponent {
       this.initializeFilters();
     });
 
-    effect(() => {
-      if (!isPlatformBrowser(this.platformId)) {
-        return;
-      }
-      const snap: StoredFilters = {
-        fyStartYear: this.selectedFyStart(),
-        quarter: this.selectedQuarter(),
-        retPeriod: this.selectedRetPeriod(),
-      };
-      sessionStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(snap));
-    });
-
     toObservable(this.authStore.user)
       .pipe(
         switchMap((user) => {
@@ -815,139 +746,34 @@ export class ReturnsDashboardPageComponent {
     if (!Number.isFinite(y)) {
       return;
     }
-    this.selectedFyStart.set(y);
-    this.ensureFiltersCoherent();
+    this.periodStore.setFyStartYear(y);
   }
 
   onQuarterChange(value: string): void {
-    this.selectedQuarter.set(value as QuarterId);
-    this.ensureFiltersCoherent();
+    this.periodStore.setQuarter(value as QuarterId);
   }
 
   onPeriodChange(value: string): void {
-    if (!RETURN_PERIOD_REGEX.test(value)) {
-      return;
-    }
-    this.selectedRetPeriod.set(value);
+    this.periodStore.setRetPeriod(value);
   }
 
   private initializeFilters(): void {
-    this.fyOptions.set(listIndianFinancialYears(new Date()));
-    if (!this.restoreFiltersFromStorage()) {
-      this.applyFilterState(defaultFilters(new Date()));
-    }
-    this.ensureFiltersCoherent();
-  }
-
-  private applyFilterState(state: StoredFilters): void {
-    this.selectedFyStart.set(state.fyStartYear);
-    this.selectedQuarter.set(state.quarter);
-    this.selectedRetPeriod.set(state.retPeriod);
-  }
-
-  /** Keep ret_period aligned with FY/quarter options and the current month when applicable. */
-  private ensureFiltersCoherent(now = new Date()): void {
-    const opts = this.periodOptions();
-    if (opts.length === 0) {
-      return;
-    }
-    const cur = this.selectedRetPeriod();
-    if (opts.some((o) => o.retPeriod === cur)) {
-      return;
-    }
-    this.selectedRetPeriod.set(
-      this.preferredPeriodForQuarter(this.selectedFyStart(), this.selectedQuarter(), now),
-    );
-  }
-
-  private preferredPeriodForQuarter(
-    fyStart: number,
-    quarter: QuarterId,
-    now = new Date(),
-  ): string {
-    const opts = periodMonthsForQuarter(fyStart, quarter);
-    if (opts.length === 0) {
-      return this.selectedRetPeriod();
-    }
-    const today = defaultSelectionForDate(now);
-    if (today.fy.startYear === fyStart && today.quarter === quarter) {
-      return today.retPeriod;
-    }
-    return opts[opts.length - 1]?.retPeriod ?? opts[0].retPeriod;
-  }
-
-  private restoreFiltersFromStorage(): boolean {
-    try {
-      const raw = sessionStorage.getItem(FILTER_STORAGE_KEY);
-      if (!raw) {
-        return false;
-      }
-      const o = JSON.parse(raw) as Partial<StoredFilters>;
-      const fys = this.fyOptions().map((x) => x.startYear);
-      if (typeof o.fyStartYear !== 'number' || !fys.includes(o.fyStartYear)) {
-        return false;
-      }
-      if (o.quarter !== 'q1' && o.quarter !== 'q2' && o.quarter !== 'q3' && o.quarter !== 'q4') {
-        return false;
-      }
-      if (typeof o.retPeriod !== 'string' || !RETURN_PERIOD_REGEX.test(o.retPeriod)) {
-        return false;
-      }
-      const opts = periodMonthsForQuarter(o.fyStartYear, o.quarter);
-      if (!opts.some((p) => p.retPeriod === o.retPeriod)) {
-        return false;
-      }
-      this.applyFilterState({
-        fyStartYear: o.fyStartYear,
-        quarter: o.quarter,
-        retPeriod: o.retPeriod,
-      });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  private resetResponse(): void {
-    this.payloadOk.set(null);
-    this.rawPayload.set(null);
-    this.httpError.set(null);
-    this.monthlyFrequencyBannerDismissed.set(false);
+    this.periodStore.initializeFilters(new Date());
   }
 
   async search(): Promise<void> {
     if (this.loading() || !this.canSearch()) {
       return;
     }
-    this.ensureFiltersCoherent();
+    this.periodStore.ensureCoherent();
     const gstin = this.profileGstin();
     const ret_period = this.selectedRetPeriod().trim();
-
-    this.loading.set(true);
-    this.resetResponse();
-
-    try {
-      const payload = await firstValueFrom(
-        this.gstnApi.viewAndTrackReturns({ gstin, ret_period }),
-      );
-      const topErr = topLevelPayloadError(payload);
-      if (topErr) {
-        this.payloadOk.set(false);
-        this.rawPayload.set(payload);
-        this.httpError.set({ message: topErr });
-        this.lastSearchLabel.set(this.buildSearchSummary(gstin, ret_period));
-        return;
-      }
-      this.payloadOk.set(true);
-      this.rawPayload.set(payload);
-      this.lastSearchLabel.set(this.buildSearchSummary(gstin, ret_period));
-    } catch (err: unknown) {
-      this.payloadOk.set(false);
-      this.httpError.set(normalizeErrorEnvelope(err));
-      this.lastSearchLabel.set(this.buildSearchSummary(gstin, ret_period));
-    } finally {
-      this.loading.set(false);
-    }
+    this.monthlyFrequencyBannerDismissed.set(false);
+    await this.dashboardStore.search(
+      gstin,
+      ret_period,
+      this.buildSearchSummary(gstin, ret_period),
+    );
   }
 
   refresh(): void {

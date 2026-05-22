@@ -1,18 +1,14 @@
 {
-  "name": "gstr1-feature-login",
+  "name": "data-access-gstr1-filing-gstr1",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/gstr1/feature/login/src",
+  "sourceRoot": "libs/gstr1/data-access/gstr1-filing/src",
   "prefix": "lib",
   "projectType": "library",
-  "tags": ["type:feature", "domain:gstr1"],
+  "tags": ["domain:gstr1", "type:data-access"],
   "implicitDependencies": [
     "gstr1-data-access-gstzen-auth",
     "data-access-gstr-returns-gstr1",
-    "data-access-gstr1-filing-gstr1",
-    "utils-http-error-gstr1",
-    "auth-ui-login",
-    "auth-data-access-auth",
-    "e-invoices-data-access-einvoice"
+    "utils-http-error-gstr1"
   ],
   "targets": {
     "lint": {

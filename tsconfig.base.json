@@ -23,6 +23,15 @@
         "libs/auth/feature/login/src/index.ts"
       ],
       "@ramsoft-builder/auth/ui/login": ["libs/auth/ui/login/src/index.ts"],
+      "@ramsoft-builder/gstr1/data-access/gstr-returns": [
+        "libs/gstr1/data-access/gstr-returns/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr1/data-access/gstr1-filing": [
+        "libs/gstr1/data-access/gstr1-filing/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr1/utils/http-error": [
+        "libs/gstr1/utils/http-error/src/index.ts"
+      ],
       "@ramsoft-builder/e-invoices/data-access/einvoice": [
         "libs/e-invoices/data-access/einvoice/src/index.ts"
       ],
@@ -76,6 +85,15 @@
       ],
       "@ramsoft-builder/gstr1/feature/login": [
         "libs/gstr1/feature/login/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr1/feature/auth": [
+        "libs/gstr1/feature/auth/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr1/feature/workspace": [
+        "libs/gstr1/feature/workspace/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr1/feature/gstr1": [
+        "libs/gstr1/feature/gstr1/src/index.ts"
       ],
       "@ramsoft-builder/gstr1/models/jwt": [
         "libs/gstr1/models/jwt/src/index.ts"

@@ -1,5 +1,4 @@
 import { isPlatformBrowser, JsonPipe } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -38,6 +37,7 @@ import {
   type Gstr1AmendRecordDetailTile,
 } from '../constants/gstr1-download-workspace.constants';
 import { GSTR1_NIL_RESAVE_INV_ORDER } from '../constants/gstr1-nil-supplies.constants';
+import { normalizeGstzenHttpError, gstzenUserFacingMessage } from '@ramsoft-builder/gstr1/utils/http-error';
 import { docIssueStorageKey } from '../utils/gstr1-doc-issue.state';
 import { ecoSuppliesStorageKey } from '../utils/gstr1-eco-supplies.state';
 import { us95DraftsStorageKey } from '../utils/gstr1-supplies-us-95.drafts';
@@ -89,41 +89,6 @@ function pickProfileString(
     }
   }
   return '';
-}
-
-function normalizeErrorEnvelope(err: unknown): unknown {
-  if (err instanceof HttpErrorResponse) {
-    const bodyUnknown = err.error;
-    let parsedBody = bodyUnknown;
-    if (typeof bodyUnknown === 'string') {
-      try {
-        parsedBody = JSON.parse(bodyUnknown) as unknown;
-      } catch {
-        parsedBody = bodyUnknown;
-      }
-    }
-    return {
-      httpStatus: err.status,
-      statusText: err.statusText,
-      url: err.url ?? null,
-      body: parsedBody,
-    };
-  }
-  if (err instanceof Error) {
-    return { message: err.message };
-  }
-  return { message: String(err) };
-}
-
-function gstzenUserFacingMessage(raw: unknown): string | null {
-  if (!raw || typeof raw !== 'object') {
-    return null;
-  }
-  const msg = (raw as Record<string, unknown>)['message'];
-  if (typeof msg === 'string' && msg.trim()) {
-    return msg.trim();
-  }
-  return null;
 }
 
 /** Zero-value NIC `nil.inv` payload for File Nil GSTR-1 → FILE STATEMENT. */
@@ -518,7 +483,7 @@ export class Gstr1DownloadReturnPageComponent {
         },
       });
     } catch (err: unknown) {
-      const normalized = normalizeErrorEnvelope(err);
+      const normalized = normalizeGstzenHttpError(err);
       let detail = opts.nilRetsaveFirst
         ? 'Nil GSTR‑1 file statement failed.'
         : 'GSTR‑1 proceed request failed.';
@@ -737,7 +702,7 @@ export class Gstr1DownloadReturnPageComponent {
       this.rawResponse.set(raw);
       return true;
     } catch (err: unknown) {
-      this.httpError.set(normalizeErrorEnvelope(err));
+      this.httpError.set(normalizeGstzenHttpError(err));
       this.logicalErrorText.set('RETSUM request failed.');
       return false;
     } finally {
