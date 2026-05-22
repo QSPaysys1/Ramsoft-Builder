@@ -117,6 +117,24 @@
       }
     </div>
   } @else if (payloadOk() === true) {
+    @if (showMonthlyFrequencyBanner()) {
+      <div
+        class="mb-6 flex items-start gap-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950 shadow-sm"
+        role="status"
+      >
+        <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-600 text-xs font-bold text-white" aria-hidden="true">i</span>
+        <p class="flex-1 leading-relaxed">{{ monthlyFrequencyMessage() }}</p>
+        <button
+          type="button"
+          class="shrink-0 rounded p-1 text-sky-700 hover:bg-sky-100"
+          (click)="dismissMonthlyFrequencyBanner()"
+          aria-label="Dismiss monthly filing notice"
+        >
+          ×
+        </button>
+      </div>
+    }
+
     <section class="mb-8" aria-label="Summary">
       <div
         class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
@@ -163,6 +181,7 @@
         @for (c of primaryReturnCards(); track c.spec.id) {
           <article
             class="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md transition hover:shadow-lg"
+            [ngClass]="gstr1aCardClass(c)"
           >
             <div class="rounded-t-xl bg-[#1c2b54] px-3 py-3 text-center text-white md:px-4 md:py-4">
               <p class="text-xs font-medium leading-snug text-white/95 md:text-sm">{{ c.spec.headerTitle }}</p>
@@ -204,6 +223,9 @@
               } @else {
                 <p class="text-sm text-slate-500">No filing row matched this return family for the selected GSTIN and period.</p>
               }
+              @if (c.spec.id === 'gstr1a' && gstr1aDisabledReason(c)) {
+                <p class="text-left text-sm text-slate-600">{{ gstr1aDisabledReason(c) }}</p>
+              }
               <div class="mt-auto flex flex-wrap justify-center gap-2 pt-2">
                 @if (c.spec.id === 'gstr1') {
                   @if (hasValidGstin()) {
@@ -231,7 +253,7 @@
                     </button>
                   }
                 } @else if (c.spec.id === 'gstr1a') {
-                  @if (hasValidGstin()) {
+                  @if (hasValidGstin() && isGstr1aPrepareEnabled(c)) {
                     <a
                       class="inline-flex min-h-[38px] min-w-[100px] flex-1 items-center justify-center rounded-lg bg-[#1a56a7] px-3 text-center text-xs font-bold uppercase tracking-wide text-white hover:bg-[#154a8f] sm:flex-none"
                       routerLink="/gstr1/workspace/gstr1a-view"
@@ -249,7 +271,7 @@
                       type="button"
                       disabled
                       class="inline-flex min-h-[38px] min-w-[100px] flex-1 cursor-not-allowed items-center justify-center rounded-lg bg-slate-300 px-3 text-center text-xs font-bold uppercase tracking-wide text-white opacity-70 sm:flex-none"
-                      title="Add a GSTIN to your Ramsoft profile to open Prepare online."
+                      [title]="gstr1aDisabledReason(c) || (hasValidGstin() ? 'GSTR-1A is not available for this period.' : 'Add a GSTIN to your Ramsoft profile to open Prepare online.')"
                     >
                       Prepare online
                     </button>
@@ -269,49 +291,51 @@
         }
       </div>
 
-      @if (eFiledPrimaryRows().length > 0) {
-        <div class="mt-8 rounded-xl border border-slate-200 bg-white shadow-sm" aria-label="GSTR-1 and GSTR-1A e-filed rows">
-          <div class="border-b border-slate-100 px-4 py-3 md:px-5">
-            <h3 class="text-base font-bold text-[#222f3f]">E-filed rows · GSTR-1 / GSTR-1A</h3>
-            <p class="mt-0.5 text-sm text-slate-600">Filtered from Rettrack for this GSTIN and period.</p>
-          </div>
-          <div class="hidden md:block md:overflow-x-auto">
-            <table class="w-full min-w-[640px] border-collapse text-left text-sm">
-              <thead class="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th class="px-4 py-3">Return type</th>
-                  <th class="px-4 py-3">Period</th>
-                  <th class="px-4 py-3">Status</th>
-                  <th class="px-4 py-3">ARN</th>
-                  <th class="px-4 py-3">Date of filing</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100">
-                @for (row of eFiledPrimaryRows(); track $index) {
+      @if(false) {
+        @if (eFiledPrimaryRows().length > 0) {
+          <div class="mt-8 rounded-xl border border-slate-200 bg-white shadow-sm" aria-label="GSTR-1 and GSTR-1A e-filed rows">
+            <div class="border-b border-slate-100 px-4 py-3 md:px-5">
+              <h3 class="text-base font-bold text-[#222f3f]">E-filed rows · GSTR-1 / GSTR-1A</h3>
+              <p class="mt-0.5 text-sm text-slate-600">Filtered from Rettrack for this GSTIN and period.</p>
+            </div>
+            <div class="hidden md:block md:overflow-x-auto">
+              <table class="w-full min-w-[640px] border-collapse text-left text-sm">
+                <thead class="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
-                    <td class="px-4 py-2.5 font-medium">{{ cell(row, 'rtntype', 'rtn_type', 'Rtntype') }}</td>
-                    <td class="px-4 py-2.5 font-mono text-xs">{{ cell(row, 'ret_prd', 'retprd', 'ret_period') }}</td>
-                    <td class="px-4 py-2.5">{{ cell(row, 'status', '_Status') }}</td>
-                    <td class="break-all px-4 py-2.5 font-mono text-xs">{{ cell(row, 'arn', 'ARN') }}</td>
-                    <td class="px-4 py-2.5">{{ cell(row, 'dof', 'dofiling', 'date_of_filing') }}</td>
+                    <th class="px-4 py-3">Return type</th>
+                    <th class="px-4 py-3">Period</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3">ARN</th>
+                    <th class="px-4 py-3">Date of filing</th>
                   </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-          <div class="divide-y divide-slate-100 md:hidden">
-            @for (row of eFiledPrimaryRows(); track $index) {
-              <div class="space-y-2 px-4 py-4 text-sm">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <span class="font-semibold text-[#222f3f]">{{ cell(row, 'rtntype', 'rtn_type') }}</span>
-                  <span class="font-mono text-xs text-slate-500">{{ cell(row, 'ret_prd', 'retprd') }}</span>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  @for (row of eFiledPrimaryRows(); track $index) {
+                    <tr>
+                      <td class="px-4 py-2.5 font-medium">{{ cell(row, 'rtntype', 'rtn_type', 'Rtntype') }}</td>
+                      <td class="px-4 py-2.5 font-mono text-xs">{{ cell(row, 'ret_prd', 'retprd', 'ret_period') }}</td>
+                      <td class="px-4 py-2.5">{{ cell(row, 'status', '_Status') }}</td>
+                      <td class="break-all px-4 py-2.5 font-mono text-xs">{{ cell(row, 'arn', 'ARN') }}</td>
+                      <td class="px-4 py-2.5">{{ cell(row, 'dof', 'dofiling', 'date_of_filing') }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div class="divide-y divide-slate-100 md:hidden">
+              @for (row of eFiledPrimaryRows(); track $index) {
+                <div class="space-y-2 px-4 py-4 text-sm">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="font-semibold text-[#222f3f]">{{ cell(row, 'rtntype', 'rtn_type') }}</span>
+                    <span class="font-mono text-xs text-slate-500">{{ cell(row, 'ret_prd', 'retprd') }}</span>
+                  </div>
+                  <p class="text-slate-700">{{ cell(row, 'status', '_Status') }}</p>
+                  <p class="break-all font-mono text-xs text-slate-800">{{ cell(row, 'arn', 'ARN') }}</p>
                 </div>
-                <p class="text-slate-700">{{ cell(row, 'status', '_Status') }}</p>
-                <p class="break-all font-mono text-xs text-slate-800">{{ cell(row, 'arn', 'ARN') }}</p>
-              </div>
-            }
+              }
+            </div>
           </div>
-        </div>
+        }
       }
     </section>
 
@@ -440,6 +464,7 @@
       </div>
     </section>
 
+    @if(false) {
     <section class="rounded-xl border border-slate-200 bg-white shadow-sm" aria-label="Detailed rows">
       <div class="border-b border-slate-100 px-4 py-3 md:px-5">
         <h3 class="text-base font-bold text-[#222f3f]">E-filed list</h3>
@@ -490,6 +515,7 @@
         </div>
       }
     </section>
+  }
   } @else if (payloadOk() === false && httpError() !== null) {
     <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-5 text-red-950 shadow-sm">
       <p class="text-sm font-bold">Could not load return tracking</p>
