@@ -39,15 +39,8 @@ import {
   rowArn,
   rowFilingDateLabel,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
-import { catchError, of, switchMap } from 'rxjs';
-
-const GSTIN_PROFILE_KEYS = [
-  'GSTIN',
-  'gstin',
-  'tinGstNo',
-  'organizationGstin',
-  'Gstin',
-] as const;
+import { catchError, combineLatest, map, of, switchMap } from 'rxjs';
+import { resolveLoggedInUserGstrGstin } from '../utils/gstr1-profile-credentials.utils';
 
 type AggregateStatus = 'filed' | 'pending' | 'notFiled' | 'error';
 
@@ -92,19 +85,6 @@ const RETURN_SECTIONS: readonly ReturnSectionSpec[] = [
     match: isGstr2aFamily,
   },
 ];
-
-function pickProfileGstin(obj: Record<string, unknown> | undefined): string {
-  if (!obj) {
-    return '';
-  }
-  for (const k of GSTIN_PROFILE_KEYS) {
-    const v = obj[k];
-    if (typeof v === 'string' && v.trim()) {
-      return v.trim().toUpperCase();
-    }
-  }
-  return '';
-}
 
 const MONTHLY_FREQUENCY_MESSAGE =
   'You have selected to file the return on monthly frequency, GSTR-1 and GSTR-3B shall be required to be filed for each month of the quarter.';
@@ -727,17 +707,33 @@ export class ReturnsDashboardPageComponent {
       .pipe(
         switchMap((user) => {
           if (!user?.id) {
-            return of(undefined);
+            this.profileGstin.set('');
+            return of(null);
           }
-          return this.userProfile.watchProfileData(user.id).pipe(
-            catchError(() => of(undefined)),
+          return combineLatest([
+            this.userProfile.watchProfileData(user.id).pipe(
+              catchError(() => of(undefined)),
+            ),
+            this.userProfile.watchLegacyUserFlat(user.id).pipe(
+              catchError(() => of(undefined)),
+            ),
+          ]).pipe(
+            map(([prof, flat]) => ({
+              prof: prof as Record<string, unknown> | undefined,
+              flat,
+              email: user.email,
+            })),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((prof) => {
-        const gstin = pickProfileGstin(prof as Record<string, unknown> | undefined);
-        this.profileGstin.set(gstin);
+      .subscribe((bundle) => {
+        if (!bundle) {
+          return;
+        }
+        this.profileGstin.set(
+          resolveLoggedInUserGstrGstin(bundle.prof, bundle.flat, bundle.email),
+        );
       });
   }
 

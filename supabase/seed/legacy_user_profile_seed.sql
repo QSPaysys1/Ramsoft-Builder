@@ -266,6 +266,10 @@ $seed$;
 -- address / city        | text
 -- stateCode             | text
 -- loginEmail            | text (sign-in identifier helper)
+-- gstPortalUsername     | GST portal username for OTP (not userName)
+-- gstZenUsername        | GSTZen login email (GSTR-1 Generate Token)
+-- gstZenPassword        | GSTZen password (store only in Supabase; do not commit)
+-- gstrGstin / gstr1Gstin | GSTR return GSTIN (e.g. 36AAYCA9563F1ZZ); preferred over company GSTIN
 -- bank                  | jsonb array (edit in JSON panel)
 -- legacy_uid            | old Firebase uid string
 -- …                     | any other legacy keys you merge into data

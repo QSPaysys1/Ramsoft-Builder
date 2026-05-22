@@ -1,4 +1,7 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { isPlatformBrowser } from '@angular/common';
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
@@ -7,7 +10,6 @@ import {
   PLATFORM_ID,
   signal,
 } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
@@ -18,44 +20,32 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AuthStore,
   safeInternalNavigateUrl,
-  type AppUser,
 } from '@ramsoft-builder/auth/data-access/auth';
 import {
   AuthPageLayoutComponent,
-  AuthPasswordFieldComponent,
   AuthServerErrorComponent,
-  AuthSubmitButtonComponent,
   AuthToastService,
-  AuthUserNameFieldComponent,
 } from '@ramsoft-builder/auth/ui/login';
 import { UserProfileRepository } from '@ramsoft-builder/e-invoices/data-access/einvoice';
-import { Gstr1AuthStore } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
-import { catchError, debounceTime, of, switchMap } from 'rxjs';
-import { indianGstinValidator } from '../validators/indian-gstin.validator';
+import {
+  Gstr1AuthStore,
+  Gstr1GstnOtpApiService,
+} from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
+import { catchError, combineLatest, firstValueFrom, map, of, switchMap } from 'rxjs';
+import {
+  gstr1ProfileGstCredentialsMissingLabels,
+  parseGstr1ProfileGstCredentials,
+  type Gstr1ProfileGstCredentials,
+} from '../utils/gstr1-profile-credentials.utils';
 
-function pickProfileString(
-  obj: Record<string, unknown> | undefined,
-  keys: string[],
-): string {
-  if (!obj) {
-    return '';
-  }
-  for (const k of keys) {
-    const v = obj[k];
-    if (typeof v === 'string' && v.trim()) {
-      return v.trim();
-    }
-  }
-  return '';
-}
+type LoginFlowStep = 'token' | 'requestOtp' | 'establish' | 'complete';
 
-/** Last-used GSTZen user name and password per GSTIN (this browser tab only; set after a successful sign-in). */
-const LOGIN_DRAFT_STORAGE_KEY = 'ramsoft.gstr1.login.draftsByGstin';
-
-type LoginDraftByGstin = Record<
-  string,
-  { readonly userName: string; readonly password: string }
->;
+const EMPTY_CREDENTIALS: Gstr1ProfileGstCredentials = {
+  gstin: '',
+  portalUsername: '',
+  gstZenUsername: '',
+  gstZenPassword: '',
+};
 
 @Component({
   selector: 'lib-gstr1-login-page',
@@ -67,9 +57,6 @@ type LoginDraftByGstin = Record<
     ReactiveFormsModule,
     RouterLink,
     AuthPageLayoutComponent,
-    AuthUserNameFieldComponent,
-    AuthPasswordFieldComponent,
-    AuthSubmitButtonComponent,
     AuthServerErrorComponent,
   ],
   templateUrl: './gstr1-login.page.html',
@@ -82,240 +69,263 @@ export class Gstr1LoginPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly platformId = inject(PLATFORM_ID);
   readonly gstr1Auth = inject(Gstr1AuthStore);
+  private readonly gstnApi = inject(Gstr1GstnOtpApiService);
   private readonly toast = inject(AuthToastService);
   private readonly authStore = inject(AuthStore);
   private readonly userProfile = inject(UserProfileRepository);
 
-  private readonly profileGstinRaw = signal('');
-
-  private submitLocked = false;
+  private tokenActionLocked = false;
 
   readonly heroImageSrc = 'assets/img/ramsoftmillersmelody.png';
 
-  readonly loginForm = this.fb.nonNullable.group({
-    gstin: ['', [Validators.required, indianGstinValidator]],
-    userName: ['', [Validators.required]],
-    password: [
-      '',
-      [Validators.required, Validators.minLength(1), Validators.maxLength(128)],
-    ],
+  readonly flowStep = signal<LoginFlowStep>('token');
+  readonly otpRequestLoading = signal(false);
+  readonly establishLoading = signal(false);
+  readonly otpRequestError = signal<string | null>(null);
+  readonly establishError = signal<string | null>(null);
+  readonly profileResolved = signal(false);
+
+  readonly profileCredentials = signal<Gstr1ProfileGstCredentials>(EMPTY_CREDENTIALS);
+
+  readonly establishOtpForm = this.fb.nonNullable.group({
+    otp: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
   });
 
-  readonly loading = computed(() => this.gstr1Auth.status() === 'loading');
+  readonly tokenLoading = computed(() => this.gstr1Auth.status() === 'loading');
 
-  /** GSTIN from Supabase profile `data`, same keys as dashboard home. */
-  readonly profileGstinDisplay = computed(() => {
-    const g = this.profileGstinRaw().trim();
-    return g ? g.toUpperCase() : '';
+  readonly resolvedGstin = computed(() => this.profileCredentials().gstin);
+
+  readonly portalUsername = computed(() => this.profileCredentials().portalUsername);
+
+  readonly gstZenUsername = computed(() => this.profileCredentials().gstZenUsername);
+
+  readonly gstZenPasswordMasked = computed(() => {
+    const len = this.profileCredentials().gstZenPassword.length;
+    return len > 0 ? '•'.repeat(Math.min(len, 12)) : '';
   });
 
-  readonly appUserEmail = computed(() => this.authStore.user()?.email?.trim() ?? '');
+  readonly gstZenCredentialsReady = computed(() => {
+    const c = this.profileCredentials();
+    return c.gstZenUsername.trim().length > 0 && c.gstZenPassword.length > 0;
+  });
+
+  readonly step1Complete = computed(() => this.gstr1Auth.hasValidToken());
+
+  readonly showStep2 = computed(() => {
+    const s = this.flowStep();
+    return s === 'requestOtp' || s === 'establish' || s === 'complete';
+  });
+
+  readonly showStep3 = computed(() => {
+    const s = this.flowStep();
+    return s === 'establish' || s === 'complete';
+  });
+
+  readonly gstFieldsReady = computed(
+    () =>
+      this.resolvedGstin().length === 15 &&
+      this.portalUsername().trim().length > 0,
+  );
+
+  readonly credentialsMissingHint = computed(() => {
+    const missing = gstr1ProfileGstCredentialsMissingLabels(this.profileCredentials());
+    if (missing.length === 0) {
+      return '';
+    }
+    return `Add to your user profile (profiles.data): ${missing.join(', ')}.`;
+  });
 
   constructor() {
+    afterNextRender(() => {
+      this.resetFlowForVisit();
+    });
+
     toObservable(this.authStore.user)
       .pipe(
         switchMap((user) => {
-          this.prefillUserNameFromAppUser(user ?? null);
           if (!user?.id) {
-            this.profileGstinRaw.set('');
-            return of(undefined);
+            this.profileCredentials.set(EMPTY_CREDENTIALS);
+            this.profileResolved.set(true);
+            return of(null);
           }
-          return this.userProfile.watchProfileData(user.id).pipe(
-            catchError(() => of(undefined)),
+          this.profileResolved.set(false);
+          return combineLatest([
+            this.userProfile.watchProfileData(user.id).pipe(
+              catchError(() => of(undefined)),
+            ),
+            this.userProfile.watchLegacyUserFlat(user.id).pipe(
+              catchError(() => of(undefined)),
+            ),
+          ]).pipe(
+            map(([prof, flat]) => ({
+              prof: prof as Record<string, unknown> | undefined,
+              flat,
+              email: user.email,
+            })),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((prof) => {
-        const p = prof as Record<string, unknown> | undefined;
-        const gstin = pickProfileString(p, [
-          'GSTIN',
-          'gstin',
-          'tinGstNo',
-          'organizationGstin',
-          'Gstin',
-        ]);
-        this.profileGstinRaw.set(gstin);
-        const gstinCtrl = this.loginForm.controls.gstin;
-        if (gstin && !gstinCtrl.getRawValue()?.trim()) {
-          const g = gstin.toUpperCase();
-          gstinCtrl.patchValue(g, { emitEvent: false });
-          this.applyCredentialsForGstin(g);
-        }
-      });
-
-    const gstinCtrl = this.loginForm.controls.gstin;
-    gstinCtrl.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((v) => {
-        const raw = (v ?? '').trim();
-        const u = raw.toUpperCase();
-        if (raw !== u) {
-          gstinCtrl.patchValue(u, { emitEvent: false });
-        }
-      });
-
-    gstinCtrl.valueChanges
-      .pipe(debounceTime(400), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        const g = (gstinCtrl.value ?? '').trim().toUpperCase();
-        if (!g) {
-          this.loginForm.patchValue(
-            { userName: '', password: '' },
-            { emitEvent: false },
-          );
+      .subscribe((bundle) => {
+        if (!bundle) {
           return;
         }
-        if (!gstinCtrl.valid) {
-          return;
-        }
-        this.applyCredentialsForGstin(g);
+        const creds = parseGstr1ProfileGstCredentials(
+          bundle.prof,
+          bundle.flat,
+          bundle.email,
+        );
+        this.profileCredentials.set(creds);
+        this.profileResolved.set(true);
       });
-
-    this.loginForm.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.gstr1Auth.clearError());
   }
 
-  private readLoginDrafts(): LoginDraftByGstin {
-    if (!isPlatformBrowser(this.platformId) || !globalThis.sessionStorage) {
-      return {};
-    }
-    try {
-      const raw = globalThis.sessionStorage.getItem(LOGIN_DRAFT_STORAGE_KEY);
-      if (!raw) {
-        return {};
-      }
-      const parsed = JSON.parse(raw) as unknown;
-      if (!parsed || typeof parsed !== 'object') {
-        return {};
-      }
-      return parsed as LoginDraftByGstin;
-    } catch {
-      return {};
+  private resetFlowForVisit(): void {
+    this.otpRequestError.set(null);
+    this.establishError.set(null);
+    this.flowStep.set('token');
+    if (this.gstr1Auth.hasValidToken()) {
+      this.flowStep.set('requestOtp');
     }
   }
 
-  private persistLoginDraft(
-    gstinUpper: string,
-    userName: string,
-    password: string,
-  ): void {
-    if (!isPlatformBrowser(this.platformId) || !globalThis.sessionStorage) {
+  async generateToken(): Promise<void> {
+    if (this.tokenActionLocked || this.tokenLoading()) {
       return;
     }
-    const g = gstinUpper.trim().toUpperCase();
-    if (g.length !== 15) {
-      return;
-    }
-    const next = {
-      ...this.readLoginDrafts(),
-      [g]: { userName, password },
-    };
-    globalThis.sessionStorage.setItem(
-      LOGIN_DRAFT_STORAGE_KEY,
-      JSON.stringify(next),
-    );
-  }
-
-  private applyCredentialsForGstin(normalizedGstin: string): void {
-    const g = normalizedGstin.trim().toUpperCase();
-    if (g.length !== 15) {
-      return;
-    }
-    const draft = this.readLoginDrafts()[g];
-    if (draft) {
-      this.loginForm.patchValue(
-        { userName: draft.userName, password: draft.password },
-        { emitEvent: false },
-      );
-      return;
-    }
-    const profileG = this.profileGstinRaw().trim().toUpperCase();
-    if (g === profileG) {
-      const email = this.authStore.user()?.email?.trim() ?? '';
-      this.loginForm.patchValue(
-        { userName: email, password: '' },
-        { emitEvent: false },
-      );
-      return;
-    }
-    if (profileG) {
-      this.loginForm.patchValue(
-        { userName: '', password: '' },
-        { emitEvent: false },
-      );
-      return;
-    }
-    const email = this.authStore.user()?.email?.trim() ?? '';
-    const currentUser = this.loginForm.controls.userName.getRawValue()?.trim();
-    if (email && !currentUser) {
-      this.loginForm.patchValue({ userName: email }, { emitEvent: false });
-    }
-  }
-
-  private prefillUserNameFromAppUser(user: AppUser | null): void {
-    const email = user?.email?.trim();
-    if (!email) {
-      return;
-    }
-    const gstinVal =
-      this.loginForm.controls.gstin.getRawValue()?.trim().toUpperCase() ?? '';
-    const profileG = this.profileGstinRaw().trim().toUpperCase();
-    if (gstinVal && profileG && gstinVal !== profileG) {
-      return;
-    }
-    const current = this.loginForm.controls.userName.getRawValue()?.trim();
-    if (!current) {
-      this.loginForm.patchValue({ userName: email }, { emitEvent: false });
-    }
-  }
-
-  async onSubmit(): Promise<void> {
-    if (this.submitLocked) {
-      return;
-    }
-    if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched();
-      this.toast.show(
-        'error',
-        'Please enter a valid GSTIN, GSTZen user name, and password.',
-        6000,
-      );
+    if (!this.gstZenCredentialsReady()) {
+      this.toast.show('error', this.credentialsMissingHint(), 8000);
       return;
     }
 
-    this.submitLocked = true;
-    const { gstin, userName, password } = this.loginForm.getRawValue();
+    const { gstZenUsername, gstZenPassword } = this.profileCredentials();
+
+    this.tokenActionLocked = true;
+    this.gstr1Auth.clearError();
+    this.otpRequestError.set(null);
+    this.establishError.set(null);
     this.toast.clear();
-    const signingInId = this.toast.show('info', 'Signing in to GSTZen…', 0);
+    const toastId = this.toast.show('info', 'Generating GSTZen token…', 0);
+
     try {
-      await this.gstr1Auth.login(userName, password);
-      this.persistLoginDraft(gstin, userName, password);
-      this.toast.dismiss(signingInId);
-      this.toast.show(
-        'success',
-        'GSTZen session established. Taking you to the app…',
-        5000,
-      );
-      const fallback = '/home';
-      const target = safeInternalNavigateUrl(
-        this.route.snapshot.queryParamMap.get('returnUrl'),
-        fallback,
-      );
-      if (isPlatformBrowser(this.platformId)) {
-        await this.router.navigateByUrl(target, { replaceUrl: true });
-      }
+      await this.gstr1Auth.login(gstZenUsername, gstZenPassword);
+      this.toast.dismiss(toastId);
+      this.toast.show('success', 'GSTZen token generated.', 4000);
+      this.flowStep.set('requestOtp');
     } catch {
-      this.toast.dismiss(signingInId);
+      this.toast.dismiss(toastId);
       this.toast.show(
         'error',
         this.gstr1Auth.errorMessage() ??
-          'Could not sign in to GSTZen. Check your credentials and try again.',
+          'Could not generate GSTZen token. Please try again.',
         8000,
       );
     } finally {
-      this.submitLocked = false;
+      this.tokenActionLocked = false;
     }
+  }
+
+  async generateOtp(): Promise<void> {
+    if (this.otpRequestLoading() || !this.showStep2()) {
+      return;
+    }
+    if (!this.gstFieldsReady()) {
+      this.otpRequestError.set(this.credentialsMissingHint());
+      return;
+    }
+    if (!this.gstr1Auth.hasValidToken()) {
+      this.otpRequestError.set('Generate token first (Step 1).');
+      this.flowStep.set('token');
+      return;
+    }
+
+    this.otpRequestLoading.set(true);
+    this.otpRequestError.set(null);
+    this.establishError.set(null);
+
+    try {
+      await firstValueFrom(
+        this.gstnApi.generateOtp({
+          gstin: this.resolvedGstin(),
+          username: this.portalUsername(),
+        }),
+      );
+      this.toast.show('success', 'OTP sent on GST portal. Enter it in Step 3.', 6000);
+      this.establishOtpForm.reset({ otp: '' });
+      this.flowStep.set('establish');
+    } catch (err: unknown) {
+      this.otpRequestError.set(this.formatApiError(err));
+    } finally {
+      this.otpRequestLoading.set(false);
+    }
+  }
+
+  async establishSession(): Promise<void> {
+    if (this.establishLoading() || !this.showStep3()) {
+      return;
+    }
+    if (this.establishOtpForm.invalid) {
+      this.establishOtpForm.markAllAsTouched();
+      return;
+    }
+    if (!this.gstr1Auth.hasValidToken()) {
+      this.establishError.set('Generate token first (Step 1).');
+      this.flowStep.set('token');
+      return;
+    }
+
+    const otp = this.establishOtpForm.controls.otp.getRawValue().trim();
+
+    this.establishLoading.set(true);
+    this.establishError.set(null);
+
+    try {
+      await firstValueFrom(
+        this.gstnApi.establishSession({
+          gstin: this.resolvedGstin(),
+          otp,
+        }),
+      );
+      this.flowStep.set('complete');
+      this.toast.show('success', 'GST session established.', 4000);
+      await this.navigateAfterSuccess();
+    } catch (err: unknown) {
+      this.establishError.set(this.formatApiError(err));
+    } finally {
+      this.establishLoading.set(false);
+    }
+  }
+
+  private async navigateAfterSuccess(): Promise<void> {
+    const fallback = '/home';
+    const target = safeInternalNavigateUrl(
+      this.route.snapshot.queryParamMap.get('returnUrl'),
+      fallback,
+    );
+
+    if (isPlatformBrowser(this.platformId)) {
+      await this.router.navigateByUrl(target, { replaceUrl: true });
+    }
+  }
+
+  private formatApiError(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      const body = err.error;
+      if (typeof body === 'object' && body !== null) {
+        const msg = (body as { message?: string; detail?: string }).message
+          ?? (body as { detail?: string }).detail;
+        if (typeof msg === 'string' && msg.trim()) {
+          return msg.trim();
+        }
+      }
+      if (typeof body === 'string' && body.trim()) {
+        return body.trim();
+      }
+      return `Request failed (${err.status}).`;
+    }
+    if (err instanceof Error) {
+      return err.message;
+    }
+    return 'Request failed. Please try again.';
   }
 }

@@ -43,13 +43,21 @@ export class Gstr1GstzenAuthService {
             return throwError(() => err);
           }
           if (err instanceof HttpErrorResponse) {
-            const body = err.error as Record<string, unknown> | string | null;
+            const errBody = err.error as Record<string, unknown> | string | null;
             const detail =
-              body && typeof body === 'object' && 'detail' in body
-                ? formatGstZenJwtDetail((body as { detail?: unknown }).detail)
+              errBody && typeof errBody === 'object' && 'detail' in errBody
+                ? formatGstZenJwtDetail((errBody as { detail?: unknown }).detail)
                 : err.message;
+            const status =
+              err.status ||
+              (typeof errBody === 'object' &&
+              errBody !== null &&
+              typeof errBody['status_code'] === 'number'
+                ? errBody['status_code']
+                : undefined);
             return throwError(
-              () => new Gstr1AuthError(detail || 'Login request failed.', err.status, err.error),
+              () =>
+                new Gstr1AuthError(detail || 'Login request failed.', status, err.error),
             );
           }
           return throwError(() => new Gstr1AuthError('Login request failed.', undefined, err));

@@ -24,7 +24,11 @@ declare
     'email', 'ajay.gunda@sbpcorp.in',
     'loginEmail', 'ajay.gunda@sbpcorp.in',
     'companyName', 'SBP Consulting Private Limited',
-    'GSTIN', '36AADCG4992P1ZU',
+    'GSTIN', '36AAYCA9563F1ZZ',
+    'gstin', '36AAYCA9563F1ZZ',
+    'gstrGstin', '36AAYCA9563F1ZZ',
+    'gstr1Gstin', '36AAYCA9563F1ZZ',
+    'organizationGstin', '36AADCG4992P1ZU',
     'phone', '7013857444',
     'city', 'Hyderabad',
     'address', 'Gachibowli',
@@ -37,7 +41,10 @@ declare
     'status', 'ACTIVE',
     'isGSTAuthenticated', true,
     'isOnline', true,
-    'isAdded', true
+    'isAdded', true,
+    'gstPortalUsername', 'ARHASRI-23',
+    'gstZenUsername', 'ajay.a02@gmail.com',
+    'gstZenPassword', 'Arhasri@1234'
   );
 begin
   if length(v_plain_password) < 6 then
@@ -113,7 +120,7 @@ begin
     id, gstin, company_name, display_name, email, phone, city, address,
     state_code, pincode, user_name, login_email, extra, updated_at
   ) values (
-    v_uid, '36AADCG4992P1ZU', 'SBP Consulting Private Limited', 'Ajay',
+    v_uid, '36AAYCA9563F1ZZ', 'SBP Consulting Private Limited', 'Ajay',
     'ajay.gunda@sbpcorp.in', '7013857444', 'Hyderabad', 'Gachibowli',
     '36', '500082', 'ajay', 'ajay.gunda@sbpcorp.in',
     jsonb_build_object('status', 'ACTIVE'),
