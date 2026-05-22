@@ -183,24 +183,24 @@
     }
   </section>
 
-  @if (!retsumLoading() && logicalErrorText()) {
+  @if (!fileNilGstr1() && !retsumLoading() && logicalErrorText()) {
     <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-amber-950 shadow-sm">
       <p class="text-sm font-bold">Return summary (RETSUM)</p>
       <p class="mt-1 text-sm">{{ logicalErrorText() }}</p>
     </div>
   }
-  @if (!retsumLoading() && httpError() !== null) {
+  @if (!fileNilGstr1() && !retsumLoading() && httpError() !== null) {
     <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-5 text-red-950 shadow-sm">
       <p class="text-sm font-bold">RETSUM request failed</p>
       <pre class="mt-3 max-h-64 overflow-auto rounded border border-red-100 bg-white p-3 font-mono text-[11px] leading-relaxed text-red-900">{{ httpError() | json }}</pre>
     </div>
   }
 
-  <div class="mt-0 border border-t-0 border-slate-200 bg-slate-100/90 px-4 py-2.5 md:px-6">
-    <label class="inline-flex cursor-pointer select-none items-center gap-2 text-sm font-medium text-slate-800">
+  <div class="border border-t-0 border-slate-200 bg-white px-4 py-3 md:px-6">
+    <label class="inline-flex cursor-pointer select-none items-center gap-2.5 text-sm font-medium text-slate-800">
       <input
         type="checkbox"
-        class="h-4 w-4 rounded border-slate-300 text-[#1a56a7] focus:ring-[#1a56a7]"
+        class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
         [checked]="fileNilGstr1()"
         (change)="toggleFileNil()"
       />
@@ -208,7 +208,28 @@
     </label>
   </div>
 
-  <section class="mb-6 overflow-hidden rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-md" aria-label="Add record summary">
+  @if (fileNilGstr1()) {
+    <div class="border border-t-0 border-slate-200 bg-white px-4 pb-4 md:px-6 md:pb-5">
+      <div class="rounded-lg border border-sky-300 bg-sky-50/80 px-4 py-4 text-sm text-slate-800 shadow-sm">
+        <p class="font-semibold text-slate-900">
+          Note: NIL Form GSTR-1 can be filed by you if you have:
+        </p>
+        <ol class="mt-3 list-[lower-alpha] space-y-2 pl-5 leading-relaxed">
+          <li>
+            no outward supplies to report for the month including supplies made through e-invoice, if applicable;
+          </li>
+          <li>
+            no amendments to be made for any of the supplies declared in earlier GSTR-1/IFF for the current tax period;
+          </li>
+          <li>no credit/debit notes to be declared/amended; and</li>
+          <li>
+            no liabilities due to declaration of advances in earlier tax periods or advances received in the current tax period.
+          </li>
+        </ol>
+      </div>
+    </div>
+  } @else {
+    <section class="overflow-hidden border border-t-0 border-slate-200 bg-white shadow-md" aria-label="Add record summary">
     <button
       type="button"
       class="flex w-full items-center justify-between gap-3 bg-[#2c4172] px-4 py-3 text-left text-white md:px-5"
@@ -279,9 +300,9 @@
         }
       </div>
     }
-  </section>
+    </section>
 
-  <section class="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md" aria-label="Amend record details">
+    <section class="mb-0 overflow-hidden border border-t-0 border-slate-200 bg-white shadow-md" aria-label="Amend record details">
     <button
       type="button"
       class="flex w-full items-center justify-between gap-3 bg-[#2c4172] px-4 py-3 text-left text-white md:px-5"
@@ -340,6 +361,29 @@
         }
       </div>
     }
+    </section>
+  }
+
+  <p class="mb-0 border border-t-0 border-slate-200 bg-sky-50 px-4 py-3 text-sm leading-relaxed text-slate-700 md:px-6">
+    <span class="mr-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-600 text-[10px] font-bold text-white" aria-hidden="true">i</span>
+    The taxpayers for whom e-invoicing is not applicable may ignore the sections/options related to e-invoice download. The downloaded file would be blank in case taxpayer is not e-invoicing or when e-invoices reported to IRP are yet to be processed by GST system.
+  </p>
+
+  <section class="mb-6 overflow-hidden rounded-b-xl border border-t-0 border-slate-200 bg-white shadow-md" aria-label="E-invoice download history">
+    <button
+      type="button"
+      class="flex w-full items-center justify-between gap-3 bg-[#2c4172] px-4 py-3 text-left text-white md:px-5"
+      (click)="toggleEInvoiceHistorySection()"
+      [attr.aria-expanded]="eInvoiceHistoryOpen()"
+    >
+      <span class="text-sm font-bold uppercase tracking-wide md:text-base">E-invoice download history</span>
+      <span class="text-lg font-bold">{{ eInvoiceHistoryOpen() ? '▲' : '▼' }}</span>
+    </button>
+    @if (eInvoiceHistoryOpen()) {
+      <div class="border-t border-slate-200 bg-slate-50/80 px-4 py-8 text-center md:px-6">
+        <p class="text-sm text-slate-600">No e-invoice download history for this return period.</p>
+      </div>
+    }
   </section>
 
   <footer class="sticky bottom-0 z-10 mt-2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg md:mt-4" aria-label="Workspace actions">
@@ -353,9 +397,19 @@
       <div class="flex flex-wrap items-center justify-end gap-3">
         <button
           type="button"
-          class="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-400 bg-white px-5 text-sm font-bold uppercase tracking-wide text-slate-800 shadow-sm hover:bg-slate-50"
+          class="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[#1c2b54] px-4 text-xs font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347] md:px-5 md:text-sm"
+          (click)="downloadEInvoiceExcel()"
+          title="Download e-invoice details as Excel"
+        >
+          Download details from e-invoices (Excel)
+        </button>
+        <button
+          type="button"
+          class="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-slate-400 bg-white px-5 text-sm font-bold uppercase tracking-wide shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+          [class.text-slate-800]="!resetDisabled()"
           (click)="openResetConfirm()"
-          title="Clear saved drafts and RETSUM"
+          [disabled]="resetDisabled()"
+          [title]="resetDisabled() ? 'Reset is not available while filing Nil GSTR-1.' : 'Clear saved drafts and RETSUM'"
         >
           Reset
         </button>
@@ -364,20 +418,26 @@
           class="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-[#1c2b54] px-6 text-sm font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#152347] disabled:cursor-not-allowed disabled:opacity-50"
           [disabled]="!paramsValid() || proceedToFileLoading()"
           (click)="proceedToFileSummary()"
-          title="Call GSTZen POST /api/gstr1/reset/, then open returns dashboard when successful"
+          [title]="
+            fileNilGstr1()
+              ? 'Save nil return and proceed to file'
+              : 'Call GSTZen POST /api/gstr1/reset/, then open returns dashboard when successful'
+          "
         >
           @if (proceedToFileLoading()) {
-            <span>Proceeding…</span>
+            <span>{{ fileNilGstr1() ? 'Filing…' : 'Proceeding…' }}</span>
           } @else {
-            <span>Proceed to file / Summary</span>
+            <span>{{ primaryActionLabel() }}</span>
           }
         </button>
       </div>
     </div>
-    <p class="border-t border-slate-100 bg-slate-50 px-4 py-3 text-center text-xs text-slate-600 md:px-6">
-      Press <span class="font-semibold">View</span> after <span class="font-semibold">Reset</span> to reload RETSUM. Use tiles under
-      <span class="font-semibold">Add record details</span> for original data and <span class="font-semibold">Amend record details</span> for amendment buckets.
-    </p>
+    @if (!fileNilGstr1()) {
+      <p class="border-t border-slate-100 bg-slate-50 px-4 py-3 text-center text-xs text-slate-600 md:px-6">
+        Use tiles under <span class="font-semibold">Add record details</span> for original data and
+        <span class="font-semibold">Amend record details</span> for amendment buckets.
+      </p>
+    }
   </footer>
 
   @if (resetConfirmOpen()) {

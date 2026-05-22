@@ -37,6 +37,7 @@ import {
   GSTR1_SUMMARY_TILES_FOR_API,
   type Gstr1AmendRecordDetailTile,
 } from '../constants/gstr1-download-workspace.constants';
+import { GSTR1_NIL_RESAVE_INV_ORDER } from '../constants/gstr1-nil-supplies.constants';
 import { docIssueStorageKey } from '../utils/gstr1-doc-issue.state';
 import { ecoSuppliesStorageKey } from '../utils/gstr1-eco-supplies.state';
 import { us95DraftsStorageKey } from '../utils/gstr1-supplies-us-95.drafts';
@@ -125,6 +126,26 @@ function gstzenUserFacingMessage(raw: unknown): string | null {
   return null;
 }
 
+/** Zero-value NIC `nil.inv` payload for File Nil GSTR-1 → FILE STATEMENT. */
+function buildZeroNilRetsavePayload(
+  gstin: string,
+  retPeriod: string,
+): Record<string, unknown> {
+  const inv: Record<string, unknown>[] = GSTR1_NIL_RESAVE_INV_ORDER.map(({ sply_ty }) => ({
+    sply_ty,
+    expt_amt: 0,
+    nil_amt: 0,
+    ngsup_amt: 0,
+  }));
+  return {
+    fp: retPeriod.trim(),
+    gstin: gstin.trim().toUpperCase(),
+    gt: 0,
+    cur_gt: 0,
+    nil: { inv },
+  };
+}
+
 @Component({
   selector: 'lib-gstr1-download-return-page',
   standalone: true,
@@ -172,6 +193,7 @@ export class Gstr1DownloadReturnPageComponent {
   readonly fileNilGstr1 = signal(false);
   readonly addRecordOpen = signal(true);
   readonly amendRecordOpen = signal(false);
+  readonly eInvoiceHistoryOpen = signal(false);
   readonly resetConfirmOpen = signal(false);
 
   readonly retsumLoading = signal(false);
@@ -290,8 +312,29 @@ export class Gstr1DownloadReturnPageComponent {
     this.amendRecordOpen.update((v) => !v);
   }
 
+  toggleEInvoiceHistorySection(): void {
+    this.eInvoiceHistoryOpen.update((v) => !v);
+  }
+
   toggleFileNil(): void {
-    this.fileNilGstr1.update((v) => !v);
+    this.fileNilGstr1.update((v) => {
+      const next = !v;
+      if (next) {
+        this.logicalErrorText.set(null);
+        this.httpError.set(null);
+      } else {
+        void this.fetchRetsumSummary();
+      }
+      return next;
+    });
+  }
+
+  resetDisabled(): boolean {
+    return this.fileNilGstr1();
+  }
+
+  primaryActionLabel(): string {
+    return this.fileNilGstr1() ? 'File statement' : 'Proceed to file / Summary';
   }
 
   summaryTileActive(index: number): boolean {
@@ -398,19 +441,58 @@ export class Gstr1DownloadReturnPageComponent {
   }
 
   async proceedToFileSummary(): Promise<void> {
+    if (this.fileNilGstr1()) {
+      await this.fileNilStatement();
+      return;
+    }
+    await this.runProceedToFileFlow({ nilRetsaveFirst: false });
+  }
+
+  /** Portal “FILE STATEMENT” — post zero `nil` retsave, then proceed to file. */
+  async fileNilStatement(): Promise<void> {
+    if (!this.fileNilGstr1()) {
+      return;
+    }
+    await this.runProceedToFileFlow({ nilRetsaveFirst: true });
+  }
+
+  downloadEInvoiceExcel(): void {
+    this.toast.show(
+      'info',
+      'E-invoice Excel download is not available in this workspace yet.',
+      4500,
+    );
+  }
+
+  private async runProceedToFileFlow(opts: {
+    readonly nilRetsaveFirst: boolean;
+  }): Promise<void> {
     if (this.proceedToFileLoading()) {
       return;
     }
     if (!this.paramsValid()) {
-      this.toast.show('error', 'Enter a valid 15-character GSTIN and return period (MMYYYY) before proceeding.', 5500);
+      this.toast.show(
+        'error',
+        'Enter a valid 15-character GSTIN and return period (MMYYYY) before proceeding.',
+        5500,
+      );
       return;
     }
     this.proceedToFileLoading.set(true);
     try {
+      const g = this.gstin().trim().toUpperCase();
+      const r = this.retPeriod().trim();
+
+      if (opts.nilRetsaveFirst) {
+        await firstValueFrom(
+          this.api.retsaveGstr1Return(buildZeroNilRetsavePayload(g, r)),
+        );
+      }
+
       const raw = await firstValueFrom(
         this.api.resetGstr1Proceed({
-          gstin: this.gstin().trim().toUpperCase(),
-          ret_period: this.retPeriod().trim(),
+          gstin: g,
+          ret_period: r,
         }),
       );
       if (!isGstr1ProceedToFileResetSuccess(raw)) {
@@ -427,8 +509,6 @@ export class Gstr1DownloadReturnPageComponent {
         return;
       }
 
-      const g = this.gstin().trim().toUpperCase();
-      const r = this.retPeriod().trim();
       const refId = raw.message.reference_id.trim();
       void this.router.navigate(['/gstr1/workspace/returns-dashboard'], {
         queryParams: {
@@ -439,7 +519,9 @@ export class Gstr1DownloadReturnPageComponent {
       });
     } catch (err: unknown) {
       const normalized = normalizeErrorEnvelope(err);
-      let detail = 'GSTR‑1 proceed request failed.';
+      let detail = opts.nilRetsaveFirst
+        ? 'Nil GSTR‑1 file statement failed.'
+        : 'GSTR‑1 proceed request failed.';
       if (normalized && typeof normalized === 'object') {
         const body = (normalized as { body?: unknown }).body;
         const fromBody = gstzenUserFacingMessage(body);
@@ -613,8 +695,6 @@ export class Gstr1DownloadReturnPageComponent {
       return false;
     }
     if (this.fileNilGstr1()) {
-      this.logicalErrorText.set('Nil GSTR-1 is selected; clear the checkbox to load return summary.');
-      this.httpError.set(null);
       return false;
     }
 
