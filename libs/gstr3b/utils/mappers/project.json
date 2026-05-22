@@ -1,0 +1,19 @@
+{
+  "name": "gstr3b-utils-mappers",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr3b/utils/mappers/src",
+  "projectType": "library",
+  "tags": ["type:utils", "domain:gstr3b"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr3b/utils/mappers",
+        "main": "libs/gstr3b/utils/mappers/src/index.ts",
+        "tsConfig": "libs/gstr3b/utils/mappers/tsconfig.lib.json",
+        "assets": ["libs/gstr3b/utils/mappers/*.md"]
+      }
+    }
+  }
+}

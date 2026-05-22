@@ -1,0 +1,19 @@
+{
+  "name": "gstr3b-shared-return-period",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr3b/shared/return-period/src",
+  "projectType": "library",
+  "tags": ["type:shared", "domain:gstr3b"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr3b/shared/return-period",
+        "main": "libs/gstr3b/shared/return-period/src/index.ts",
+        "tsConfig": "libs/gstr3b/shared/return-period/tsconfig.lib.json",
+        "assets": ["libs/gstr3b/shared/return-period/*.md"]
+      }
+    }
+  }
+}

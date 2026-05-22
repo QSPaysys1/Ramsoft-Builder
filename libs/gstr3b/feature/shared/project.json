@@ -1,0 +1,13 @@
+{
+  "name": "gstr3b-feature-shared",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr3b/feature/shared/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:feature", "domain:gstr3b"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

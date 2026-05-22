@@ -374,6 +374,150 @@
       "@ramsoft-builder/gstr2b/utils/validators": [
         "libs/gstr2b/utils/validators/src/index.ts"
       ],
+      "@ramsoft-builder/gstr3b/data-access/api": [
+        "libs/gstr3b/data-access/api/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/data-access/facades": [
+        "libs/gstr3b/data-access/facades/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/data-access/guards": [
+        "libs/gstr3b/data-access/guards/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/data-access/interceptors": [
+        "libs/gstr3b/data-access/interceptors/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/data-access/resolvers": [
+        "libs/gstr3b/data-access/resolvers/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/data-access/services": [
+        "libs/gstr3b/data-access/services/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/data-access/state": [
+        "libs/gstr3b/data-access/state/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/data-access/stores": [
+        "libs/gstr3b/data-access/stores/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/feature/dashboard": [
+        "libs/gstr3b/feature/dashboard/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/feature/exempt-nil-non-gst": [
+        "libs/gstr3b/feature/exempt-nil-non-gst/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/feature/filing": [
+        "libs/gstr3b/feature/filing/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/feature/interest-late-fee": [
+        "libs/gstr3b/feature/interest-late-fee/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/feature/inward-supplies": [
+        "libs/gstr3b/feature/inward-supplies/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/feature/itc": [
+        "libs/gstr3b/feature/itc/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/feature/outward-supplies": [
+        "libs/gstr3b/feature/outward-supplies/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/feature/payment-tax": [
+        "libs/gstr3b/feature/payment-tax/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/feature/refund-adjustment": [
+        "libs/gstr3b/feature/refund-adjustment/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/feature/shared": [
+        "libs/gstr3b/feature/shared/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/feature/summary": [
+        "libs/gstr3b/feature/summary/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/feature/tds-tcs-credit": [
+        "libs/gstr3b/feature/tds-tcs-credit/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/models/dto": [
+        "libs/gstr3b/models/dto/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/models/entities": [
+        "libs/gstr3b/models/entities/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/models/enums": [
+        "libs/gstr3b/models/enums/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/models/interfaces": [
+        "libs/gstr3b/models/interfaces/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/models/requests": [
+        "libs/gstr3b/models/requests/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/models/responses": [
+        "libs/gstr3b/models/responses/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/shared/caching": [
+        "libs/gstr3b/shared/caching/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/shared/error-handler": [
+        "libs/gstr3b/shared/error-handler/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/shared/filters": [
+        "libs/gstr3b/shared/filters/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/shared/pagination": [
+        "libs/gstr3b/shared/pagination/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/shared/return-period": [
+        "libs/gstr3b/shared/return-period/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/shared/session": [
+        "libs/gstr3b/shared/session/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/shared/tax-calculation": [
+        "libs/gstr3b/shared/tax-calculation/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/ui/empty-state": [
+        "libs/gstr3b/ui/empty-state/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/ui/filing-status": [
+        "libs/gstr3b/ui/filing-status/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/ui/filters": [
+        "libs/gstr3b/ui/filters/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/ui/itc-table": [
+        "libs/gstr3b/ui/itc-table/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/ui/loaders": [
+        "libs/gstr3b/ui/loaders/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/ui/payment-table": [
+        "libs/gstr3b/ui/payment-table/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/ui/shared": [
+        "libs/gstr3b/ui/shared/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/ui/summary-cards": [
+        "libs/gstr3b/ui/summary-cards/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/ui/tax-table": [
+        "libs/gstr3b/ui/tax-table/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/utils/calculators": [
+        "libs/gstr3b/utils/calculators/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/utils/constants": [
+        "libs/gstr3b/utils/constants/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/utils/helpers": [
+        "libs/gstr3b/utils/helpers/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/utils/mappers": [
+        "libs/gstr3b/utils/mappers/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/utils/transformers": [
+        "libs/gstr3b/utils/transformers/src/index.ts"
+      ],
+      "@ramsoft-builder/gstr3b/utils/validators": [
+        "libs/gstr3b/utils/validators/src/index.ts"
+      ],
       "@ramsoft-builder/shared/data-access/supabase": [
         "libs/shared/data-access/supabase/src/index.ts"
       ]

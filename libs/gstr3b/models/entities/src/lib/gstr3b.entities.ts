@@ -1,0 +1,215 @@
+export interface Gstr3bTaxAmounts {
+  readonly igst: string;
+  readonly cgst: string;
+  readonly sgst: string;
+  readonly cess: string;
+}
+
+export interface Gstr3bInterStateAmounts {
+  readonly taxableValue: string;
+  readonly igst: string;
+}
+
+export interface Gstr3bExemptAmounts {
+  readonly interState: string;
+  readonly intraState: string;
+}
+
+export interface Gstr3bPaymentAmounts {
+  readonly balanceLiability: string;
+  readonly paidThroughCash: string;
+  readonly paidThroughCredit: string;
+}
+
+export interface Gstr3bAutoliabMeta {
+  readonly gstin: string;
+  readonly returnPeriod: string;
+  readonly r1FileDate: string;
+  readonly r2bGenDate: string;
+  readonly r3bGenDate: string;
+}
+
+export interface Gstr3bAutoliabBundle {
+  readonly meta: Gstr3bAutoliabMeta;
+  readonly table31: Gstr3bTaxAmounts;
+  readonly table311: Gstr3bTaxAmounts;
+  readonly table32: Gstr3bInterStateAmounts;
+  readonly table4: Gstr3bTaxAmounts;
+  readonly table5: Gstr3bExemptAmounts;
+  readonly table51: Gstr3bTaxAmounts;
+  readonly table61: Gstr3bPaymentAmounts;
+}
+
+/** GSTZen `POST /api/gstr3b/retsave/` — tax line with all five columns. */
+export interface Gstr3bRetsaveFullTaxLine {
+  txval: number;
+  iamt: number;
+  camt: number;
+  samt: number;
+  csamt: number;
+}
+
+export interface Gstr3bRetsaveZeroRatedLine {
+  txval: number;
+  iamt: number;
+  csamt: number;
+}
+
+export interface Gstr3bRetsaveTxvalLine {
+  txval: number;
+}
+
+export interface Gstr3bRetsaveInterSupRow {
+  pos: string;
+  txval: number;
+  iamt: number;
+}
+
+export interface Gstr3bRetsaveItcRow {
+  ty: string;
+  iamt: number;
+  camt: number;
+  samt: number;
+  csamt: number;
+}
+
+export interface Gstr3bRetsaveItcTaxOnly {
+  iamt: number;
+  camt: number;
+  samt: number;
+  csamt: number;
+}
+
+export interface Gstr3bRetsaveInwardSupRow {
+  ty: string;
+  inter: number;
+  intra: number;
+}
+
+export interface Gstr3bSupDetails {
+  osup_det: Gstr3bRetsaveFullTaxLine;
+  osup_zero: Gstr3bRetsaveZeroRatedLine;
+  osup_nil_exmp: Gstr3bRetsaveTxvalLine;
+  isup_rev: Gstr3bRetsaveFullTaxLine;
+  osup_nongst: Gstr3bRetsaveTxvalLine;
+}
+
+export interface Gstr3bEcoDetails {
+  eco_sup: Gstr3bRetsaveFullTaxLine;
+  eco_reg_sup: Gstr3bRetsaveTxvalLine;
+}
+
+export interface Gstr3bInterSup {
+  unreg_details: Gstr3bRetsaveInterSupRow[];
+  comp_details: Gstr3bRetsaveInterSupRow[];
+  uin_details: Gstr3bRetsaveInterSupRow[];
+}
+
+export interface Gstr3bItcElg {
+  itc_avl: Gstr3bRetsaveItcRow[];
+  itc_rev: Gstr3bRetsaveItcRow[];
+  itc_net: Gstr3bRetsaveItcTaxOnly;
+  itc_inelg: Gstr3bRetsaveItcRow[];
+}
+
+export interface Gstr3bInwardSup {
+  isup_details: Gstr3bRetsaveInwardSupRow[];
+}
+
+export interface Gstr3bIntrLtfee {
+  intr_details: Gstr3bRetsaveItcTaxOnly;
+  ltfee_details: Gstr3bRetsaveItcTaxOnly;
+}
+
+export interface Gstr3bRetsavePditc {
+  liab_ldg_id: number;
+  trans_typ: number;
+  i_pdi: number;
+  i_pdc: number;
+  i_pds: number;
+  c_pdi: number;
+  c_pdc: number;
+  s_pdi: number;
+  s_pds: number;
+  cs_pdcs: number;
+}
+
+export interface Gstr3bRetsavePdcashRow {
+  liab_ldg_id: number;
+  trans_typ: number;
+  ipd: number;
+  cpd: number;
+  spd: number;
+  cspd: number;
+  i_intrpd: number;
+  c_intrpd: number;
+  s_intrpd: number;
+  cs_intrpd: number;
+  i_lfeepd: number;
+  c_lfeepd: number;
+  s_lfeepd: number;
+  cs_lfeepd: number;
+}
+
+export interface Gstr3bTaxPayComponent {
+  tx: number;
+  intr: number;
+  fee: number;
+}
+
+export interface Gstr3bNetTaxPayRow {
+  liab_ldg_id: number;
+  tran_desc: string;
+  trans_typ: number;
+  igst: Gstr3bTaxPayComponent;
+  cgst: Gstr3bTaxPayComponent;
+  sgst: Gstr3bTaxPayComponent;
+  cess: Gstr3bTaxPayComponent;
+}
+
+export type Gstr3bPaymentTaxKey = 'igst' | 'cgst' | 'sgst' | 'cess';
+
+export interface Gstr3bPaymentGridRow {
+  key: Gstr3bPaymentTaxKey;
+  label: string;
+  netNonRc: number;
+  netRc: number;
+  itcIgst: number;
+  itcCgst: number;
+  itcSgst: number;
+  itcCess: number;
+  cashNonRc: number;
+  cashRc: number;
+  intrPayable: number;
+  intrCash: number;
+  feePayable: number;
+  feeCash: number;
+}
+
+export interface Gstr3bCreditLedgerBalance {
+  igst: number;
+  cgst: number;
+  sgst: number;
+  cess: number;
+}
+
+export interface Gstr3bTxPmt {
+  pditc: Gstr3bRetsavePditc;
+  pdcash: Gstr3bRetsavePdcashRow[];
+  net_tax_pay: Gstr3bNetTaxPayRow[];
+}
+
+export interface Gstr3bRetsaveFormState {
+  sup_details: Gstr3bSupDetails;
+  inter_sup: Gstr3bInterSup;
+  eco_dtls: Gstr3bEcoDetails;
+  itc_elg: Gstr3bItcElg;
+  inward_sup: Gstr3bInwardSup;
+  intr_ltfee: Gstr3bIntrLtfee;
+  tx_pmt: Gstr3bTxPmt;
+}
+
+export interface Gstr3bRetsaveRequestBody extends Gstr3bRetsaveFormState {
+  readonly ret_period: string;
+  readonly gstin: string;
+}

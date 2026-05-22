@@ -1,0 +1,19 @@
+{
+  "name": "gstr3b-utils-validators",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr3b/utils/validators/src",
+  "projectType": "library",
+  "tags": ["type:utils", "domain:gstr3b"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr3b/utils/validators",
+        "main": "libs/gstr3b/utils/validators/src/index.ts",
+        "tsConfig": "libs/gstr3b/utils/validators/tsconfig.lib.json",
+        "assets": ["libs/gstr3b/utils/validators/*.md"]
+      }
+    }
+  }
+}

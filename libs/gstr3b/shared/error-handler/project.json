@@ -1,0 +1,19 @@
+{
+  "name": "gstr3b-shared-error-handler",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr3b/shared/error-handler/src",
+  "projectType": "library",
+  "tags": ["type:shared", "domain:gstr3b"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr3b/shared/error-handler",
+        "main": "libs/gstr3b/shared/error-handler/src/index.ts",
+        "tsConfig": "libs/gstr3b/shared/error-handler/tsconfig.lib.json",
+        "assets": ["libs/gstr3b/shared/error-handler/*.md"]
+      }
+    }
+  }
+}

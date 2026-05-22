@@ -1,34 +1,27 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { Gstr3bGstApiClient } from '@ramsoft-builder/gstr3b/data-access/api';
 import type {
   Gstr3bAutoliabRequestBody,
   Gstr3bRetsaveRequestBody,
   Gstr3bRetsumRequestBody,
-} from './gstr3b.models';
-import { GSTR1_GSTZEN_AUTH_CONFIG } from './gstr1-gstzen-auth.config';
-import { GstzenHttpClient } from './gstzen-http.client';
+} from '@ramsoft-builder/gstr3b/models/requests';
+import type { Gstr3bRetsaveRequestBody as RetsaveBody } from '@ramsoft-builder/gstr3b/models/entities';
 
-/** GSTR-3B APIs (autoliab, retsave, retsum). */
+/** Backward-compatible wrapper around {@link Gstr3bGstApiClient}. */
 @Injectable({ providedIn: 'root' })
 export class Gstr3bApiService {
-  private readonly http = inject(GstzenHttpClient);
-  private readonly config = inject(GSTR1_GSTZEN_AUTH_CONFIG);
+  private readonly client = inject(Gstr3bGstApiClient);
 
   fetchGstr3bAutoliab(body: Gstr3bAutoliabRequestBody): Observable<unknown> {
-    return this.http.postJson(this.config.gstr3bAutoliabUrl, {
-      gstin: body.gstin.trim().toUpperCase(),
-      ret_period: body.ret_period.trim(),
-    });
+    return this.client.fetchAutoliab(body);
   }
 
-  retsaveGstr3bReturn(body: Gstr3bRetsaveRequestBody): Observable<unknown> {
-    return this.http.postJson(this.config.gstr3bRetsaveUrl, body);
+  retsaveGstr3bReturn(body: RetsaveBody): Observable<unknown> {
+    return this.client.retsave(body);
   }
 
   fetchGstr3bRetsum(body: Gstr3bRetsumRequestBody): Observable<unknown> {
-    return this.http.postJson(this.config.gstr3bRetsumUrl, {
-      gstin: body.gstin.trim().toUpperCase(),
-      ret_period: body.ret_period.trim(),
-    });
+    return this.client.fetchRetsum(body);
   }
 }

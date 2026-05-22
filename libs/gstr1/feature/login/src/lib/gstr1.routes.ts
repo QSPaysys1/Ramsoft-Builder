@@ -284,56 +284,66 @@ export const gstr1Routes: Routes = [
       {
         path: 'gstr3b-view',
         loadComponent: () =>
-          import('./pages/gstr3b-view.page').then((m) => m.Gstr3bViewPageComponent),
+          import('./pages/gstr3b-route-redirect.page').then(
+            (m) => m.Gstr3bRouteRedirectPageComponent,
+          ),
+        data: { gstr3bTarget: 'summary' },
       },
       {
         path: 'gstr3b-sup-details',
         loadComponent: () =>
-          import('./pages/gstr3b-sup-details.page').then(
-            (m) => m.Gstr3bSupDetailsPageComponent,
+          import('./pages/gstr3b-route-redirect.page').then(
+            (m) => m.Gstr3bRouteRedirectPageComponent,
           ),
+        data: { gstr3bTarget: 'outward-supplies' },
       },
       {
         path: 'gstr3b-eco-details',
         loadComponent: () =>
-          import('./pages/gstr3b-eco-details.page').then(
-            (m) => m.Gstr3bEcoDetailsPageComponent,
+          import('./pages/gstr3b-route-redirect.page').then(
+            (m) => m.Gstr3bRouteRedirectPageComponent,
           ),
+        data: { gstr3bTarget: 'outward-supplies/eco' },
       },
       {
         path: 'gstr3b-inter-sup-details',
         loadComponent: () =>
-          import('./pages/gstr3b-inter-sup-details.page').then(
-            (m) => m.Gstr3bInterSupDetailsPageComponent,
+          import('./pages/gstr3b-route-redirect.page').then(
+            (m) => m.Gstr3bRouteRedirectPageComponent,
           ),
+        data: { gstr3bTarget: 'outward-supplies/inter' },
       },
       {
         path: 'gstr3b-itc-details',
         loadComponent: () =>
-          import('./pages/gstr3b-itc-details.page').then(
-            (m) => m.Gstr3bItcDetailsPageComponent,
+          import('./pages/gstr3b-route-redirect.page').then(
+            (m) => m.Gstr3bRouteRedirectPageComponent,
           ),
+        data: { gstr3bTarget: 'itc' },
       },
       {
         path: 'gstr3b-inward-sup-details',
         loadComponent: () =>
-          import('./pages/gstr3b-inward-sup-details.page').then(
-            (m) => m.Gstr3bInwardSupDetailsPageComponent,
+          import('./pages/gstr3b-route-redirect.page').then(
+            (m) => m.Gstr3bRouteRedirectPageComponent,
           ),
+        data: { gstr3bTarget: 'inward-supplies' },
       },
       {
         path: 'gstr3b-intr-ltfee-details',
         loadComponent: () =>
-          import('./pages/gstr3b-intr-ltfee-details.page').then(
-            (m) => m.Gstr3bIntrLtfeeDetailsPageComponent,
+          import('./pages/gstr3b-route-redirect.page').then(
+            (m) => m.Gstr3bRouteRedirectPageComponent,
           ),
+        data: { gstr3bTarget: 'interest-late-fee' },
       },
       {
         path: 'gstr3b-payment-details',
         loadComponent: () =>
-          import('./pages/gstr3b-payment-details.page').then(
-            (m) => m.Gstr3bPaymentDetailsPageComponent,
+          import('./pages/gstr3b-route-redirect.page').then(
+            (m) => m.Gstr3bRouteRedirectPageComponent,
           ),
+        data: { gstr3bTarget: 'payment-tax' },
       },
       {
         path: 'gstr2a-b2b',

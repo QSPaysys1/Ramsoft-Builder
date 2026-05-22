@@ -1,0 +1,123 @@
+<div class="gstr3b-section pb-12">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600 md:text-sm">
+    <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+    <span aria-hidden="true">›</span>
+    <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+    <span aria-hidden="true">›</span>
+    <a
+      routerLink="/gstr3b/summary"
+      [queryParams]="backToGstr3bQueryParams()"
+      class="text-[#1a56a7] hover:underline"
+    >GSTR-3B</a>
+    <span aria-hidden="true">›</span>
+    <span class="font-semibold text-slate-900">Inward Supplies</span>
+  </nav>
+
+  @if (!paramsValid()) {
+    <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+      <p class="font-bold">Missing parameters</p>
+      <p class="mt-1">Open from the GSTR-3B summary card with GSTIN and return period.</p>
+      <a routerLink="/gstr3b/summary" class="mt-3 inline-flex text-sm font-semibold text-[#1a56a7] hover:underline">Back to GSTR-3B</a>
+    </div>
+  } @else {
+    <section class="overflow-hidden rounded border border-slate-300 bg-white shadow-md">
+      <header class="gstr3b-section__banner">
+        <h1 class="gstr3b-section__banner-title">
+          5. Values of exempt, nil-rated and non-GST inward supplies
+        </h1>
+        <button type="button" class="text-xs font-semibold text-white/90 hover:underline">Help ?</button>
+      </header>
+
+      @if (viewState() === 'loading' || viewState() === 'idle') {
+        <div class="px-4 py-16 text-center text-sm text-slate-600">
+          Loading from <span class="font-mono text-xs">POST /api/gstr3b/retsum/</span>…
+        </div>
+      } @else if (viewState() === 'error') {
+        <div class="space-y-4 px-4 py-8 md:px-6">
+          @if (logicalError()) {
+            <p class="text-sm font-semibold text-red-800">{{ logicalError() }}</p>
+          }
+          @if (httpError() !== null) {
+            <pre class="max-h-64 overflow-auto rounded border border-red-100 bg-red-50 p-3 font-mono text-[11px] text-red-900">{{ httpError() | json }}</pre>
+          }
+          <button type="button" class="text-sm font-semibold text-[#1a56a7] hover:underline" (click)="loadDetails()">Retry</button>
+        </div>
+      } @else if (viewState() === 'ready') {
+        <div class="gstr3b-section__table-wrap">
+          <table class="gstr3b-section__table">
+            <thead>
+              <tr>
+                <th class="col-nature">Nature of Supplies</th>
+                <th>Inter-State Supplies (₹)</th>
+                <th>Intra-State Supplies (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              @let inward = draftInwardSup();
+              @for (ty of inwardSupTypes; track ty) {
+                @let row = inward.isup_details[$index];
+                <tr>
+                  <td class="col-nature">{{ inwardSupLabels[ty] }}</td>
+                  <td>
+                    <input
+                      type="number"
+                      step="0.01"
+                      class="gstr3b-section__input"
+                      [(ngModel)]="row.inter"
+                      (ngModelChange)="touchInwardSup()"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      step="0.01"
+                      class="gstr3b-section__input"
+                      [(ngModel)]="row.intra"
+                      (ngModelChange)="touchInwardSup()"
+                    />
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (retsaveError() !== null) {
+          <div class="mx-4 mt-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 md:mx-6">
+            <p class="font-semibold">Retsave failed</p>
+            <pre class="mt-2 max-h-48 overflow-auto font-mono text-[11px]">{{ retsaveError() | json }}</pre>
+          </div>
+        }
+        @if (retsaveSuccessPayload() !== null) {
+          <div class="mx-4 mt-4 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 md:mx-6">
+            <p class="font-semibold">Section 5 saved successfully</p>
+            <pre class="mt-2 max-h-48 overflow-auto font-mono text-[11px]">{{ retsaveSuccessPayload() | json }}</pre>
+          </div>
+        }
+
+        <details class="mx-4 mt-4 rounded border border-slate-200 bg-slate-50 px-3 py-2 md:mx-6">
+          <summary class="cursor-pointer text-xs font-semibold text-slate-700">
+            Retsave JSON preview — <span class="font-mono">POST /api/gstr3b/retsave/</span>
+          </summary>
+          <pre class="mt-2 max-h-64 overflow-auto font-mono text-[10px] text-slate-800">{{ retsavePreview() | json }}</pre>
+        </details>
+
+        <div class="gstr3b-section__actions">
+          <button type="button" class="gstr3b-section__btn gstr3b-section__btn--cancel" (click)="cancel()">Cancel</button>
+          <button
+            type="button"
+            class="gstr3b-section__btn gstr3b-section__btn--confirm"
+            (click)="confirm()"
+            [disabled]="retsaveSubmitting()"
+          >
+            @if (retsaveSubmitting()) {
+              Saving…
+            } @else {
+              Confirm
+            }
+          </button>
+        </div>
+      }
+    </section>
+  }
+</div>

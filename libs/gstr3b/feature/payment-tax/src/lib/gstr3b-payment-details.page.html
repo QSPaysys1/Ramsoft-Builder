@@ -1,0 +1,269 @@
+<div class="gstr3b-section pb-12">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600 md:text-sm">
+    <a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a>
+    <span aria-hidden="true">›</span>
+    <a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a>
+    <span aria-hidden="true">›</span>
+    <a
+      routerLink="/gstr3b/summary"
+      [queryParams]="backToGstr3bQueryParams()"
+      class="text-[#1a56a7] hover:underline"
+    >GSTR-3B</a>
+    <span aria-hidden="true">›</span>
+    <span class="font-semibold text-slate-900">Payment of tax</span>
+  </nav>
+
+  @if (!paramsValid()) {
+    <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+      <p class="font-bold">Missing parameters</p>
+      <p class="mt-1">Open from the GSTR-3B summary card with GSTIN and return period.</p>
+      <a routerLink="/gstr3b/summary" class="mt-3 inline-flex text-sm font-semibold text-[#1a56a7] hover:underline">Back to GSTR-3B</a>
+    </div>
+  } @else {
+    <section class="overflow-hidden rounded border border-slate-300 bg-white shadow-md">
+      <header class="gstr3b-section__banner">
+        <h1 class="gstr3b-section__banner-title">6.1 Payment of tax</h1>
+        <button type="button" class="text-xs font-semibold text-white/90 hover:underline">Help ?</button>
+      </header>
+
+      @if (viewState() === 'loading' || viewState() === 'idle') {
+        <div class="px-4 py-16 text-center text-sm text-slate-600">
+          Loading payment details…
+        </div>
+      } @else if (viewState() === 'error') {
+        <div class="space-y-4 px-4 py-8 md:px-6">
+          @if (logicalError()) {
+            <p class="text-sm font-semibold text-red-800">{{ logicalError() }}</p>
+          }
+          @if (httpError() !== null) {
+            <pre class="max-h-64 overflow-auto rounded border border-red-100 bg-red-50 p-3 font-mono text-[11px] text-red-900">{{ httpError() | json }}</pre>
+          }
+          <button type="button" class="text-sm font-semibold text-[#1a56a7] hover:underline" (click)="loadDetails()">Retry</button>
+        </div>
+      } @else if (viewState() === 'ready') {
+        @let pditc = draftTxPmt().pditc;
+        @let nonRc = cashNonRc();
+        @let rc = cashRc();
+        @let credit = creditLedger();
+
+        <div class="gstr3b-section__note">
+          @if (hasPendingLiability()) {
+            Pending tax liabilities are shown below. Utilize ITC and cash as applicable.
+          } @else {
+            No pending Liabilities to pay.
+          }
+        </div>
+        <div class="gstr3b-section__note">
+          The cash available as on date and ITC available (considering ITC of current tax period) are shown in this table.
+        </div>
+        <div class="gstr3b-section__note">
+          Net tax payable is auto-populated based on provisions of the law. Tax to be paid through ITC fields can be edited; if cash balances are insufficient, additional cash will be required.
+        </div>
+        <div class="gstr3b-section__note">
+          The ITC and Cash utilization information entered will only be available for 2 days.
+        </div>
+
+        <div class="gstr3b-section__table-wrap gstr3b-payment__ledger-wrap">
+          <table class="gstr3b-section__table gstr3b-payment__ledger">
+            <thead>
+              <tr>
+                <th rowspan="2" class="col-nature">Description</th>
+                <th colspan="5">Cash Ledger Balance</th>
+                <th colspan="5">Credit Ledger Balance</th>
+              </tr>
+              <tr>
+                <th>Integrated Tax (₹)</th>
+                <th>Central Tax (₹)</th>
+                <th>State/UT Tax (₹)</th>
+                <th>CESS (₹)</th>
+                <th>Total (₹)</th>
+                <th>Integrated Tax (₹)</th>
+                <th>Central Tax (₹)</th>
+                <th>State/UT Tax (₹)</th>
+                <th>CESS (₹)</th>
+                <th>Total (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-nature">Tax</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ credit.igst | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ credit.cgst | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ credit.sgst | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ credit.cess | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ creditTotal() | number: '1.2-2' }}</td>
+              </tr>
+              <tr>
+                <td class="col-nature">Interest</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-disabled">—</td>
+                <td class="cell-disabled">—</td>
+                <td class="cell-disabled">—</td>
+                <td class="cell-disabled">—</td>
+                <td class="cell-disabled">—</td>
+              </tr>
+              <tr>
+                <td class="col-nature">Late Fees</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-readonly">{{ 0 | number: '1.2-2' }}</td>
+                <td class="cell-disabled">—</td>
+                <td class="cell-disabled">—</td>
+                <td class="cell-disabled">—</td>
+                <td class="cell-disabled">—</td>
+                <td class="cell-disabled">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="gstr3b-section__table-wrap gstr3b-payment__grid-wrap">
+          <table class="gstr3b-section__table gstr3b-payment__grid">
+            <thead>
+              <tr>
+                <th rowspan="2" class="col-nature">Description</th>
+                <th colspan="2">Net Tax Payable (₹)</th>
+                <th colspan="4">Paid through ITC</th>
+                <th colspan="2">Tax to be paid in Cash (₹)</th>
+                <th colspan="2">Interest</th>
+                <th colspan="2">Late Fee</th>
+              </tr>
+              <tr>
+                <th>Reverse charge and reverse supplies made u/s 9(5)</th>
+                <th>Other than reverse charge</th>
+                <th>Integrated Tax (₹)</th>
+                <th>Central Tax (₹)</th>
+                <th>State/UT Tax (₹)</th>
+                <th>CESS (₹)</th>
+                <th>Other than reverse charge</th>
+                <th>Reverse charge</th>
+                <th>Interest payable (₹)</th>
+                <th>Interest to be paid in cash (₹)</th>
+                <th>Late Fee Payable (₹)</th>
+                <th>Late Fee to be paid in cash (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of paymentGrid(); track row.key) {
+                <tr>
+                  <td class="col-nature">{{ row.label }}</td>
+                  <td class="cell-readonly">{{ row.netRc | number: '1.2-2' }}</td>
+                  <td class="cell-readonly">{{ row.netNonRc | number: '1.2-2' }}</td>
+
+                  @if (row.key === 'igst') {
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="pditc.i_pdi" (ngModelChange)="touchTxPmt()" /></td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="pditc.i_pdc" (ngModelChange)="touchTxPmt()" /></td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="pditc.i_pds" (ngModelChange)="touchTxPmt()" /></td>
+                    <td class="cell-disabled">—</td>
+                  } @else if (row.key === 'cgst') {
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="pditc.c_pdi" (ngModelChange)="touchTxPmt()" /></td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="pditc.c_pdc" (ngModelChange)="touchTxPmt()" /></td>
+                    <td class="cell-disabled">—</td>
+                    <td class="cell-disabled">—</td>
+                  } @else if (row.key === 'sgst') {
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="pditc.s_pdi" (ngModelChange)="touchTxPmt()" /></td>
+                    <td class="cell-disabled">—</td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="pditc.s_pds" (ngModelChange)="touchTxPmt()" /></td>
+                    <td class="cell-disabled">—</td>
+                  } @else {
+                    <td class="cell-disabled">—</td>
+                    <td class="cell-disabled">—</td>
+                    <td class="cell-disabled">—</td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="pditc.cs_pdcs" (ngModelChange)="touchTxPmt()" /></td>
+                  }
+
+                  @if (row.key === 'igst' && nonRc && rc) {
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="nonRc.ipd" (ngModelChange)="touchTxPmt()" /></td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="rc.ipd" (ngModelChange)="touchTxPmt()" /></td>
+                    <td class="cell-readonly">{{ row.intrPayable | number: '1.2-2' }}</td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="nonRc.i_intrpd" (ngModelChange)="touchTxPmt()" /></td>
+                    <td class="cell-readonly">{{ row.feePayable | number: '1.2-2' }}</td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="nonRc.i_lfeepd" (ngModelChange)="touchTxPmt()" /></td>
+                  } @else if (row.key === 'cgst' && nonRc && rc) {
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="nonRc.cpd" (ngModelChange)="touchTxPmt()" /></td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="rc.cpd" (ngModelChange)="touchTxPmt()" /></td>
+                    <td class="cell-readonly">{{ row.intrPayable | number: '1.2-2' }}</td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="nonRc.c_intrpd" (ngModelChange)="touchTxPmt()" /></td>
+                    <td class="cell-readonly">{{ row.feePayable | number: '1.2-2' }}</td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="nonRc.c_lfeepd" (ngModelChange)="touchTxPmt()" /></td>
+                  } @else if (row.key === 'sgst' && nonRc && rc) {
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="nonRc.spd" (ngModelChange)="touchTxPmt()" /></td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="rc.spd" (ngModelChange)="touchTxPmt()" /></td>
+                    <td class="cell-readonly">{{ row.intrPayable | number: '1.2-2' }}</td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="nonRc.s_intrpd" (ngModelChange)="touchTxPmt()" /></td>
+                    <td class="cell-readonly">{{ row.feePayable | number: '1.2-2' }}</td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="nonRc.s_lfeepd" (ngModelChange)="touchTxPmt()" /></td>
+                  } @else if (nonRc && rc) {
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="nonRc.cspd" (ngModelChange)="touchTxPmt()" /></td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="rc.cspd" (ngModelChange)="touchTxPmt()" /></td>
+                    <td class="cell-readonly">{{ row.intrPayable | number: '1.2-2' }}</td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="nonRc.cs_intrpd" (ngModelChange)="touchTxPmt()" /></td>
+                    <td class="cell-readonly">{{ row.feePayable | number: '1.2-2' }}</td>
+                    <td><input type="number" step="0.01" class="gstr3b-section__input" [(ngModel)]="nonRc.cs_lfeepd" (ngModelChange)="touchTxPmt()" /></td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mx-4 mt-4 grid gap-3 sm:grid-cols-2 md:mx-6">
+          <div class="rounded border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Paid through Credit</p>
+            <p class="mt-1 text-lg font-bold text-slate-900">{{ paidThroughCredit() | number: '1.2-2' }}</p>
+          </div>
+          <div class="rounded border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Paid through Cash</p>
+            <p class="mt-1 text-lg font-bold text-slate-900">{{ paidThroughCash() | number: '1.2-2' }}</p>
+          </div>
+        </div>
+
+        @if (retsaveError() !== null) {
+          <div class="mx-4 mt-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 md:mx-6">
+            <p class="font-semibold">Save failed</p>
+            <pre class="mt-2 max-h-48 overflow-auto font-mono text-[11px]">{{ retsaveError() | json }}</pre>
+          </div>
+        }
+        @if (retsaveSuccessPayload() !== null) {
+          <div class="mx-4 mt-4 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 md:mx-6">
+            <p class="font-semibold">Payment details saved successfully</p>
+          </div>
+        }
+
+        <div class="gstr3b-section__actions gstr3b-payment__footer">
+          <a
+            routerLink="/gstr3b/summary"
+            [queryParams]="backToGstr3bQueryParams()"
+            class="gstr3b-section__btn gstr3b-section__btn--cancel no-underline"
+          >Back</a>
+          <button type="button" class="gstr3b-section__btn gstr3b-section__btn--cancel" disabled>Create Challan</button>
+          <button type="button" class="gstr3b-section__btn gstr3b-section__btn--cancel opacity-50" disabled>Make Payment / Post Credit</button>
+          <button type="button" class="gstr3b-section__btn gstr3b-section__btn--cancel" (click)="cancel()">Cancel</button>
+          <button
+            type="button"
+            class="gstr3b-section__btn gstr3b-section__btn--confirm"
+            (click)="confirm()"
+            [disabled]="retsaveSubmitting()"
+          >
+            @if (retsaveSubmitting()) {
+              Saving…
+            } @else {
+              Confirm
+            }
+          </button>
+        </div>
+      }
+    </section>
+  }
+</div>

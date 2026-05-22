@@ -1,0 +1,13 @@
+{
+  "name": "gstr3b-ui-filters",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr3b/ui/filters/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:ui", "domain:gstr3b"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

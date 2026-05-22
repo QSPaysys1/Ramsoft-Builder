@@ -1,0 +1,19 @@
+{
+  "name": "gstr3b-models-interfaces",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr3b/models/interfaces/src",
+  "projectType": "library",
+  "tags": ["type:models", "domain:gstr3b"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr3b/models/interfaces",
+        "main": "libs/gstr3b/models/interfaces/src/index.ts",
+        "tsConfig": "libs/gstr3b/models/interfaces/tsconfig.lib.json",
+        "assets": ["libs/gstr3b/models/interfaces/*.md"]
+      }
+    }
+  }
+}

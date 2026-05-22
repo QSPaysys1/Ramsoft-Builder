@@ -1,0 +1,19 @@
+{
+  "name": "gstr3b-models-dto",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr3b/models/dto/src",
+  "projectType": "library",
+  "tags": ["type:models", "domain:gstr3b"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr3b/models/dto",
+        "main": "libs/gstr3b/models/dto/src/index.ts",
+        "tsConfig": "libs/gstr3b/models/dto/tsconfig.lib.json",
+        "assets": ["libs/gstr3b/models/dto/*.md"]
+      }
+    }
+  }
+}

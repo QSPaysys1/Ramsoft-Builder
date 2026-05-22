@@ -1,0 +1,19 @@
+{
+  "name": "gstr3b-utils-calculators",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gstr3b/utils/calculators/src",
+  "projectType": "library",
+  "tags": ["type:utils", "domain:gstr3b"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gstr3b/utils/calculators",
+        "main": "libs/gstr3b/utils/calculators/src/index.ts",
+        "tsConfig": "libs/gstr3b/utils/calculators/tsconfig.lib.json",
+        "assets": ["libs/gstr3b/utils/calculators/*.md"]
+      }
+    }
+  }
+}

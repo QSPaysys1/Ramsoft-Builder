@@ -1,0 +1,17 @@
+<div class="gstr3b-hub px-4 py-6">
+  <h1 class="text-lg font-bold">GSTR-3B</h1>
+  <p class="text-sm text-slate-600">Uses GSTR-1 session — refer GSTR-1 authentication/session establishment flow.</p>
+  @if (!paramsValid()) {
+    <p class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm">Open from Returns with GSTIN and MMYYYY period.</p>
+  } @else {
+    <ul class="mt-6 grid gap-3 sm:grid-cols-2">
+      @for (tile of tiles; track tile.id) {
+        <li>
+          <button type="button" class="w-full rounded-xl border px-4 py-4 text-left text-sm font-semibold text-[#1a56a7]" (click)="open(tile.route)">
+            {{ tile.label }}
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>

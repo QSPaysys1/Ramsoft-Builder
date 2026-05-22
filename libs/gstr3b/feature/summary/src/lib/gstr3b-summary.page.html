@@ -1,0 +1,268 @@
+<div class="gstr3b-view pb-12">
+  <nav aria-label="Breadcrumb" class="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-600 md:text-sm">
+    <ol class="m-0 flex list-none flex-wrap items-center gap-2 p-0">
+      <li><a routerLink="/gstr1/workspace" class="text-[#1a56a7] hover:underline">Dashboard</a></li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li><a routerLink="/gstr1/workspace/returns-dashboard" class="text-[#1a56a7] hover:underline">Returns</a></li>
+      <li aria-hidden="true"><span>›</span></li>
+      <li><span class="font-semibold text-slate-900" aria-current="page">GSTR-3B</span></li>
+    </ol>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] shadow-sm text-slate-500">English</span>
+      <button
+        type="button"
+        class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#1a56a7] hover:underline md:text-xs"
+        (click)="openGstHelp()"
+      >
+        Facilitation in filing GSTR-3B
+      </button>
+    </div>
+  </nav>
+
+  @if (!paramsValid()) {
+    <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+      <p class="font-bold">Missing parameters</p>
+      <p class="mt-1">Open from <span class="font-semibold">Returns dashboard → GSTR-3B → View</span> with GSTIN and return period.</p>
+      <a routerLink="/gstr1/workspace/returns-dashboard" class="mt-3 inline-flex text-sm font-semibold text-[#1a56a7] hover:underline">Back to Returns</a>
+    </div>
+  } @else {
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+      <div class="border-b border-slate-200 bg-white px-4 py-4 md:px-6">
+        <h1 class="text-base font-bold text-[#222f3f] md:text-lg">GSTR-3B – Monthly Return</h1>
+      </div>
+
+      <div class="border-b border-slate-200 bg-slate-50/90 px-4 py-4 md:px-6">
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">GSTIN</p>
+            <p class="mt-0.5 font-mono text-sm font-semibold text-slate-900">{{ gstin() }}</p>
+          </div>
+          <div class="sm:col-span-2">
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Legal name</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ profile.legalName() || '—' }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Status</p>
+            <p class="mt-0.5 text-sm font-semibold text-teal-800">{{ filingLabel() || '—' }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">FY</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ fyLabel() }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Return period</p>
+            <p class="mt-0.5 text-sm font-semibold text-slate-900">{{ taxPeriodLabel() }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Due date</p>
+            <p class="mt-0.5 text-sm font-semibold text-teal-800">{{ dueDateLabel() || '—' }}</p>
+          </div>
+        </div>
+      </div>
+
+      @if (viewState() === 'loading') {
+        <div class="px-4 py-16 text-center text-sm text-slate-600">
+          Loading GSTR-3B via <span class="font-mono text-xs">POST /api/gstr3b/retsum/</span>…
+        </div>
+      } @else if (viewState() === 'error') {
+        <div class="space-y-4 px-4 py-8 md:px-6">
+          @if (logicalError()) {
+            <p class="text-sm font-semibold text-red-800">{{ logicalError() }}</p>
+          }
+          @if (httpError() !== null) {
+            <pre class="max-h-64 overflow-auto rounded border border-red-100 bg-red-50 p-3 font-mono text-[11px] text-red-900">{{ httpError() | json }}</pre>
+          }
+          <button type="button" class="text-sm font-semibold text-[#1a56a7] hover:underline" (click)="loadGstr3b()">Retry</button>
+        </div>
+      } @else if (viewState() === 'success') {
+        @if (showInterestAlert()) {
+          <div class="mx-4 mt-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 md:mx-6">
+            System has not generated summary of table 5.1 interest of Form GSTR-3B basis your previous period Form GSTR-3B as the same is not filed or interest is not applicable.
+          </div>
+        }
+
+        <div class="flex flex-wrap gap-3 px-4 py-3 text-xs md:px-6">
+          <button type="button" class="font-semibold text-[#1a56a7] hover:underline" (click)="openGstHelp()">
+            Click here for system generated summary status for GSTR-3B
+          </button>
+          <button type="button" class="font-semibold text-[#1a56a7] hover:underline" (click)="openGstHelp()">Help Manual</button>
+        </div>
+
+        <div class="gstr3b-cards px-4 pb-6 md:px-6">
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <a
+              routerLink="/gstr3b/outward-supplies"
+              [queryParams]="gstr3bSectionQueryParams()"
+              class="gstr3b-card gstr3b-card--link"
+            >
+              <header class="gstr3b-card__header">
+                <h2 class="gstr3b-card__title">3.1 Tax on outward and reverse charge inward supplies</h2>
+              </header>
+              <div class="gstr3b-card__body">
+                <dl class="gstr3b-field-list">
+                  <div class="gstr3b-field"><dt>Integrated Tax (₹)</dt><dd>{{ taxField(table31(), 'igst') }}</dd></div>
+                  <div class="gstr3b-field"><dt>Central Tax (₹)</dt><dd>{{ taxField(table31(), 'cgst') }}</dd></div>
+                  <div class="gstr3b-field"><dt>State/UT Tax (₹)</dt><dd>{{ taxField(table31(), 'sgst') }}</dd></div>
+                  <div class="gstr3b-field"><dt>CESS (₹)</dt><dd>{{ taxField(table31(), 'cess') }}</dd></div>
+                </dl>
+                <span class="gstr3b-card__cta">Open table →</span>
+              </div>
+            </a>
+
+            <a
+              routerLink="/gstr3b/outward-supplies/eco"
+              [queryParams]="gstr3bSectionQueryParams()"
+              class="gstr3b-card gstr3b-card--link"
+            >
+              <header class="gstr3b-card__header">
+                <h2 class="gstr3b-card__title">3.1.1 Supplies notified under section 9(5) of the CGST Act, 2017</h2>
+              </header>
+              <div class="gstr3b-card__body">
+                <dl class="gstr3b-field-list">
+                  <div class="gstr3b-field"><dt>Integrated Tax (₹)</dt><dd>{{ taxField(table311(), 'igst') }}</dd></div>
+                  <div class="gstr3b-field"><dt>Central Tax (₹)</dt><dd>{{ taxField(table311(), 'cgst') }}</dd></div>
+                  <div class="gstr3b-field"><dt>State/UT Tax (₹)</dt><dd>{{ taxField(table311(), 'sgst') }}</dd></div>
+                  <div class="gstr3b-field"><dt>CESS (₹)</dt><dd>{{ taxField(table311(), 'cess') }}</dd></div>
+                </dl>
+                <span class="gstr3b-card__cta">Open table →</span>
+              </div>
+            </a>
+
+            <a
+              routerLink="/gstr3b/outward-supplies/inter"
+              [queryParams]="gstr3bSectionQueryParams()"
+              class="gstr3b-card gstr3b-card--link"
+            >
+              <header class="gstr3b-card__header">
+                <h2 class="gstr3b-card__title">3.2 Inter-state supplies</h2>
+              </header>
+              <div class="gstr3b-card__body">
+                <dl class="gstr3b-field-list">
+                  <div class="gstr3b-field"><dt>Taxable Value (₹)</dt><dd>{{ interField(table32(), 'taxableValue') }}</dd></div>
+                  <div class="gstr3b-field"><dt>Integrated Tax (₹)</dt><dd>{{ interField(table32(), 'igst') }}</dd></div>
+                </dl>
+                <span class="gstr3b-card__cta">Open table →</span>
+              </div>
+            </a>
+
+            <a
+              routerLink="/gstr3b/itc"
+              [queryParams]="gstr3bSectionQueryParams()"
+              class="gstr3b-card gstr3b-card--link"
+            >
+              <header class="gstr3b-card__header">
+                <h2 class="gstr3b-card__title">4 Eligible ITC</h2>
+              </header>
+              <div class="gstr3b-card__body">
+                <dl class="gstr3b-field-list">
+                  <div class="gstr3b-field"><dt>Integrated Tax (₹)</dt><dd>{{ taxField(table4(), 'igst') }}</dd></div>
+                  <div class="gstr3b-field"><dt>Central Tax (₹)</dt><dd>{{ taxField(table4(), 'cgst') }}</dd></div>
+                  <div class="gstr3b-field"><dt>State/UT Tax (₹)</dt><dd>{{ taxField(table4(), 'sgst') }}</dd></div>
+                  <div class="gstr3b-field"><dt>CESS (₹)</dt><dd>{{ taxField(table4(), 'cess') }}</dd></div>
+                </dl>
+                <span class="gstr3b-card__cta">Open table →</span>
+              </div>
+            </a>
+
+            <a
+              routerLink="/gstr3b/inward-supplies"
+              [queryParams]="gstr3bSectionQueryParams()"
+              class="gstr3b-card gstr3b-card--link"
+            >
+              <header class="gstr3b-card__header">
+                <h2 class="gstr3b-card__title">5 Exempt, nil and Non GST inward supplies</h2>
+              </header>
+              <div class="gstr3b-card__body">
+                <dl class="gstr3b-field-list">
+                  <div class="gstr3b-field"><dt>Inter-state supplies (₹)</dt><dd>{{ exemptField(table5(), 'interState') }}</dd></div>
+                  <div class="gstr3b-field"><dt>Intra-state supplies (₹)</dt><dd>{{ exemptField(table5(), 'intraState') }}</dd></div>
+                </dl>
+                <span class="gstr3b-card__cta">Open table →</span>
+              </div>
+            </a>
+
+            <a
+              routerLink="/gstr3b/interest-late-fee"
+              [queryParams]="gstr3bSectionQueryParams()"
+              class="gstr3b-card gstr3b-card--link"
+            >
+              <header class="gstr3b-card__header">
+                <h2 class="gstr3b-card__title">6 5.1 Interest and Late fee for previous tax period</h2>
+              </header>
+              <div class="gstr3b-card__body">
+                <dl class="gstr3b-field-list">
+                  <div class="gstr3b-field"><dt>Integrated Tax (₹)</dt><dd>{{ taxField(table51(), 'igst') }}</dd></div>
+                  <div class="gstr3b-field"><dt>Central Tax (₹)</dt><dd>{{ taxField(table51(), 'cgst') }}</dd></div>
+                  <div class="gstr3b-field"><dt>State/UT Tax (₹)</dt><dd>{{ taxField(table51(), 'sgst') }}</dd></div>
+                  <div class="gstr3b-field"><dt>CESS (₹)</dt><dd>{{ taxField(table51(), 'cess') }}</dd></div>
+                </dl>
+                <span class="gstr3b-card__cta">Open table →</span>
+              </div>
+            </a>
+
+            <a
+              routerLink="/gstr3b/payment-tax"
+              [queryParams]="gstr3bSectionQueryParams()"
+              class="gstr3b-card gstr3b-card--link md:col-span-2 xl:col-span-1"
+            >
+              <header class="gstr3b-card__header">
+                <h2 class="gstr3b-card__title">6.1 Payment of tax</h2>
+              </header>
+              <div class="gstr3b-card__body">
+                <dl class="gstr3b-field-list">
+                  <div class="gstr3b-field"><dt>Balance Liability (₹)</dt><dd>{{ paymentField(table61(), 'balanceLiability') }}</dd></div>
+                  <div class="gstr3b-field"><dt>Paid through Cash (₹)</dt><dd>{{ paymentField(table61(), 'paidThroughCash') }}</dd></div>
+                  <div class="gstr3b-field"><dt>Paid through Credit (₹)</dt><dd>{{ paymentField(table61(), 'paidThroughCredit') }}</dd></div>
+                </dl>
+                <span class="gstr3b-card__cta">Open table →</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <div class="mx-4 mb-6 rounded border-2 border-[#1a56a7] bg-blue-50/40 px-4 py-4 md:mx-6">
+          <h3 class="text-sm font-bold text-[#1a56a7]">Important Message</h3>
+          <ul class="mt-2 list-disc space-y-1 pl-5 text-xs leading-relaxed text-slate-700 md:text-sm">
+            <li>After filling in the tables, click <span class="font-semibold">Save GSTR3B</span> to save your return.</li>
+            <li>Download the draft GSTR-3B for review before proceeding to payment.</li>
+            <li>Proceed to payment if tax liability exists after offsetting eligible ITC.</li>
+            <li>File the return using DSC or EVC after payment is complete.</li>
+          </ul>
+        </div>
+
+        <div class="gstr3b-actions flex flex-wrap gap-2 border-t border-slate-200 bg-slate-50 px-4 py-4 md:px-6">
+          <a
+            routerLink="/gstr1/workspace/returns-dashboard"
+            [queryParams]="backToDashboardQueryParams()"
+            class="inline-flex min-h-[38px] items-center justify-center rounded border border-slate-400 bg-white px-4 text-xs font-bold uppercase tracking-wide text-slate-800 hover:bg-slate-100"
+          >
+            Back
+          </a>
+          <button
+            type="button"
+            disabled
+            class="inline-flex min-h-[38px] cursor-not-allowed items-center justify-center rounded bg-slate-300 px-4 text-xs font-bold uppercase tracking-wide text-white opacity-70"
+            title="Save is not available in this view"
+          >
+            Save GSTR3B
+          </button>
+          <button
+            type="button"
+            disabled
+            class="inline-flex min-h-[38px] cursor-not-allowed items-center justify-center rounded bg-[#1a56a7] px-4 text-xs font-bold uppercase tracking-wide text-white opacity-70"
+            title="Download is not available in this view"
+          >
+            Download Filed GSTR-3B
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-[38px] items-center justify-center rounded bg-red-700 px-4 text-xs font-bold uppercase tracking-wide text-white hover:bg-red-800"
+            (click)="loadGstr3b()"
+          >
+            System Generated GSTR-3B
+          </button>
+        </div>
+      }
+    </section>
+  }
+</div>

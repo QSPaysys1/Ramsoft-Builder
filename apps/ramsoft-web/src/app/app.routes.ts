@@ -49,6 +49,11 @@ export const appRoutes: Routes = [
           import('@ramsoft-builder/gstr2b/feature/dashboard').then((m) => m.gstr2bRoutes),
       },
       {
+        path: 'gstr3b',
+        loadChildren: () =>
+          import('@ramsoft-builder/gstr3b/feature/dashboard').then((m) => m.gstr3bRoutes),
+      },
+      {
         path: 'versions/issues',
         loadComponent: () =>
           import('./versions/versions-issues-page.component').then(
