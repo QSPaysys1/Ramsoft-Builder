@@ -20,6 +20,41 @@ export const appRoutes: Routes = [
           import('./home/home.page').then((m) => m.HomePageComponent),
       },
       {
+        path: 'notes-ai',
+        loadChildren: () =>
+          import('@ramsoft-builder/llm/feature/tools').then(
+            (m) => m.notesAiRoutes,
+          ),
+      },
+      {
+        path: 'audio-to-text',
+        loadChildren: () =>
+          import('@ramsoft-builder/llm/feature/tools').then(
+            (m) => m.audioToTextRoutes,
+          ),
+      },
+      {
+        path: 'video-to-text',
+        loadChildren: () =>
+          import('@ramsoft-builder/llm/feature/tools').then(
+            (m) => m.videoToTextRoutes,
+          ),
+      },
+      {
+        path: 'summarizer',
+        loadChildren: () =>
+          import('@ramsoft-builder/llm/feature/tools').then(
+            (m) => m.summarizerRoutes,
+          ),
+      },
+      {
+        path: 'translate',
+        loadChildren: () =>
+          import('@ramsoft-builder/llm/feature/tools').then(
+            (m) => m.translateRoutes,
+          ),
+      },
+      {
         path: 'e-invoice',
         loadChildren: () =>
           import('@ramsoft-builder/einvoice/feature/flow').then(

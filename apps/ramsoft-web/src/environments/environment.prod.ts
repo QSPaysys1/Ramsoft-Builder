@@ -1,5 +1,6 @@
 import type { GstZenEnvironment } from './gstzen-environment';
 import type { Gstr1Environment } from './gstr1-environment';
+import type { LlmEnvironment } from './llm-environment';
 
 export const environment = {
   production: true,
@@ -68,4 +69,10 @@ export const environment = {
     gstr3bRetsaveUrl: 'https://my.gstzen.in/api/gstr3b/retsave/',
     gstr3bRetsumUrl: 'https://my.gstzen.in/api/gstr3b/retsum/',
   } satisfies Gstr1Environment,
+  llm: {
+    audioToTextUrl: '/api/llm/audio-to-text',
+    videoToTextUrl: '/api/llm/video-to-text',
+    generateTextUrl: '/api/llm/generate-text',
+    urlToTextUrl: '/api/llm/url-to-text',
+  } satisfies LlmEnvironment,
 };

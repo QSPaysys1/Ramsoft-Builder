@@ -19,6 +19,7 @@ import {
   gstr1UnauthorizedInterceptor,
   provideGstr1GstzenAuthConfig,
 } from '@ramsoft-builder/gstr1/data-access/gstzen-auth';
+import { LLM_API_CONFIG } from '@ramsoft-builder/llm/data-access/api';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
@@ -114,6 +115,15 @@ export const appConfig: ApplicationConfig = {
           'https://my.gstzen.in/~gstzen/a/ewbapi/get-ewb-transporter-gstin-view/',
         token: environment.gstZen.token,
         ewbTestToken: environment.gstZen.ewbTestToken?.trim() || undefined,
+      },
+    },
+    {
+      provide: LLM_API_CONFIG,
+      useValue: {
+        audioToTextUrl: environment.llm.audioToTextUrl,
+        videoToTextUrl: environment.llm.videoToTextUrl,
+        generateTextUrl: environment.llm.generateTextUrl,
+        urlToTextUrl: environment.llm.urlToTextUrl,
       },
     },
     provideClientHydration(withEventReplay()),

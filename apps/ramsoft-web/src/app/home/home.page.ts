@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthStore, type AppUser } from '@ramsoft-builder/auth/data-access/auth';
 import {
   UserDashboardRepository,
@@ -33,6 +33,13 @@ function pickProfileString(
   return '';
 }
 
+interface AiToolCard {
+  id: string;
+  title: string;
+  description: string;
+  iconColor: string;
+}
+
 @Component({
   standalone: true,
   selector: 'app-home-page',
@@ -45,9 +52,43 @@ export class HomePageComponent {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly userProfile = inject(UserProfileRepository);
   private readonly userDashboard = inject(UserDashboardRepository);
   readonly authStore = inject(AuthStore);
+
+  readonly aiTools: readonly AiToolCard[] = [
+    {
+      id: 'notes-ai',
+      title: 'Notes AI',
+      description: 'Create notes using AI text editor',
+      iconColor: 'text-indigo-600',
+    },
+    {
+      id: 'audio-to-text',
+      title: 'Audio to Text',
+      description: 'Upload audio and convert speech into text',
+      iconColor: 'text-violet-600',
+    },
+    {
+      id: 'video-to-text',
+      title: 'Video to Text',
+      description: 'Upload video and extract transcript',
+      iconColor: 'text-sky-600',
+    },
+    {
+      id: 'summarizer',
+      title: 'Summarizer',
+      description: 'Convert long text into summary',
+      iconColor: 'text-emerald-600',
+    },
+    {
+      id: 'translate',
+      title: 'Translate Notes',
+      description: 'Convert content into selected language',
+      iconColor: 'text-amber-600',
+    },
+  ];
 
   private readonly profile = signal<Record<string, unknown> | undefined>(
     undefined,
@@ -152,6 +193,46 @@ export class HomePageComponent {
     const raw = this.dashboard()?.[field];
     const n = typeof raw === 'number' ? raw : Number(raw);
     return Number.isFinite(n) ? n : 0;
+  }
+
+  openNotesAI(): void {
+    void this.router.navigate(['/notes-ai/create']);
+  }
+
+  openAudioToText(): void {
+    void this.router.navigate(['/audio-to-text/create']);
+  }
+
+  openVideoToText(): void {
+    void this.router.navigate(['/video-to-text/create']);
+  }
+
+  openSummarizer(): void {
+    void this.router.navigate(['/summarizer/create']);
+  }
+
+  openTranslate(): void {
+    void this.router.navigate(['/translate/create']);
+  }
+
+  openAiTool(id: string): void {
+    switch (id) {
+      case 'notes-ai':
+        this.openNotesAI();
+        break;
+      case 'audio-to-text':
+        this.openAudioToText();
+        break;
+      case 'video-to-text':
+        this.openVideoToText();
+        break;
+      case 'summarizer':
+        this.openSummarizer();
+        break;
+      case 'translate':
+        this.openTranslate();
+        break;
+    }
   }
 
   private readFinancialYearKey(): string | null {

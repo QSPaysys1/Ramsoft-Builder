@@ -10,10 +10,7 @@
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
-    "lib": [
-      "es2020",
-      "dom"
-    ],
+    "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
@@ -25,9 +22,7 @@
       "@ramsoft-builder/auth/feature/login": [
         "libs/auth/feature/login/src/index.ts"
       ],
-      "@ramsoft-builder/auth/ui/login": [
-        "libs/auth/ui/login/src/index.ts"
-      ],
+      "@ramsoft-builder/auth/ui/login": ["libs/auth/ui/login/src/index.ts"],
       "@ramsoft-builder/e-invoices/data-access/einvoice": [
         "libs/e-invoices/data-access/einvoice/src/index.ts"
       ],
@@ -718,13 +713,20 @@
       "@ramsoft-builder/gstr3b/utils/validators": [
         "libs/gstr3b/utils/validators/src/index.ts"
       ],
+      "@ramsoft-builder/llm/data-access/api": [
+        "libs/llm/data-access/api/src/index.ts"
+      ],
+      "@ramsoft-builder/llm/data-access/gemini": [
+        "libs/llm/data-access/gemini/src/index.ts"
+      ],
+      "@ramsoft-builder/llm/feature/tools": [
+        "libs/llm/feature/tools/src/index.ts"
+      ],
+      "@ramsoft-builder/llm/models/api": ["libs/llm/models/api/src/index.ts"],
       "@ramsoft-builder/shared/data-access/supabase": [
         "libs/shared/data-access/supabase/src/index.ts"
       ]
     }
   },
-  "exclude": [
-    "node_modules",
-    "tmp"
-  ]
+  "exclude": ["node_modules", "tmp"]
 }

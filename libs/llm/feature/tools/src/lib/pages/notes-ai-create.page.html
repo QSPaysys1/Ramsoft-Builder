@@ -1,0 +1,177 @@
+<div class="min-h-[calc(100vh-3.5rem)] bg-slate-50">
+  <div class="border-b border-slate-200 bg-white px-4 py-4 shadow-sm">
+    <div
+      class="mx-auto flex max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
+    >
+      <nav class="text-sm text-slate-500" aria-label="Breadcrumb">
+        <ol class="flex items-center gap-2">
+          <li>
+            <a routerLink="/home" class="hover:text-indigo-600">Home</a>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li class="font-medium text-slate-800" aria-current="page">
+            Notes AI
+          </li>
+        </ol>
+      </nav>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <input
+          type="text"
+          class="min-w-48 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          placeholder="Note title"
+          [ngModel]="title()"
+          (ngModelChange)="title.set($event)"
+        />
+        <select
+          class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          [ngModel]="selectedLanguage()"
+          (ngModelChange)="onLanguageChange($event)"
+        >
+          @for (lang of languages; track lang) {
+            <option [value]="lang">{{ lang }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="mx-auto grid max-w-7xl gap-4 p-4 lg:grid-cols-2">
+    <section
+      class="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm"
+    >
+      <div class="border-b border-slate-100 px-4 py-3">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-600">
+          Editor
+        </h2>
+      </div>
+
+      <textarea
+        class="min-h-72 flex-1 resize-y border-0 px-4 py-3 text-sm leading-relaxed text-slate-800 focus:outline-none"
+        placeholder="Type or paste your notes here…"
+        [ngModel]="editorText()"
+        (ngModelChange)="editorText.set($event)"
+      ></textarea>
+
+      <div class="border-t border-slate-100 px-4 py-3">
+        <label
+          class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500"
+          for="mediaUrl"
+        >
+          Media URL (YouTube, audio, or video link)
+        </label>
+        <input
+          id="mediaUrl"
+          type="url"
+          inputmode="url"
+          class="mb-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          placeholder="https://www.youtube.com/watch?v=…"
+          [ngModel]="mediaUrl()"
+          (ngModelChange)="mediaUrl.set($event)"
+        />
+
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            (click)="onAddAudio()"
+          >
+            Add Audio
+          </button>
+          <button
+            type="button"
+            class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            (click)="onAddVideo()"
+          >
+            Add Video
+          </button>
+        </div>
+
+        <input
+          #audioInput
+          type="file"
+          accept="audio/*,.mp3,.wav,.m4a,.ogg,.webm,.aac,.flac"
+          class="hidden"
+          (change)="onAudioSelected($event)"
+        />
+        <input
+          #videoInput
+          type="file"
+          accept="video/*,.mp4,.webm,.mov,.avi,.mkv,.m4v"
+          class="hidden"
+          (change)="onVideoSelected($event)"
+        />
+
+        @if (audioFile(); as audio) {
+          <p class="mt-2 text-xs text-slate-500">
+            Audio: <span class="font-medium text-slate-700">{{ audio.name }}</span>
+          </p>
+        }
+        @if (videoFile(); as video) {
+          <p class="mt-2 text-xs text-slate-500">
+            Video: <span class="font-medium text-slate-700">{{ video.name }}</span>
+          </p>
+        }
+      </div>
+    </section>
+
+    <section
+      class="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm"
+    >
+      <div class="border-b border-slate-100 px-4 py-3">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-600">
+          AI Output
+        </h2>
+      </div>
+
+      <div class="min-h-72 flex-1 px-4 py-3">
+        @if (loading()) {
+          <div class="flex h-full items-center justify-center">
+            <div
+              class="size-10 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600"
+              role="status"
+              aria-label="Generating"
+            ></div>
+          </div>
+        } @else if (errorMessage()) {
+          <p class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+            {{ errorMessage() }}
+          </p>
+        } @else if (generatedText()) {
+          <p class="whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
+            {{ generatedText() }}
+          </p>
+        } @else {
+          <p class="text-sm text-slate-400">
+            Generated text will appear here after you click Generate Text.
+          </p>
+        }
+      </div>
+    </section>
+  </div>
+
+  <div
+    class="mx-auto flex max-w-7xl flex-wrap gap-3 px-4 pb-8"
+  >
+    <button
+      type="button"
+      class="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+      [disabled]="loading()"
+      (click)="generate()"
+    >
+      @if (loading()) {
+        Generating…
+      } @else {
+        Generate Text
+      }
+    </button>
+    <button
+      type="button"
+      class="rounded-lg border border-slate-300 px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+      [disabled]="loading()"
+      (click)="clear()"
+    >
+      Clear
+    </button>
+  </div>
+</div>

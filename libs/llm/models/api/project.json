@@ -1,0 +1,22 @@
+{
+  "name": "llm-models-api",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/llm/models/api/src",
+  "projectType": "library",
+  "tags": ["type:models", "domain:llm"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/llm/models/api",
+        "main": "libs/llm/models/api/src/index.ts",
+        "tsConfig": "libs/llm/models/api/tsconfig.lib.json",
+        "assets": ["libs/llm/models/api/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

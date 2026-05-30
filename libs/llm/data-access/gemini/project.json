@@ -1,0 +1,13 @@
+{
+  "name": "llm-data-access-gemini",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/llm/data-access/gemini/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["type:data-access", "domain:llm"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
