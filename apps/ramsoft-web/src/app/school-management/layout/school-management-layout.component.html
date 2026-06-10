@@ -1,0 +1,38 @@
+<div class="school-management-layout flex min-h-[calc(100vh-3.5rem)] flex-col bg-slate-50">
+  <header
+    class="shrink-0 border-b border-slate-200 bg-white px-4 py-4 shadow-sm md:px-6"
+  >
+    <nav class="text-sm text-slate-500" aria-label="Breadcrumb">
+      <ol class="flex flex-wrap items-center gap-2">
+        <li>
+          <a routerLink="/home" class="font-medium text-indigo-600 hover:underline">
+            App Home
+          </a>
+        </li>
+        <li aria-hidden="true" class="text-slate-400">/</li>
+        <li class="font-medium text-slate-800" aria-current="page">
+          School Management
+        </li>
+      </ol>
+    </nav>
+  </header>
+
+  <div class="flex min-h-0 flex-1 flex-col md:flex-row">
+    <aside
+      class="max-h-[45vh] shrink-0 overflow-y-auto border-b border-slate-200 bg-white md:max-h-none md:w-[280px] md:border-b-0 md:border-r"
+      aria-label="School management navigation"
+    >
+      <app-school-menu-sidebar [activeMenuId]="activeMenuId()" />
+    </aside>
+
+    <main class="min-w-0 flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+      <div
+        class="mx-auto"
+        [class.max-w-3xl]="!wideMain()"
+        [class.max-w-6xl]="wideMain()"
+      >
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+</div>

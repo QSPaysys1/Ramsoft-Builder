@@ -215,6 +215,10 @@ export class HomePageComponent {
     void this.router.navigate(['/translate/create']);
   }
 
+  openSchoolManagement(): void {
+    void this.router.navigate(['/school-management', 'hub', 'home']);
+  }
+
   openAiTool(id: string): void {
     switch (id) {
       case 'notes-ai':

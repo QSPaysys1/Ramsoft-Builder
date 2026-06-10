@@ -1,0 +1,48 @@
+<section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+  <div class="border-b border-slate-200 px-6 py-4">
+    <h2 class="text-lg font-semibold text-slate-900">Parent details</h2>
+    <p class="mt-1 text-sm text-slate-500">Guardian contacts from student records.</p>
+  </div>
+
+  @if (store.viewState() === 'loading') {
+    <p class="px-6 py-12 text-center text-sm text-slate-500">Loading…</p>
+  } @else if (store.viewState() === 'empty') {
+    <p class="px-6 py-12 text-center text-sm text-slate-500">No student records yet.</p>
+  } @else {
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-left text-sm">
+        <thead class="bg-slate-50 text-slate-500">
+          <tr>
+            <th class="px-4 py-3 font-medium">Student</th>
+            <th class="px-4 py-3 font-medium">Father</th>
+            <th class="px-4 py-3 font-medium">Father mobile</th>
+            <th class="px-4 py-3 font-medium">Mother</th>
+            <th class="px-4 py-3 font-medium">Mother mobile</th>
+            <th class="px-4 py-3 font-medium"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (row of store.rows(); track row.id) {
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3 font-medium">
+                {{ row.firstName }} {{ row.lastName }}
+              </td>
+              <td class="px-4 py-3">{{ row.parentDetails.father?.name ?? '—' }}</td>
+              <td class="px-4 py-3">{{ row.parentDetails.father?.mobileNumber ?? '—' }}</td>
+              <td class="px-4 py-3">{{ row.parentDetails.mother?.name ?? '—' }}</td>
+              <td class="px-4 py-3">{{ row.parentDetails.mother?.mobileNumber ?? '—' }}</td>
+              <td class="px-4 py-3 text-right">
+                <a
+                  [routerLink]="['/school-management/academics/students/profile', row.id]"
+                  class="text-indigo-600 hover:underline"
+                >
+                  Profile
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

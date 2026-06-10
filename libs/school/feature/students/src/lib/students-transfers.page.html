@@ -1,0 +1,83 @@
+<section class="max-w-xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+  <h2 class="text-lg font-semibold text-slate-900">{{ pageTitle() }}</h2>
+  <p class="mt-1 text-sm text-slate-500">
+    Search a student, record transfer details, and generate a TC number in the database.
+  </p>
+
+  @if (completedTc()) {
+    <p class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+      Transfer recorded. TC number: <strong>{{ completedTc() }}</strong>
+    </p>
+  }
+  @if (store.errorMessage()) {
+    <p class="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+      {{ store.errorMessage() }}
+    </p>
+  }
+
+  <label class="mt-4 block text-sm">
+    <span class="text-slate-600">Search student</span>
+    <input
+      type="search"
+      class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+      [value]="searchTerm()"
+      (input)="onSearch($any($event.target).value)"
+    />
+  </label>
+
+  @if (results().length > 0) {
+    <ul class="mt-2 rounded-lg border border-slate-200">
+      @for (r of results(); track r.id) {
+        <li>
+          <button
+            type="button"
+            class="w-full px-3 py-2 text-left text-sm hover:bg-indigo-50"
+            (click)="pick(r)"
+          >
+            {{ r.firstName }} {{ r.lastName }} — {{ r.admissionNumber }}
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (selected(); as s) {
+    <p class="mt-3 text-sm font-medium text-slate-800">
+      Selected: {{ s.firstName }} {{ s.lastName }} ({{ s.admissionNumber }})
+    </p>
+  }
+
+  <form class="mt-6 space-y-4" [formGroup]="form" (ngSubmit)="submit()">
+    @if (!lockTransferType()) {
+      <label class="block text-sm">
+        <span class="text-slate-600">Transfer type</span>
+        <select
+          class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+          formControlName="transferType"
+        >
+          <option value="outgoing">Outgoing</option>
+          <option value="internal">Internal</option>
+        </select>
+      </label>
+    }
+    <label class="block text-sm">
+      <span class="text-slate-600">Transfer date</span>
+      <input type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2" formControlName="transferDate" />
+    </label>
+    <label class="block text-sm">
+      <span class="text-slate-600">New school</span>
+      <input class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2" formControlName="newSchool" />
+    </label>
+    <label class="block text-sm">
+      <span class="text-slate-600">Reason</span>
+      <textarea class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2" rows="3" formControlName="reason"></textarea>
+    </label>
+    <button
+      type="submit"
+      class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+      [disabled]="saving() || !selected()"
+    >
+      {{ saving() ? 'Processing…' : 'Complete transfer' }}
+    </button>
+  </form>
+</section>

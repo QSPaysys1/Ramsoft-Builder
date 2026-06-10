@@ -20,6 +20,13 @@ export const appRoutes: Routes = [
           import('./home/home.page').then((m) => m.HomePageComponent),
       },
       {
+        path: 'school-management',
+        loadChildren: () =>
+          import('./school-management/school-management.routes').then(
+            (m) => m.schoolManagementRoutes,
+          ),
+      },
+      {
         path: 'notes-ai',
         loadChildren: () =>
           import('@ramsoft-builder/llm/feature/tools').then(

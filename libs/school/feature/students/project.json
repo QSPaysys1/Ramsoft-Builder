@@ -1,0 +1,13 @@
+{
+  "name": "school-feature-students",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/school/feature/students/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["domain:school", "type:feature"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

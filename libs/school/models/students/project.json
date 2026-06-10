@@ -1,0 +1,19 @@
+{
+  "name": "school-models-students",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/school/models/students/src",
+  "projectType": "library",
+  "tags": ["domain:school", "type:models"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/school/models/students",
+        "main": "libs/school/models/students/src/index.ts",
+        "tsConfig": "libs/school/models/students/tsconfig.lib.json",
+        "assets": ["libs/school/models/students/*.md"]
+      }
+    }
+  }
+}

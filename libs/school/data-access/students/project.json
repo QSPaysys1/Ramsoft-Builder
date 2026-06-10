@@ -1,0 +1,12 @@
+{
+  "name": "school-data-access-students",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/school/data-access/students/src",
+  "projectType": "library",
+  "tags": ["domain:school", "type:data-access"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

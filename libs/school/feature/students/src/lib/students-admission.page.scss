@@ -1,0 +1,63 @@
+.admission-layout {
+  display: grid;
+  gap: 1.5rem;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 220px 1fr;
+  }
+}
+
+.admission-nav {
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+}
+
+.admission-section {
+  scroll-margin-top: 1rem;
+}
+
+.field-grid {
+  display: grid;
+  gap: 1rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.field {
+  display: block;
+  font-size: 0.875rem;
+
+  span {
+    color: rgb(71 85 105);
+  }
+
+  input,
+  select,
+  textarea {
+    margin-top: 0.25rem;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid rgb(226 232 240);
+    padding: 0.5rem 0.75rem;
+  }
+
+  textarea {
+    min-height: 4rem;
+  }
+}
+
+.field-full {
+  grid-column: 1 / -1;
+}
+
+.subheading {
+  grid-column: 1 / -1;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(30 41 59);
+}

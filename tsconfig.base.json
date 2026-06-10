@@ -723,6 +723,15 @@
         "libs/llm/feature/tools/src/index.ts"
       ],
       "@ramsoft-builder/llm/models/api": ["libs/llm/models/api/src/index.ts"],
+      "@ramsoft-builder/school/data-access/students": [
+        "libs/school/data-access/students/src/index.ts"
+      ],
+      "@ramsoft-builder/school/feature/students": [
+        "libs/school/feature/students/src/index.ts"
+      ],
+      "@ramsoft-builder/school/models/students": [
+        "libs/school/models/students/src/index.ts"
+      ],
       "@ramsoft-builder/shared/data-access/supabase": [
         "libs/shared/data-access/supabase/src/index.ts"
       ]

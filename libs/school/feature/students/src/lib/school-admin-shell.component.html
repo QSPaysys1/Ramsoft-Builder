@@ -1,0 +1,34 @@
+<div class="school-admin-shell">
+  <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <h2 class="text-lg font-semibold text-slate-900">{{ config.moduleTitle }}</h2>
+      <p class="mt-0.5 text-sm text-slate-600">{{ config.moduleDescription }}</p>
+    </div>
+    @if (config.showNewAdmission) {
+      <a
+        [routerLink]="config.basePath + '/admission/new'"
+        class="inline-flex shrink-0 items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+      >
+        New Admission
+      </a>
+    }
+  </header>
+
+  <nav
+      class="-mx-1 mb-6 flex gap-1 overflow-x-auto border-b border-slate-200 pb-px"
+      [attr.aria-label]="config.moduleTitle + ' sections'"
+    >
+      @for (tab of config.tabs; track tab.id) {
+        <a
+          [routerLink]="tab.path"
+          routerLinkActive="border-indigo-600 text-indigo-700"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="shrink-0 border-b-2 border-transparent px-3 py-2.5 text-sm font-medium whitespace-nowrap text-slate-600 hover:border-slate-300 hover:text-slate-900"
+        >
+          {{ tab.label }}
+        </a>
+      }
+  </nav>
+
+  <router-outlet />
+</div>

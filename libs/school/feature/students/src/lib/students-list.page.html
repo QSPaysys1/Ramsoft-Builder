@@ -1,0 +1,151 @@
+<section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+  <div class="border-b border-slate-200 px-4 py-4 sm:px-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <h2 class="text-lg font-semibold text-slate-900">{{ title() }}</h2>
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          [disabled]="store.rows().length === 0"
+          (click)="exportCsv()"
+        >
+          Export CSV
+        </button>
+        <a
+          routerLink="/school-management/academics/students/admission/new"
+          class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+        >
+          New Admission
+        </a>
+      </div>
+    </div>
+
+    <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <input
+        type="search"
+        class="rounded-lg border border-slate-200 px-3 py-2 text-sm lg:col-span-2"
+        placeholder="Search name, admission, roll…"
+        [value]="searchInput()"
+        (input)="onSearchInput($any($event.target).value)"
+      />
+      <select
+        class="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+        (change)="onFilterChange('className', $any($event.target).value)"
+      >
+        <option value="">All classes</option>
+        @for (c of store.classOptions(); track c) {
+          <option [value]="c">{{ c }}</option>
+        }
+      </select>
+      <select
+        class="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+        (change)="onFilterChange('section', $any($event.target).value)"
+      >
+        <option value="">All sections</option>
+        @for (s of store.sectionOptions(); track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+      <select
+        class="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+        (change)="onFilterChange('academicYear', $any($event.target).value)"
+      >
+        <option value="">All years</option>
+        @for (y of store.yearOptions(); track y) {
+          <option [value]="y">{{ y }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (store.viewState() === 'loading') {
+    <p class="px-6 py-12 text-center text-sm text-slate-500">Loading students…</p>
+  } @else if (store.viewState() === 'error') {
+    <p class="px-6 py-12 text-center text-sm text-red-600">
+      {{ store.errorMessage() }}
+    </p>
+  } @else if (store.viewState() === 'empty') {
+    <p class="px-6 py-12 text-center text-sm text-slate-500">
+      No students found. Use <strong>New Admission</strong> to add the first record.
+    </p>
+  } @else {
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-left text-sm">
+        <thead class="bg-slate-50 text-slate-500">
+          <tr>
+            <th class="px-4 py-3 font-medium">Admission</th>
+            <th class="px-4 py-3 font-medium">Roll</th>
+            <th class="px-4 py-3 font-medium">Name</th>
+            <th class="px-4 py-3 font-medium">Class</th>
+            <th class="px-4 py-3 font-medium">Status</th>
+            <th class="px-4 py-3 font-medium">Mobile</th>
+            <th class="px-4 py-3 font-medium"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (row of store.rows(); track row.id) {
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3 font-mono text-xs">{{ row.admissionNumber }}</td>
+              <td class="px-4 py-3">{{ row.rollNumber ?? '—' }}</td>
+              <td class="px-4 py-3 font-medium text-slate-900">
+                {{ row.firstName }} {{ row.lastName }}
+              </td>
+              <td class="px-4 py-3">
+                {{ row.className ?? '—' }}
+                @if (row.section) {
+                  <span class="text-slate-400">/ {{ row.section }}</span>
+                }
+              </td>
+              <td class="px-4 py-3">
+                <span
+                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
+                  [class]="statusBadgeClass(row.status)"
+                >
+                  {{ statusLabels[row.status] }}
+                </span>
+              </td>
+              <td class="px-4 py-3">{{ row.mobileNumber }}</td>
+              <td class="px-4 py-3 text-right">
+                @if (profileLink()) {
+                  <a
+                    [routerLink]="['/school-management/academics/students/profile', row.id]"
+                    class="text-sm font-medium text-indigo-600 hover:underline"
+                  >
+                    View
+                  </a>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div
+      class="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-sm text-slate-600"
+    >
+      <span>{{ store.total() }} total</span>
+      <div class="flex gap-2">
+        <button
+          type="button"
+          class="rounded border border-slate-200 px-2 py-1 disabled:opacity-40"
+          [disabled]="store.filters().page <= 1"
+          (click)="goPage(store.filters().page - 1)"
+        >
+          Previous
+        </button>
+        <span class="px-2 py-1">
+          Page {{ store.filters().page }} / {{ totalPages() }}
+        </span>
+        <button
+          type="button"
+          class="rounded border border-slate-200 px-2 py-1 disabled:opacity-40"
+          [disabled]="store.filters().page >= totalPages()"
+          (click)="goPage(store.filters().page + 1)"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  }
+</section>

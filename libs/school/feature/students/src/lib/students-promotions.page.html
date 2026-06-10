@@ -1,0 +1,67 @@
+<div class="grid gap-6 lg:grid-cols-2">
+  <form
+    class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+  >
+    <h2 class="text-lg font-semibold text-slate-900">Promote students</h2>
+    <p class="mt-1 text-sm text-slate-500">
+      Select active students and assign the next class, section, and academic year.
+    </p>
+
+    @if (success()) {
+      <p class="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+        Promotion saved successfully.
+      </p>
+    }
+    @if (store.errorMessage()) {
+      <p class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        {{ store.errorMessage() }}
+      </p>
+    }
+
+    <div class="mt-4 grid gap-4">
+      <label class="block text-sm">
+        <span class="text-slate-600">Next class *</span>
+        <input class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2" formControlName="nextClassName" />
+      </label>
+      <label class="block text-sm">
+        <span class="text-slate-600">Next section *</span>
+        <input class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2" formControlName="nextSection" />
+      </label>
+      <label class="block text-sm">
+        <span class="text-slate-600">Academic year *</span>
+        <input class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2" formControlName="academicYear" />
+      </label>
+    </div>
+
+    <button
+      type="submit"
+      class="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+      [disabled]="saving() || selectedIds().size === 0"
+    >
+      Promote {{ selectedIds().size }} student(s)
+    </button>
+  </form>
+
+  <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-200 px-4 py-3">
+      <h3 class="font-medium text-slate-900">Active students</h3>
+    </div>
+    <ul class="max-h-96 divide-y divide-slate-100 overflow-y-auto">
+      @for (row of store.rows(); track row.id) {
+        <li class="flex items-center gap-3 px-4 py-2">
+          <input
+            type="checkbox"
+            [checked]="selectedIds().has(row.id)"
+            (change)="toggle(row.id, $any($event.target).checked)"
+          />
+          <span class="text-sm">
+            {{ row.firstName }} {{ row.lastName }}
+            <span class="text-slate-400">({{ row.className ?? '—' }}/{{ row.section ?? '—' }})</span>
+          </span>
+        </li>
+      }
+    </ul>
+  </section>
+</div>

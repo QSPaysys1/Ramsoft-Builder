@@ -1,0 +1,46 @@
+<div class="academics-shell">
+  <header class="mb-6">
+    <nav class="mb-2 text-sm text-slate-500" aria-label="Breadcrumb">
+      <ol class="flex flex-wrap items-center gap-2">
+        <li>
+          <a routerLink="/school-management/hub/academics" class="hover:text-indigo-600">
+            Academics
+          </a>
+        </li>
+        <li aria-hidden="true" class="text-slate-400">/</li>
+        <li class="font-medium text-slate-800" aria-current="page">
+          School administration
+        </li>
+      </ol>
+    </nav>
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+      Students · Transfers · Promotions
+    </h1>
+    <p class="mt-1 text-sm text-slate-600">
+      Manage student records, transfers, and academic promotions.
+    </p>
+  </header>
+
+  <nav
+    class="-mx-1 mb-6 flex gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1"
+    aria-label="School administration modules"
+  >
+    @for (tab of primaryTabs; track tab.id) {
+      <a
+        [routerLink]="tab.path"
+        routerLinkActive="bg-white text-indigo-700 shadow-sm"
+        [routerLinkActiveOptions]="{
+          paths: 'subset',
+          queryParams: 'ignored',
+          matrixParams: 'ignored',
+          fragment: 'ignored',
+        }"
+        class="flex-1 rounded-md px-4 py-2.5 text-center text-sm font-semibold whitespace-nowrap text-slate-600 transition hover:text-slate-900"
+      >
+        {{ tab.label }}
+      </a>
+    }
+  </nav>
+
+  <router-outlet />
+</div>
