@@ -1,0 +1,236 @@
+<div class="upload-page bg-slate-50 px-4 py-6 md:px-6">
+  @if (successMessage(); as msg) {
+    <div
+      class="fixed right-4 top-4 z-50 flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 shadow-lg"
+      role="status"
+      aria-live="polite"
+    >
+      <svg
+        class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+        />
+      </svg>
+      <p class="text-sm font-medium text-emerald-800">{{ msg }}</p>
+      <button
+        type="button"
+        class="ml-2 text-emerald-600 hover:text-emerald-800"
+        aria-label="Dismiss"
+        (click)="dismissToast()"
+      >
+        &times;
+      </button>
+    </div>
+  }
+
+  <div class="mx-auto w-full max-w-2xl space-y-6">
+    <header
+      class="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm"
+    >
+      <p class="text-sm font-medium uppercase tracking-wider text-slate-500">
+        Storage
+      </p>
+      <h1
+        class="mt-1 text-2xl font-bold tracking-tight text-[#222f3f] md:text-3xl"
+      >
+        Upload a file
+      </h1>
+      <p class="mt-2 text-sm text-slate-600">
+        Images are optimized and served via Cloudflare Images. Other files are
+        stored in Cloudflare R2.
+      </p>
+    </header>
+
+    <section
+      class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+    >
+      <div
+        class="dropzone flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors"
+        [class.border-indigo-400]="dragOver()"
+        [class.bg-indigo-50]="dragOver()"
+        [class.border-slate-300]="!dragOver()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+      >
+        @if (previewUrl(); as preview) {
+          <img
+            [src]="preview"
+            alt="Selected image preview"
+            loading="lazy"
+            class="mb-4 max-h-48 rounded-lg object-contain shadow"
+          />
+        } @else {
+          <svg
+            class="mb-3 h-12 w-12 text-slate-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+            />
+          </svg>
+        }
+
+        @if (selectedFile(); as file) {
+          <p class="text-sm font-semibold text-[#222f3f]">{{ file.name }}</p>
+          <p class="mt-1 text-xs text-slate-500">
+            {{ file.type || 'unknown type' }} · {{ formatBytes(file.size) }}
+          </p>
+        } @else {
+          <p class="text-sm font-medium text-slate-700">
+            Drag &amp; drop a file here
+          </p>
+          <p class="mt-1 text-xs text-slate-500">or</p>
+        }
+
+        <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <button
+            type="button"
+            class="rounded-lg bg-[#222f3f] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#2f3f53]"
+            (click)="openFilePicker()"
+          >
+            Choose file
+          </button>
+          @if (selectedFile() && !uploading()) {
+            <button
+              type="button"
+              class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100"
+              (click)="clear()"
+            >
+              Remove
+            </button>
+          }
+        </div>
+
+        <input
+          #fileInput
+          type="file"
+          class="hidden"
+          [accept]="accept"
+          (change)="onFileSelected($event)"
+        />
+      </div>
+
+      @if (uploading()) {
+        <div class="mt-5">
+          <div class="mb-1 flex justify-between text-xs font-medium text-slate-600">
+            <span>Uploading…</span>
+            <span>{{ progress() }}%</span>
+          </div>
+          <div class="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+            <div
+              class="h-full rounded-full bg-indigo-500 transition-all"
+              [style.width.%]="progress()"
+            ></div>
+          </div>
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <p
+          class="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          {{ errorMessage() }}
+        </p>
+      }
+
+      <button
+        type="button"
+        class="mt-5 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+        [disabled]="!selectedFile() || uploading()"
+        (click)="startUpload()"
+      >
+        {{ uploading() ? 'Uploading…' : 'Upload' }}
+      </button>
+    </section>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-lg font-bold tracking-wide text-[#222f3f]">
+          Your uploads
+        </h2>
+        @if (loadingUploads()) {
+          <span class="text-xs font-medium text-slate-500">Loading…</span>
+        }
+      </div>
+
+      @if (uploads().length === 0) {
+        <p class="text-sm text-slate-500">
+          No uploads yet. Files you upload will appear here.
+        </p>
+      } @else {
+        <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          @for (row of uploads(); track row.id) {
+            <li
+              class="flex items-center gap-3 rounded-xl border border-slate-200 p-3"
+            >
+              @if (isImageRow(row)) {
+                <img
+                  [src]="thumbUrl(row)"
+                  [alt]="row.file_name"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-14 w-14 shrink-0 rounded-lg object-cover"
+                  (error)="onThumbError($event, row)"
+                />
+              } @else {
+                <span
+                  class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500"
+                >
+                  <svg
+                    class="h-7 w-7"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+                    />
+                  </svg>
+                </span>
+              }
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold text-[#222f3f]">
+                  {{ row.file_name }}
+                </p>
+                <p class="truncate text-xs text-slate-500">
+                  {{ row.storage_type === 'cloudflare_images' ? 'Image' : 'File' }}
+                  · {{ row.file_type }}
+                  @if (formatBytes(row.file_size); as size) {
+                    · {{ size }}
+                  }
+                </p>
+                <a
+                  [href]="viewUrl(row)"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                >
+                  View
+                </a>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+</div>

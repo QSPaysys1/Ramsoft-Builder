@@ -10,6 +10,7 @@ import https from 'node:https';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registerLlmApiHandlers } from './llm-api.handlers';
+import { registerUploadApiHandlers } from './upload-api.handlers';
 
 const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
@@ -117,6 +118,7 @@ app.use((req, res, next): void => {
 });
 
 registerLlmApiHandlers(app);
+registerUploadApiHandlers(app);
 
 /**
  * Serve static files from /browser

@@ -20,6 +20,11 @@ export const appRoutes: Routes = [
           import('./home/home.page').then((m) => m.HomePageComponent),
       },
       {
+        path: 'upload',
+        loadComponent: () =>
+          import('./upload/upload.page').then((m) => m.UploadPageComponent),
+      },
+      {
         path: 'school-management',
         loadChildren: () =>
           import('./school-management/school-management.routes').then(
